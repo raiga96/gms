@@ -1,6 +1,6 @@
-# DBKU Contractor & Contract Management System
+# Greens Management System
 
-Sistem Pengurusan Kontraktor & Kontrak DBKU (Dewan Bandaraya Kuching Utara) adalah sebuah aplikasi berasaskan web yang dibangunkan menggunakan PHP dan MySQL. Sistem ini direka untuk memudahkan pengurusan data kontraktor, pemantauan kontrak, serta pengurusan zon dan subzon di bawah pentadbiran DBKU.
+Greens Management System (DBKU - Dewan Bandaraya Kuching Utara) adalah sebuah aplikasi berasaskan web yang dibangunkan menggunakan PHP dan MySQL. Sistem ini direka untuk memudahkan pengurusan data kontraktor, pemantauan kontrak, serta pengurusan zon dan subzon di bawah pentadbiran DBKU.
 
 ## 🚀 Ciri-Ciri Utama (Key Features)
 
