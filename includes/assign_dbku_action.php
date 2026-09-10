@@ -18,10 +18,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if (mysqli_query($conn, $sql)) {
         $_SESSION['status'] = "success";
-        $_SESSION['message'] = "DBKU Staff assigned successfully.";
+        $_SESSION['message'] = "Staf DBKU berjaya ditugaskan.";
     } else {
         $_SESSION['status'] = "error";
-        $_SESSION['message'] = "Failed to assign DBKU Staff.";
+        $_SESSION['message'] = "Gagal menugaskan staf DBKU.";
     }
 }
 

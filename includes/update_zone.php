@@ -15,7 +15,7 @@ $zone_name = $row['zone_name'];
 
 if ($name == $zone_name) {
     $_SESSION['status'] = 'warning';
-    $_SESSION['message'] = 'No changes made to the zone name';
+    $_SESSION['message'] = 'Tiada perubahan dibuat pada nama zon.';
 
     header("Location: ../update_zone?id=" . $zone_id);
     exit();
@@ -32,13 +32,13 @@ try {
     mysqli_commit($conn);
 
     $_SESSION['status'] = 'success';
-    $_SESSION['message'] = 'Zone updated successfully';
+    $_SESSION['message'] = 'Zon berjaya dikemaskini.';
 } catch (Exception $e) {
 
     mysqli_rollback($conn);
 
     $_SESSION['status'] = 'error';
-    $_SESSION['message'] = 'Database error: ' . $e->getMessage();
+    $_SESSION['message'] = 'Ralat pangkalan data: ' . $e->getMessage();
 }
 
 header("Location: ../update_zone?id=" . $zone_id);

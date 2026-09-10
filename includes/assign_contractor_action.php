@@ -67,16 +67,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // =========================
     if (mysqli_query($conn, $sql)) {
         $_SESSION['status'] = "success";
-        $_SESSION['message'] = "Contractor assigned successfully.";
+        $_SESSION['message'] = "Kontraktor berjaya ditugaskan.";
 
         header("Location: ../subzone_details?zid=" . $zid . "&szid=" . $sz_id);
         exit();
     } else {
 
         $_SESSION['status'] = "error";
-        $_SESSION['message'] = "Failed to assign contractor.";
+        $_SESSION['message'] = "Gagal menugaskan kontraktor.";
 
-        echo "Database Error : " . mysqli_error($conn);
+        echo "Ralat pangkalan data: " . mysqli_error($conn);
     }
 } else {
 

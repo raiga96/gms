@@ -34,16 +34,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 header("Location: ../index.php");
                 exit();
             } else {
-                $_SESSION['login_error'] = "Your account is not active. Please contact administrator.";
+                $_SESSION['login_error'] = "Akaun anda tidak aktif. Sila hubungi pentadbir.";
             }
         } else {
-            $_SESSION['login_error'] = "Invalid password.";
+            $_SESSION['login_error'] = "Kata laluan tidak sah.";
         }
     } else {
-        $_SESSION['login_error'] = "User not found.";
+        $_SESSION['login_error'] = "Pengguna tidak ditemui.";
     }
 } else {
-    $_SESSION['login_error'] = "Invalid request.";
+    $_SESSION['login_error'] = "Permintaan tidak sah.";
 }
 
 header("Location: ../login.php");

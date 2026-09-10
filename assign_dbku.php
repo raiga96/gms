@@ -23,295 +23,186 @@ $row3 = $res3->fetch_assoc();
 $total_area = $row3['total_area'] ?? 0;
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ms">
 
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>SmartCut</title>
-    <!-- plugins:css -->
+    <title>Tugaskan Staf DBKU — Green Management System (DBKU)</title>
+    <link rel="shortcut icon" href="assets/images/favicon.png" />
     <link rel="stylesheet" href="assets/vendors/simple-line-icons/css/simple-line-icons.css">
     <link rel="stylesheet" href="assets/vendors/flag-icon-css/css/flag-icons.min.css">
     <link rel="stylesheet" href="assets/vendors/css/vendor.bundle.base.css">
-    <!-- endinject -->
-    <!-- Plugin css for this page -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css">
+    <link rel="stylesheet" href="assets/vendors/mdi/css/materialdesignicons.min.css">
     <link rel="stylesheet" href="assets/vendors/font-awesome/css/font-awesome.min.css" />
     <link rel="stylesheet" href="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css">
-    <link rel="stylesheet" href="assets/vendors/jvectormap/jquery-jvectormap.css">
     <link rel="stylesheet" href="assets/vendors/daterangepicker/daterangepicker.css">
-    <link rel="stylesheet" href="assets/vendors/chartist/chartist.min.css">
-    <!-- End plugin css for this page -->
-    <!-- inject:css -->
-    <!-- endinject -->
     <!-- Layout styles -->
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
     <!-- End layout styles -->
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
-
-        .modern-assign-container {
-            font-family: 'Outfit', sans-serif;
-            color: #334155;
-        }
-
-        /* Modern Banner / Header */
-        .modern-banner {
-            background: linear-gradient(90deg, #1d384d 0%, #00311c 100%);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
-            margin-bottom: 24px;
-            border: none;
-        }
-
-        .modern-banner-title {
-            font-size: 22px;
-            font-weight: 700;
-            color: #ffffff;
-            margin: 0;
-            letter-spacing: -0.02em;
-        }
-
-        .modern-banner-subtitle {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.7);
-            margin: 4px 0 0 0;
-        }
-
-        /* Metric Cards Styling */
-        .metric-card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-
-        .metric-card-modern {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 18px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 5px 15px -8px rgba(0, 0, 0, 0.05);
-            transition: all 0.25s ease;
-        }
-
-        .metric-card-modern:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.08), 0 8px 20px -8px rgba(0, 0, 0, 0.08);
-            border-color: #cbd5e1;
-        }
-
-        .metric-card-content {
+        /* Page-specific touches that complement modern-dashboard.css */
+        .gms-form-group {
             display: flex;
             flex-direction: column;
+            gap: 8px;
+            margin-bottom: 1.25rem;
         }
 
-        .metric-card-title {
-            font-size: 11px;
+        .gms-form-group > label {
+            font-size: 0.8125rem;
             font-weight: 600;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 6px;
+            color: var(--gms-text-secondary);
+            margin-bottom: 0;
+            letter-spacing: 0.01em;
         }
 
-        .metric-card-value {
-            font-size: 22px;
-            font-weight: 700;
-            color: #0f172a;
-            margin: 0;
+        .gms-form-group > label .req {
+            color: var(--gms-accent-rose);
+            margin-left: 2px;
         }
 
-        .metric-card-icon-wrapper {
+        .gms-form-control {
+            border: 1px solid var(--gms-surface-muted);
+            border-radius: 12px !important;
+            padding: 12px 16px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--gms-text-primary);
+            background-color: var(--gms-surface);
+            transition: var(--gms-transition);
+            height: auto;
+            width: 100%;
+        }
+
+        .gms-form-control:focus {
+            border-color: var(--gms-primary);
+            box-shadow: 0 0 0 3px var(--gms-primary-glow);
+            outline: none;
+            background-color: var(--gms-surface);
+        }
+
+        select.gms-form-control {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23475569' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506-.001z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 38px;
+        }
+
+        /* Modern action buttons aligned with theme */
+        .gms-btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            padding: 10px 22px;
+            border-radius: var(--gms-pill-radius);
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: var(--gms-transition);
+        }
+
+        .gms-btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #007442 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 116, 66, 0.25);
+        }
+
+        .gms-btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 116, 66, 0.35);
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .gms-btn-ghost {
+            background: var(--gms-surface);
+            color: var(--gms-text-secondary);
+            border: 1px solid var(--gms-surface-muted);
+        }
+
+        .gms-btn-ghost:hover {
+            background: var(--gms-surface-subtle);
+            color: var(--gms-text-primary);
+            transform: translateY(-1px);
+            text-decoration: none;
+        }
+
+        /* Soft inline alert (rose) matching the dashboard notification palette */
+        .gms-alert-soft {
+            background-color: rgba(239, 68, 68, 0.06);
+            border: 1px solid rgba(239, 68, 68, 0.20);
+            border-radius: var(--gms-card-radius);
+            padding: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            color: var(--gms-accent-rose);
+            margin-bottom: 1.5rem;
+        }
+
+        .gms-alert-soft-icon {
             width: 44px;
             height: 44px;
             border-radius: 12px;
-            display: flex;
+            background: rgba(239, 68, 68, 0.12);
+            color: var(--gms-accent-rose);
+            display: inline-flex;
+            align-items: center;
             justify-content: center;
-            align-items: center;
-            font-size: 18px;
-            color: #ffffff;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            font-size: 1.15rem;
+            flex-shrink: 0;
         }
 
-        .icon-blue {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-        }
-
-        .icon-yellow {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
-        }
-
-        /* Modern Card Details */
-        .modern-assign-container .card {
-            border: none;
-            border-radius: 16px !important;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 5px 15px -8px rgba(0, 0, 0, 0.05) !important;
-            background: #ffffff;
-            overflow: hidden;
-            margin-bottom: 24px;
-        }
-
-        .modern-assign-container .card-body {
-            padding: 28px !important;
-        }
-
-        .modern-assign-container .card-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #1e293b;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .form-section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 12px;
-            margin-bottom: 20px;
-        }
-
-        /* Custom Form Controls */
-        .modern-assign-container .form-group {
-            margin-bottom: 0px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .modern-assign-container label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #475569;
-            margin-bottom: 0px;
-        }
-
-        .modern-assign-container .form-control {
-            border: 1px solid #cbd5e1;
-            border-radius: 10px !important;
-            padding: 10px 14px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #1e293b;
-            background-color: #ffffff;
-            transition: all 0.2s ease;
-            height: auto;
-        }
-
-        .modern-assign-container select.form-control {
-            padding: 10px 14px !important;
-            cursor: pointer;
-        }
-
-        .modern-assign-container .form-control:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-            outline: none;
-            background-color: #ffffff;
-            color: #1e293b;
-        }
-
-        /* Alerts Styling */
-        .modern-alert {
-            background-color: #fff1f2;
-            border: 1px solid #fecdd3;
-            border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            color: #be123c;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 12px rgba(244, 63, 94, 0.05);
-        }
-
-        .modern-alert-icon {
-            font-size: 28px;
-        }
-
-        .modern-alert-title {
+        .gms-alert-soft-title {
             font-weight: 700;
             margin: 0 0 4px 0;
-            font-size: 15px;
+            font-size: 0.95rem;
+            color: #be123c;
         }
 
-        .modern-alert-desc {
+        .gms-alert-soft-desc {
             margin: 0;
-            font-size: 13px;
+            font-size: 0.8125rem;
             color: #e11d48;
+            line-height: 1.5;
         }
 
-        /* Buttons styling */
-        .btn-modern-success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: #ffffff !important;
-            font-weight: 600;
-            font-size: 13px;
-            padding: 10px 24px;
-            border-radius: 30px;
-            border: none;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-            transition: all 0.2s ease;
-            display: inline-flex;
+        /* Current-assignment mini summary card */
+        .gms-current-staff {
+            display: flex;
             align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            text-decoration: none;
+            gap: 10px;
+            padding: 8px 14px;
+            background: rgba(0, 116, 66, 0.06);
+            border: 1px solid rgba(0, 116, 66, 0.18);
+            border-radius: 12px;
+            font-size: 0.8125rem;
+            color: var(--gms-text-secondary);
         }
 
-        .btn-modern-success:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
-            text-decoration: none;
-        }
-
-        .btn-modern-danger {
-            background: #f1f5f9;
-            color: #475569 !important;
-            font-weight: 600;
-            font-size: 13px;
-            padding: 10px 24px;
-            border-radius: 30px;
-            border: 1px solid #cbd5e1;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .btn-modern-danger:hover {
-            background-color: #e2e8f0;
-            color: #334155 !important;
-            transform: translateY(-1px);
-            text-decoration: none;
+        .gms-current-staff strong {
+            color: var(--gms-primary);
+            font-weight: 700;
         }
     </style>
-    <link rel="shortcut icon" href="assets/images/favicon.png" />
 </head>
 
 <body>
     <div class="container-scroller">
-        <!-- partial:partials/_navbar.html -->
-        <?php include 'partials/navbar.php' ?>
-        <!-- partial -->
+        <?php include 'partials/navbar.php'; ?>
+
         <div class="container-fluid page-body-wrapper">
-            <!-- partial:partials/_sidebar.html -->
-            <?php include 'partials/sidebar.php' ?>
-            <!-- partial -->
+            <?php include 'partials/sidebar.php'; ?>
+
             <div class="main-panel" style="height: 100%;">
                 <div class="content-wrapper">
 
@@ -327,7 +218,7 @@ $total_area = $row3['total_area'] ?? 0;
                     $sql_contract = "SELECT * FROM contract WHERE sz_id = '$subzone_id' AND c_status = 'Y'";
                     $res_contract = $conn->query($sql_contract);
                     $has_contract = ($res_contract && $res_contract->num_rows > 0);
-                    
+
                     $current_spv = '';
                     $current_pgs = '';
                     if ($has_contract) {
@@ -337,133 +228,161 @@ $total_area = $row3['total_area'] ?? 0;
                     }
                     ?>
 
-                    <div class="modern-assign-container">
-                        <!-- Action Banner / Header -->
-                        <div class="card modern-banner bg-dark">
-                            <div class="card-body p-0 d-sm-flex align-items-center justify-content-between text-white">
-                                <div>
-                                    <h3 class="modern-banner-title"><i class="icon-user-following mr-2"></i> Assign DBKU Staff</h3>
-                                    <p class="modern-banner-subtitle">Configure Supervisor and Pengawas assignments for <?php echo htmlspecialchars($subzone_name) ?></p>
+                    <!-- ============================================================== -->
+                    <!-- PAGE HEADER BANNER (Donezo-inspired gms-hero)                  -->
+                    <!-- ============================================================== -->
+                    <div class="gms-hero-banner gms-fade-in" style="padding: 1.5rem 2rem;">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap g-3">
+                            <div>
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="gms-pulse-dot" style="background:#34d399;"></span>
+                                    <span class="gms-hero-subtitle" style="color: rgba(255,255,255,0.75);">Modul Tugasan Pegawai</span>
                                 </div>
-                                <button type="button" class="modern-btn-white mt-3 mt-sm-0" onclick="history.back()"><i class="icon-arrow-left"></i> Back</button>
+                                <h1 class="gms-hero-title mb-1">
+                                    <i class="fa-solid fa-user-gear me-2"></i> Tugaskan Staf DBKU
+                                </h1>
+                                <p class="gms-hero-subtitle">
+                                    Konfigur tugasan Penyelia &amp; Pengawas bagi sub-zon
+                                    <strong style="color: #6ee7b7;"><?php echo htmlspecialchars($subzone_name); ?></strong>
+                                    (Zon <?php echo htmlspecialchars($zone_name); ?>)
+                                </p>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-light btn-sm rounded-pill px-3 py-2 font-weight-bold"
+                                        onclick="history.back()" style="color: #007442;">
+                                    <i class="fa-solid fa-arrow-left me-1"></i> Kembali
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <?php if (!$has_contract) { ?>
+                        <!-- ============================================================== -->
+                        <!-- ALERT: NO ACTIVE CONTRACT                                       -->
+                        <!-- ============================================================== -->
+                        <div class="gms-alert-soft gms-fade-in gms-fade-in-delay-1">
+                            <div class="gms-alert-soft-icon">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                            </div>
+                            <div>
+                                <h5 class="gms-alert-soft-title">Kontrak Aktif Diperlukan</h5>
+                                <p class="gms-alert-soft-desc">
+                                    Anda tidak boleh menugaskan pegawai DBKU kerana tiada kontrak aktif untuk sub-zon ini.
+                                    Sila tugaskan kontraktor terlebih dahulu sebelum membuat penugasan staf.
+                                </p>
                             </div>
                         </div>
 
-                        <?php if (!$has_contract) { ?>
-                            <!-- Alert: No active contract found -->
-                            <div class="modern-alert">
-                                <div class="modern-alert-icon">
-                                    <i class="icon-info"></i>
-                                </div>
-                                <div>
-                                    <h5 class="modern-alert-title">Active Contract Required</h5>
-                                    <p class="modern-alert-desc">You cannot assign DBKU staff because there is no active contractor contract assigned to this sub-zone yet. Please assign a contractor first.</p>
-                                </div>
-                            </div>
-                            <div class="d-flex justify-content-start mt-3">
-                                <button class="btn-modern-danger" type="button" onclick="history.back()"><i class="icon-close"></i> Go Back</button>
-                            </div>
-                        <?php } else { ?>
-                            <!-- Assignment Form -->
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="form-section-header">
-                                        <h4 class="card-title"><i class="icon-badge text-primary mr-1"></i> Staff Assignment</h4>
+                        <div class="d-flex justify-content-start mt-3 gms-fade-in gms-fade-in-delay-1">
+                            <button class="gms-btn-action gms-btn-ghost" type="button" onclick="history.back()">
+                                <i class="fa-solid fa-xmark"></i> Kembali
+                            </button>
+                        </div>
+                    <?php } else { ?>
+                        <!-- ============================================================== -->
+                        <!-- ASSIGNMENT FORM CARD                                            -->
+                        <!-- ============================================================== -->
+                        <div class="row gms-fade-in gms-fade-in-delay-1">
+                            <div class="col-12">
+                                <div class="card shadow">
+                                    <div class="card-body p-4">
+                                        <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
+                                            <div>
+                                                <h4 class="gms-section-title">Tugasan Staf DBKU</h4>
+                                                <p class="gms-section-subtitle">Pilih Penyelia (SPV) dan Pengawas (PGS) untuk sub-zon ini. Pegawai yang dipilih akan dipautkan kepada kontrak aktif semasa.</p>
+                                            </div>
+                                            <?php if (!empty($current_spv) || !empty($current_pgs)): ?>
+                                            <div class="gms-current-staff">
+                                                <i class="fa-solid fa-circle-check"></i>
+                                                <span>Tugasan semasa: <strong><?php echo htmlspecialchars($current_spv ?: '-'); ?></strong> &middot; <strong><?php echo htmlspecialchars($current_pgs ?: '-'); ?></strong></span>
+                                            </div>
+                                            <?php endif; ?>
+                                        </div>
+
+                                        <form action="includes/assign_dbku_action.php" method="POST" class="forms-sample">
+                                            <input type="text" name="zid" value="<?php echo $zone_id ?>" hidden>
+                                            <input type="text" name="sz_id" value="<?php echo $subzone_id ?>" hidden>
+
+                                            <div class="row g-3">
+                                                <!-- Supervisor (SPV) Select -->
+                                                <div class="col-md-6">
+                                                    <div class="gms-form-group">
+                                                        <label for="spv_id">Penyelia (SPV) <span class="req">*</span></label>
+                                                        <select name="spv_id" id="spv_id" class="gms-form-control">
+                                                            <option value="">-- Pilih Penyelia --</option>
+                                                            <?php
+                                                            $sql_spv = "SELECT * FROM users WHERE user_type = 'SPV' AND status = 'Y' ORDER BY user_id ASC";
+                                                            $res_spv = $conn->query($sql_spv);
+                                                            if ($res_spv && $res_spv->num_rows > 0) {
+                                                                while ($row_spv = $res_spv->fetch_assoc()) {
+                                                                    $selected = ($row_spv['uid'] == $current_spv) ? 'selected' : '';
+                                                                    echo "<option value='{$row_spv['uid']}' {$selected}>" . htmlspecialchars($row_spv['user_id']) . " (" . htmlspecialchars($row_spv['user_email']) . ")</option>";
+                                                                }
+                                                            }
+                                                            ?>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Pengawas (PGS) Select -->
+                                                <div class="col-md-6">
+                                                    <div class="gms-form-group">
+                                                        <label for="pgs_id">Pengawas (PGS) <span class="req">*</span></label>
+                                                        <select name="pgs_id" id="pgs_id" class="gms-form-control">
+                                                            <option value="">-- Pilih Pengawas --</option>
+                                                            <?php
+                                                            $sql_pgs = "SELECT * FROM users WHERE user_type = 'PGS' AND status = 'Y' ORDER BY user_id ASC";
+                                                            $res_pgs = $conn->query($sql_pgs);
+                                                            if ($res_pgs && $res_pgs->num_rows > 0) {
+                                                                while ($row_pgs = $res_pgs->fetch_assoc()) {
+                                                                    $selected = ($row_pgs['uid'] == $current_pgs) ? 'selected' : '';
+                                                                    echo "<option value='{$row_pgs['uid']}' {$selected}>" . htmlspecialchars($row_pgs['user_id']) . " (" . htmlspecialchars($row_pgs['user_email']) . ")</option>";
+                                                                }
+                                                            }
+                                                            ?>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Submission Row -->
+                                            <div class="d-flex justify-content-end gap-2 mt-4 pt-3" style="border-top: 1px solid var(--gms-border);">
+                                                <button class="gms-btn-action gms-btn-ghost" type="button" onclick="history.back()">
+                                                    <i class="fa-solid fa-xmark"></i> Batal
+                                                </button>
+                                                <button type="submit" class="gms-btn-action gms-btn-primary">
+                                                    <i class="fa-solid fa-check"></i> Tugaskan Staf
+                                                </button>
+                                            </div>
+                                        </form>
                                     </div>
-                                    
-                                    <form action="includes/assign_dbku_action.php" method="POST" class="forms-sample">
-                                        <input type="text" name="zid" value="<?php echo $zone_id ?>" hidden>
-                                        <input type="text" name="sz_id" value="<?php echo $subzone_id ?>" hidden>
-
-                                        <div class="row g-3">
-                                            <!-- Supervisor (SPV) Select -->
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="spv_id">Supervisor (SPV)</label>
-                                                    <select name="spv_id" id="spv_id" class="form-control">
-                                                        <option value="">-- Select Supervisor --</option>
-                                                        <?php
-                                                        $sql_spv = "SELECT * FROM users WHERE user_type = 'SPV' AND status = 'Y' ORDER BY user_id ASC";
-                                                        $res_spv = $conn->query($sql_spv);
-                                                        if ($res_spv && $res_spv->num_rows > 0) {
-                                                            while ($row_spv = $res_spv->fetch_assoc()) {
-                                                                $selected = ($row_spv['uid'] == $current_spv) ? 'selected' : '';
-                                                                echo "<option value='{$row_spv['uid']}' {$selected}>" . htmlspecialchars($row_spv['user_id']) . " (" . htmlspecialchars($row_spv['user_email']) . ")</option>";
-                                                            }
-                                                        }
-                                                        ?>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <!-- Pengawas (PGS) Select -->
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="pgs_id">Pengawas (PGS)</label>
-                                                    <select name="pgs_id" id="pgs_id" class="form-control">
-                                                        <option value="">-- Select Pengawas --</option>
-                                                        <?php
-                                                        $sql_pgs = "SELECT * FROM users WHERE user_type = 'PGS' AND status = 'Y' ORDER BY user_id ASC";
-                                                        $res_pgs = $conn->query($sql_pgs);
-                                                        if ($res_pgs && $res_pgs->num_rows > 0) {
-                                                            while ($row_pgs = $res_pgs->fetch_assoc()) {
-                                                                $selected = ($row_pgs['uid'] == $current_pgs) ? 'selected' : '';
-                                                                echo "<option value='{$row_pgs['uid']}' {$selected}>" . htmlspecialchars($row_pgs['user_id']) . " (" . htmlspecialchars($row_pgs['user_email']) . ")</option>";
-                                                            }
-                                                        }
-                                                        ?>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Submission Row -->
-                                        <div class="action-button-group mt-4" style="display: flex; gap: 12px; justify-content: flex-end; border-top: 1px solid #e2e8f0; padding-top: 20px;">
-                                            <button class="btn-modern-danger" type="button" onclick="history.back()"><i class="icon-close"></i> Cancel</button>
-                                            <button type="submit" class="btn-modern-success"><i class="icon-check"></i> Assign Staff</button>
-                                        </div>
-                                    </form>
                                 </div>
                             </div>
-                        <?php } ?>
-                    </div>
-                </div>
+                        </div>
+                    <?php } ?>
 
+                </div>
                 <!-- content-wrapper ends -->
-                <!-- partial:partials/_footer.html -->
                 <?php include 'partials/footer.php'; ?>
-                <!-- partial -->
             </div>
             <!-- main-panel ends -->
         </div>
         <!-- page-body-wrapper ends -->
     </div>
     <!-- container-scroller -->
-    <!-- plugins:js -->
+
+    <!-- JS -->
     <script src="assets/vendors/js/vendor.bundle.base.js"></script>
-    <!-- endinject -->
-    <!-- Plugin js for this page -->
-    <script src="assets/vendors/chart.js/chart.umd.js"></script>
-    <script src="assets/vendors/jvectormap/jquery-jvectormap.min.js"></script>
-    <script src="assets/vendors/jvectormap/jquery-jvectormap-world-mill-en.js"></script>
     <script src="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.js"></script>
     <script src="assets/vendors/moment/moment.min.js"></script>
     <script src="assets/vendors/daterangepicker/daterangepicker.js"></script>
-    <script src="assets/vendors/chartist/chartist.min.js"></script>
-    <script src="assets/vendors/progressbar.js/progressbar.min.js"></script>
     <script src="assets/js/jquery.cookie.js"></script>
-    <!-- End plugin js for this page -->
-    <!-- inject:js -->
     <script src="assets/js/off-canvas.js"></script>
     <script src="assets/js/hoverable-collapse.js"></script>
     <script src="assets/js/misc.js"></script>
     <script src="assets/js/settings.js"></script>
     <script src="assets/js/todolist.js"></script>
-    <!-- endinject -->
-    <!-- Custom js for this page -->
-    <script src="assets/js/dashboard.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- End custom js for this page -->
 
     <?php
     // Check if there is a status message in the session
@@ -475,26 +394,15 @@ $total_area = $row3['total_area'] ?? 0;
         unset($_SESSION['status']);
         unset($_SESSION['message']);
 
-        if ($status == 'success') {
-            echo '<script>
-                            document.addEventListener("DOMContentLoaded", function() {
-                                Swal.fire({
-                                    title: "' . $message . '",
-                                    text: "",
-                                    icon: "success",
-                                });
-                            });
-                        </script>';
-        } else {
-            echo '<script>
-                            document.addEventListener("DOMContentLoaded", function() {
-                                Swal.fire({
-                                    title: "' . $message . '",
-                                    icon: "error",
-                                });
-                            });
-                        </script>';
-        }
+        $icon = ($status == 'success') ? 'success' : 'error';
+        echo '<script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    Swal.fire({
+                        title: "' . addslashes($message) . '",
+                        icon: "' . $icon . '",
+                    });
+                });
+            </script>';
     }
     ?>
 

@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     
     if (!empty($_FILES['kmz_file']['name'])) {
         $originalName = basename($_FILES['kmz_file']['name']);
-        $cleanName = preg_replace('/[^A-Za-z0-9\.\-_]/', '_', $originalName);
+        $cleanName = preg_replace('/[^A-Za-z0-9\.\\-_]/', '_', $originalName);
         $cleanName = strtolower(time() . '_' . $cleanName);
         $targetPath = $uploadDir . $cleanName;
         $publicUrl = $publicUrlBase . $cleanName;
@@ -26,10 +26,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $conn->query("UPDATE subzone SET kmz_file='$cleanName' WHERE sz_id='$sz_id_post'");
             
             $_SESSION['status'] = 'success';
-            $_SESSION['message'] = 'KMZ uploaded successfully.';
+        $_SESSION['message'] = 'Fail KMZ berjaya dimuat naik.';
         } else {
             $_SESSION['status'] = 'error';
-            $_SESSION['message'] = 'Failed to upload KMZ file.';
+        $_SESSION['message'] = 'Gagal memuat naik fail KMZ.';
         }
     }
     header("Location: contract_details.php?id=$cid_post");
@@ -39,192 +39,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 $cid = $_GET['id'];
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ms">
 
 <head>
-    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>SmartCut</title>
-    <!-- plugins:css -->
+    <title>Butiran Kontrak — Green Management System (DBKU)</title>
+    <link rel="shortcut icon" href="assets/images/favicon.png" />
     <link rel="stylesheet" href="assets/vendors/simple-line-icons/css/simple-line-icons.css">
     <link rel="stylesheet" href="assets/vendors/flag-icon-css/css/flag-icons.min.css">
     <link rel="stylesheet" href="assets/vendors/css/vendor.bundle.base.css">
-    <!-- endinject -->
-    <!-- Plugin css for this page -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css">
+    <link rel="stylesheet" href="assets/vendors/mdi/css/materialdesignicons.min.css">
     <link rel="stylesheet" href="assets/vendors/font-awesome/css/font-awesome.min.css" />
     <link rel="stylesheet" href="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css">
-    <link rel="stylesheet" href="assets/vendors/jvectormap/jquery-jvectormap.css">
     <link rel="stylesheet" href="assets/vendors/daterangepicker/daterangepicker.css">
-    <link rel="stylesheet" href="assets/vendors/chartist/chartist.min.css">
-    <!-- End plugin css for this page -->
-    <!-- inject:css -->
-    <!-- endinject -->
-    <!-- Layout styles -->
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
-    <!-- End layout styles -->
-    <link rel="shortcut icon" href="assets/images/favicon.png" />
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
-
-        body {
-            font-family: 'Outfit', sans-serif;
-            background-color: #f8fafc;
-        }
-        
-        .modern-card {
-            background: #ffffff;
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 5px 15px -8px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
-            overflow: hidden;
-        }
-
-        .info-box {
-            background: linear-gradient(145deg, #ffffff, #f8fafc);
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 24px;
-            height: 100%;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-        }
-        
-        .info-box:hover {
-            border-color: #cbd5e1;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
-            transform: translateY(-2px);
-        }
-
-        .icon-wrap {
-            width: 54px;
-            height: 54px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            margin-right: 16px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            flex-shrink: 0;
-        }
-
-        .icon-blue { background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #2563eb; }
-        .icon-green { background: linear-gradient(135deg, #f0fdf4, #dcfce7); color: #16a34a; }
-        .icon-purple { background: linear-gradient(135deg, #faf5ff, #f3e8ff); color: #9333ea; }
-        .icon-orange { background: linear-gradient(135deg, #fff7ed, #ffedd5); color: #ea580c; }
-        .icon-red { background: linear-gradient(135deg, #fef2f2, #fee2e2); color: #dc2626; }
-
-        .badge-modern {
-            padding: 8px 16px;
-            font-weight: 600;
-            border-radius: 20px;
-            letter-spacing: 0.5px;
-            font-size: 11px;
-            text-transform: uppercase;
-            border: 1px solid transparent;
-        }
-
-        .badge-blue { background-color: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
-        .badge-green { background-color: #f0fdf4; color: #166534; border-color: #bbf7d0; }
-        .badge-red { background-color: #fef2f2; color: #991b1b; border-color: #fecaca; }
-        .badge-purple { background-color: #faf5ff; color: #6b21a8; border-color: #e9d5ff; }
-
-        .text-label {
-            font-size: 11px;
-            font-weight: 700;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 4px;
-        }
-
-        .text-value {
-            font-size: 16px;
-            font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 0;
-            word-wrap: break-word;
-        }
-
-        .modern-table-wrapper {
-            overflow-x: auto;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-            background: #ffffff;
-            margin-top: 15px;
-        }
-
-        .modern-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-        }
-
-        .modern-table th {
-            background-color: #f8fafc;
-            color: #475569;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: 16px 20px;
-            border-bottom: 1px solid #e2e8f0;
-            text-align: left;
-        }
-
-        .modern-table td {
-            padding: 16px 20px;
-            vertical-align: middle;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 14px;
-            color: #334155;
-            background-color: #ffffff;
-            transition: background-color 0.2s;
-        }
-
-        .modern-table tbody tr:hover td {
-            background-color: #f8fafc;
-        }
-        
-        .modern-table tr:last-child td { border-bottom: none; }
-        
-        .map-container {
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-            border: 4px solid #ffffff;
-            height: 55vh;
-            width: 100%;
-        }
-
-        .action-btn-circle {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            border: none;
-            transition: all 0.2s ease;
-        }
-        .action-btn-circle:hover {
-            transform: scale(1.1);
-        }
-        .btn-edit-modern { background-color: #eff6ff; color: #3b82f6; }
-        .btn-edit-modern:hover { background-color: #3b82f6; color: #ffffff; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
-        .btn-delete-modern { background-color: #fef2f2; color: #ef4444; }
-        .btn-delete-modern:hover { background-color: #ef4444; color: #ffffff; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); }
-        .btn-save-modern { background-color: #f0fdf4; color: #10b981; }
-        .btn-save-modern:hover { background-color: #10b981; color: #ffffff; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); }
-
-        hr.modern-divider {
-            border-top: 1px solid #e2e8f0;
-            margin: 20px 0;
-            opacity: 1;
-        }
-    </style>
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
 </head>
 
 <body>
@@ -370,114 +201,199 @@ $cid = $_GET['id'];
                         }
                     }
                     ?>
-                    <div class="row mb-4">
+                    <!-- ============================================================== -->
+                    <!-- HERO BANNER -->
+                    <!-- ============================================================== -->
+                    <div class="gms-hero-banner gms-fade-in">
+                        <div class="row align-items-center g-3">
+                            <div class="col-lg-8">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="gms-pulse-dot" style="background:#34d399;"></span>
+                                    <span class="gms-hero-subtitle" style="color: rgba(255,255,255,0.75);">Butiran Kontrak</span>
+                                </div>
+                                <h1 class="gms-hero-title mb-1">Butiran Kontrak — <?php echo htmlspecialchars($row4['name']); ?></h1>
+                                <p class="gms-hero-subtitle">Kontrak di bawah Zon <?php echo htmlspecialchars($row3['zone_name']); ?></p>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+                                    <div class="gms-hero-stat">
+                                        <div class="gms-hero-stat-icon"><i class="icon-calendar"></i></div>
+                                        <div>
+                                            <div class="gms-hero-stat-label">Durasi</div>
+                                            <div class="gms-hero-stat-value"><?php echo $duration_months; ?> Bulan</div>
+                                        </div>
+                                    </div>
+                                    <div class="gms-hero-stat">
+                                        <div class="gms-hero-stat-icon"><i class="icon-briefcase"></i></div>
+                                        <div>
+                                            <div class="gms-hero-stat-label">Kontraktor</div>
+                                            <div class="gms-hero-stat-value" style="font-size:0.85rem;"><?php echo htmlspecialchars($row4['name']); ?></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============================================================== -->
+                    <!-- KPI METRIC CARDS (Donezo-inspired) -->
+                    <!-- ============================================================== -->
+                    <div class="row g-3 mb-4 gms-fade-in gms-fade-in-delay-1">
+                        <!-- KPI 1: Contract Number (FEATURED) -->
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="gms-kpi-card kpi-featured">
+                                <div>
+                                    <div class="gms-kpi-header">
+                                        <span class="gms-kpi-label">No. Kontrak</span>
+                                        <div class="gms-kpi-icon">
+                                            <i class="icon-doc"></i>
+                                        </div>
+                                    </div>
+                                    <div class="gms-kpi-value" style="font-size:1.2rem;"><?php echo htmlspecialchars($row1['contract_number']); ?></div>
+                                </div>
+                                <div class="gms-kpi-footer">
+                                    <span style="background: rgba(255,255,255,0.15); color: #6ee7b7; padding: 3px 9px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">
+                                        <i class="fa-solid fa-file-contract"></i> Aktif
+                                    </span>
+                                    <span>DBKU</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- KPI 2: Fund -->
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="gms-kpi-card kpi-soft kpi-emerald">
+                                <div>
+                                    <div class="gms-kpi-header">
+                                        <span class="gms-kpi-label">Nilai Kontrak</span>
+                                        <div class="gms-kpi-icon">
+                                            <i class="icon-size-fullscreen"></i>
+                                        </div>
+                                    </div>
+                                    <div class="gms-kpi-value">RM <?php echo number_format($row1['fund'], 2); ?></div>
+                                </div>
+                                <div class="gms-kpi-footer">
+                                    <span class="gms-kpi-badge badge-emerald-soft">
+                                        <i class="fa-solid fa-coins"></i> Peruntukan
+                                    </span>
+                                    <span>DBKU</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- KPI 3: Duration -->
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="gms-kpi-card kpi-soft kpi-cyan">
+                                <div>
+                                    <div class="gms-kpi-header">
+                                        <span class="gms-kpi-label">Tempoh</span>
+                                        <div class="gms-kpi-icon">
+                                            <i class="icon-calendar"></i>
+                                        </div>
+                                    </div>
+                                    <div class="gms-kpi-value" style="font-size:1.2rem;"><?php echo $duration_months; ?> <small style="font-size:0.85rem; font-weight:600;">Bulan</small></div>
+                                </div>
+                                <div class="gms-kpi-footer">
+                                    <span class="gms-kpi-badge badge-cyan-soft">
+                                        <i class="fa-solid fa-clock"></i> Masa
+                                    </span>
+                                    <span><?php echo gms_format_date($start, 'd M Y'); ?> - <?php echo gms_format_date($end, 'd M Y'); ?></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- KPI 4: Status -->
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="gms-kpi-card kpi-soft kpi-amber">
+                                <div>
+                                    <div class="gms-kpi-header">
+                                        <span class="gms-kpi-label">Status</span>
+                                        <div class="gms-kpi-icon">
+                                            <i class="icon-check"></i>
+                                        </div>
+                                    </div>
+                                    <div class="gms-kpi-value" style="font-size:1.2rem;"><span class="gms-status-dot" style="background-color:#10b981;"></span> Aktif</div>
+                                </div>
+                                <div class="gms-kpi-footer">
+                                    <span class="gms-kpi-badge badge-amber-soft">
+                                        <i class="fa-solid fa-circle-check"></i> Berjaya
+                                    </span>
+                                    <span>DBKU</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- KPI END -->
+
+                    <!-- Contract Overview Info Cards -->
+                    <div class="row mb-4 gms-fade-in gms-fade-in-delay-2">
                         <div class="col-md-12 grid-margin stretch-card">
-                            <div class="modern-card w-100">
+                            <div class="card shadow">
                                 <div class="card-body p-4">
-                                    <div class="d-flex justify-content-between align-items-center mb-4">
-                                        <h4 class="card-title mb-0" style="font-size: 20px; font-weight: 700; color: #0f172a;">
-                                            <i class="icon-book-open me-2 text-primary"></i> Contract Overview
-                                        </h4>
-                                        <span class="badge-modern badge-green"><i class="fa fa-circle me-1" style="font-size: 8px;"></i> Active</span>
+                                    <div class="d-flex align-items-center justify-content-between mb-4">
+                                        <div>
+                                            <h4 class="gms-section-title">
+                                                Gambaran Kontrak
+                                            </h4>
+                                            <p class="gms-section-subtitle">Butiran keseluruhan kontrak penyerahan kerja</p>
+                                        </div>
+                                        <span class="gms-badge-contract"><i class="fa-solid fa-circle-check me-1"></i> Aktif</span>
                                     </div>
                                     <div class="row">
                                         <div class="col-md-4 mb-3 mb-md-0">
-                                            <div class="info-box">
-                                                <div class="mb-4">
-                                                    <span class="badge-modern badge-blue">Details</span>
+                                            <div class="gms-kpi-card kpi-soft kpi-blue" style="--gms-kpi-icon-bg: rgba(37,99,235,0.12); --gms-kpi-icon-color: #2563eb;">
+                                                <div>
+                                                    <div class="gms-kpi-header">
+                                                        <span class="gms-kpi-label">Maklumat Asas</span>
+                                                        <div class="gms-kpi-icon">
+                                                            <i class="icon-info"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="gms-kpi-value" style="font-size:1rem;">Kontrak #<?php echo htmlspecialchars($row1['contract_number']); ?></div>
                                                 </div>
-                                                <div class="d-flex align-items-center mb-4">
-                                                    <div class="icon-wrap icon-blue">
-                                                        <i class="icon-doc"></i>
-                                                    </div>
-                                                    <div>
-                                                        <p class="text-label">Contract Number</p>
-                                                        <h5 class="text-value"><?php echo $row1['contract_number']; ?></h5>
-                                                        <p class="text-small text-muted mb-0 fw-bold mt-1">RM <?php echo number_format($row1['fund'], 2); ?></p>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex align-items-center mb-4">
-                                                    <div class="icon-wrap icon-orange">
-                                                        <i class="icon-map"></i>
-                                                    </div>
-                                                    <div>
-                                                        <p class="text-label">Title</p>
-                                                        <h5 class="text-value" style="font-size: 13px; line-height: 1.4;">GRASS CUTTING AND DRAIN CLEANING WORKS WITHIN DBKU AREA OF ZONE <?php echo $row3['zone_name'] ?></h5>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="icon-wrap icon-purple">
-                                                        <i class="icon-calendar"></i>
-                                                    </div>
-                                                    <div>
-                                                        <p class="text-label">Duration</p>
-                                                        <h5 class="text-value" style="font-size: 14px;"><?php echo $start->format('d M Y') ?> - <?php echo $end->format('d M Y') ?></h5>
-                                                    </div>
+                                                <div class="gms-kpi-footer">
+                                                    <span class="gms-kpi-badge" style="background:rgba(37,99,235,0.1); color:#1e40af;">Butiran</span>
+                                                    <span>ID: <?php echo $cid; ?></span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div class="col-md-4 mb-3 mb-md-0">
-                                            <div class="info-box">
-                                                <div class="mb-4">
-                                                    <span class="badge-modern badge-green">Contractor Detail</span>
+                                            <div class="gms-kpi-card kpi-soft kpi-green">
+                                                <div>
+                                                    <div class="gms-kpi-header">
+                                                        <span class="gms-kpi-label">Kontraktor</span>
+                                                        <div class="gms-kpi-icon" style="background:rgba(16,185,129,0.12); color:#059669;">
+                                                            <i class="icon-briefcase"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="gms-kpi-value" style="font-size:1rem;"><?php echo htmlspecialchars($row4['name']); ?></div>
                                                 </div>
-                                               <div class="d-flex align-items-center mb-4">
-                                                    <div class="icon-wrap icon-green">
-                                                        <i class="icon-briefcase"></i>
-                                                    </div>
-                                                    <div>
-                                                        <p class="text-label">Company Name</p>
-                                                        <h5 class="text-value" style="font-size: 14px;"><?php echo htmlspecialchars($row4['name']); ?></h5>
-                                                    </div>
-                                                </div>
-                                               <div class="d-flex align-items-center mb-4">
-                                                    <div class="icon-wrap icon-blue">
-                                                        <i class="icon-user"></i>
-                                                    </div>
-                                                    <div>
-                                                        <p class="text-label">Supervisor 1</p>
-                                                        <h5 class="text-value"><?php echo htmlspecialchars($row1['supervisor_1']); ?></h5>
-                                                        <p class="text-small text-muted mb-0 fw-bold mt-1"><i class="fa fa-phone me-1"></i><?php echo htmlspecialchars($row1['supervisor1_contact']); ?></p>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="icon-wrap icon-blue">
-                                                        <i class="icon-user"></i>
-                                                    </div>
-                                                    <div>
-                                                        <p class="text-label">Supervisor 2</p>
-                                                        <h5 class="text-value"><?php echo htmlspecialchars($row1['supervisor_2']); ?></h5>
-                                                        <p class="text-small text-muted mb-0 fw-bold mt-1"><i class="fa fa-phone me-1"></i><?php echo htmlspecialchars($row1['supervisor2_contact']); ?></p>
-                                                    </div>
+                                                <div class="gms-kpi-footer">
+                                                    <span class="gms-kpi-badge badge-cyan-soft">
+                                                        <i class="fa-solid fa-user"></i> Syarikat
+                                                    </span>
+                                                    <span>CID: <?php echo $row1['cid']; ?></span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div class="col-md-4">
-                                            <div class="info-box">
-                                                <div class="mb-4">
-                                                    <span class="badge-modern badge-purple">DBKU Supervisor</span>
+                                            <div class="gms-kpi-card kpi-soft kpi-purple">
+                                                <div>
+                                                    <div class="gms-kpi-header">
+                                                        <span class="gms-kpi-label">Pengawasan DBKU</span>
+                                                        <div class="gms-kpi-icon" style="background:rgba(147,51,234,0.12); color:#9333ea;">
+                                                            <i class="icon-badge"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="gms-kpi-value" style="font-size:0.9rem;"><?php echo htmlspecialchars($dbku_spv_name); ?></div>
                                                 </div>
-                                                <div class="d-flex align-items-center mb-4">
-                                                    <div class="icon-wrap icon-purple">
-                                                        <i class="icon-badge"></i>
-                                                    </div>
-                                                    <div style="min-width: 0;">
-                                                        <p class="text-label">DBKU SUPERVISOR</p>
-                                                        <h5 class="text-value text-truncate"><?php echo htmlspecialchars($dbku_spv_name); ?></h5>
-                                                        <p class="text-small text-muted mb-0 fw-bold mt-1 text-truncate"><i class="fa fa-envelope me-1"></i><?php echo htmlspecialchars($dbku_spv_email); ?></p>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="icon-wrap icon-purple">
-                                                        <i class="icon-badge"></i>
-                                                    </div>
-                                                    <div style="min-width: 0;">
-                                                        <p class="text-label">DBKU PENGAWAS</p>
-                                                        <h5 class="text-value text-truncate"><?php echo htmlspecialchars($dbku_pgs_name); ?></h5>
-                                                        <p class="text-small text-muted mb-0 fw-bold mt-1 text-truncate"><i class="fa fa-envelope me-1"></i><?php echo htmlspecialchars($dbku_pgs_email); ?></p>
-                                                    </div>
+                                                <div class="gms-kpi-footer">
+                                                    <span class="gms-kpi-badge" style="background:rgba(147,51,234,0.1); color:#6b21a8;">
+                                                        <i class="fa-solid fa-user-shield"></i> SPV/PGS
+                                                    </span>
+                                                    <span><?php echo htmlspecialchars($dbku_pgs_name); ?></span>
                                                 </div>
                                             </div>
                                         </div>
@@ -488,27 +404,30 @@ $cid = $_GET['id'];
                     </div>
 
                     <!-- Map Subzone -->
-                    <div class="row mb-4">
+                    <div class="row mb-4 gms-fade-in gms-fade-in-delay-3">
                         <div class="col-md-12 grid-margin stretch-card">
-                            <div class="modern-card w-100">
+                            <div class="card shadow">
                                 <div class="card-body p-4">
-                                    <div class="d-flex justify-content-between align-items-center mb-4">
-                                        <h4 class="card-title mb-0" style="font-size: 20px; font-weight: 700; color: #0f172a;">
-                                            <i class="icon-map me-2 text-primary"></i> Maps Subzone
-                                        </h4>
+                                    <div class="d-flex align-items-center justify-content-between mb-4">
+                                        <div>
+                                            <h4 class="gms-section-title">
+                                                Peta Sub-Zon
+                                            </h4>
+                                            <p class="gms-section-subtitle">Visualisasi lokasi tapak kontrak</p>
+                                        </div>
                                         <?php if(!$has_kmz): ?>
-                                            <span class="badge badge-warning">KMZ Diperlukan</span>
+                                            <span class="gms-tag-pill" style="background:rgba(245,158,11,0.1); color:#d97706; border:1px solid rgba(245,158,11,0.2);"><i class="fa-solid fa-triangle-exclamation me-1"></i> KMZ Diperlukan</span>
                                         <?php endif; ?>
                                     </div>
                                     <?php if($has_kmz): ?>
-                                        <div id="map" class="map-container" style="height: 350px;"></div>
+                                        <div id="map" class="gms-map-container" style="height: 350px;"></div>
                                     <?php else: ?>
                                         <div class="text-center py-5 border rounded" style="background-color: #f8fafc; border-style: dashed !important; border-width: 2px !important;">
                                             <i class="icon-cloud-upload text-muted mb-3" style="font-size: 48px;"></i>
                                             <h5 class="text-muted fw-bold">Tiada Fail KMZ Ditemui</h5>
                                             <p class="text-small text-muted">Sila muat naik fail KMZ untuk subzon ini.</p>
-                                            <button type="button" class="btn btn-primary mt-3 px-4 py-2" data-bs-toggle="modal" data-bs-target="#uploadKmzModal" style="border-radius: 8px;">
-                                                <i class="icon-cloud-upload me-2"></i>Upload KMZ
+                                            <button type="button" class="btn btn-primary mt-3 px-4 py-2" data-bs-toggle="modal" data-bs-target="#uploadKmzModal" style="border-radius: 12px;">
+                                                <i class="icon-cloud-upload me-2"></i>Muat Naik KMZ
                                             </button>
                                         </div>
                                     <?php endif; ?>
@@ -518,45 +437,56 @@ $cid = $_GET['id'];
                     </div>
 
                     <!-- Daily Diary Table -->
-                    <div class="row mb-4 modern-record-container">
+                    <div class="row mb-4 gms-fade-in gms-fade-in-delay-4">
                         <div class="col-md-12 grid-margin stretch-card">
-                            <div class="modern-card w-100">
+                            <div class="card shadow gms-table-card">
                                 <div class="card-body p-4">
-                                    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-                                        <h4 class="card-title mb-0" style="font-size: 20px; font-weight: 700; color: #0f172a;">
-                                            <i class="icon-notebook me-2 text-info"></i> Site Daily Record
-                                        </h4>
+                                    <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom flex-wrap gap-2">
+                                        <div>
+                                            <h4 class="gms-section-title">
+                                                Rekod Harian Tapak
+                                            </h4>
+                                            <p class="gms-section-subtitle">Pemantauan aktiviti harian kontrak</p>
+                                        </div>
                                         <form method="GET" action="contract_details.php" class="d-flex align-items-center gap-2 m-0">
                                             <input type="hidden" name="id" value="<?php echo $cid; ?>">
-                                            <select name="filter_year" class="form-select form-select-sm" style="min-width: 100px; border-radius: 8px;">
-                                                <?php
-                                                foreach($available_years as $y) {
-                                                    $sel = ($y == $filter_year) ? 'selected' : '';
-                                                    echo "<option value='$y' $sel>$y</option>";
-                                                }
-                                                ?>
-                                            </select>
-                                            <select name="filter_session" class="form-select form-select-sm" style="min-width: 120px; border-radius: 8px;">
-                                                <?php
-                                                for($i=1; $i<=24; $i++) {
-                                                    $sel = ($i == $filter_session) ? 'selected' : '';
-                                                    echo "<option value='$i' $sel>Session $i</option>";
-                                                }
-                                                ?>
-                                            </select>
-                                            <button type="submit" class="btn btn-primary btn-sm" style="border-radius: 8px;">Filter</button>
+                                            <div class="gms-table-search">
+                                                <i class="icon-calendar"></i>
+                                                <select name="filter_year" class="form-select form-select-sm" style="min-width: 100px; border-radius: 12px; padding: 8px 14px;">
+                                                    <?php
+                                                    foreach($available_years as $y) {
+                                                        $sel = ($y == $filter_year) ? 'selected' : '';
+                                                        echo "<option value='$y' $sel>$y</option>";
+                                                    }
+                                                    ?>
+                                                </select>
+                                            </div>
+                                            <div class="gms-table-search">
+                                                <i class="icon-clock"></i>
+                                                <select name="filter_session" class="form-select form-select-sm" style="min-width: 120px; border-radius: 12px; padding: 8px 14px;">
+                                                    <?php
+                                                    for($i=1; $i<=24; $i++) {
+                                                        $sel = ($i == $filter_session) ? 'selected' : '';
+                                                        echo "<option value='$i' $sel>Sesi $i</option>";
+                                                    }
+                                                    ?>
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary btn-sm" style="border-radius: 12px; padding: 8px 18px;">
+                                                <i class="icon-magnifier me-1"></i>Tapis
+                                            </button>
                                         </form>
                                     </div>
-                                    <div class="modern-table-wrapper mb-2">
-                                        <table class="table modern-table">
+                                    <div class="gms-table-wrapper mb-2">
+                                        <table class="gms-table">
                                             <thead>
                                                 <tr>
-                                                    <th>Dates</th>
-                                                    <th>Session</th>
-                                                    <th>Contractor</th>
-                                                    <th>Supervisor</th>
+                                                    <th>Tarikh</th>
+                                                    <th>Sesi</th>
+                                                    <th>Kontraktor</th>
                                                     <th>Pengawas</th>
-                                                    <th>Verified</th>
+                                                    <th>Pengawas DBKU</th>
+                                                    <th>Disahkan</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -570,39 +500,33 @@ $cid = $_GET['id'];
                                                         $row_daily = $daily_data[$d_str];
                                                 ?>
                                                         <tr>
-                                                            <td style="word-wrap: break-word;overflow-wrap: break-word; white-space: normal;">
+                                                            <td>
                                                                 <a href="sitedaily_records.php?id=<?php echo $row_daily['id'] ?>">
-                                                                    <?php echo date("d M Y", strtotime($row_daily['date'])) ?>
+                                                                    <?php echo gms_format_date($row_daily['date'], 'd M Y') ?>
                                                                 </a>
                                                             </td>
-                                                            <td style="word-wrap: break-word;overflow-wrap: break-word; white-space: normal;">
-                                                                Session <?php echo htmlspecialchars($row_daily['gc_session']) ?>
+                                                            <td>Sesi <?php echo htmlspecialchars($row_daily['gc_session']) ?></td>
+                                                            <td>
+                                                                <?php echo ($row_daily['contractor_dsign'] === 'Y') ? '<i class="fa fa-check-circle text-success" style="font-size: 18px;" title="Ditelan"></i>' : '<i class="fa fa-times-circle text-danger" style="font-size: 18px;" title="Tak Ditelan"></i>'; ?>
                                                             </td>
                                                             <td>
-                                                                <?php echo ($row_daily['contractor_dsign'] === 'Y') ? '<i class="fa fa-check-circle text-success" style="font-size: 18px;" title="Signed"></i>' : '<i class="fa fa-times-circle text-danger" style="font-size: 18px;" title="Not Signed"></i>'; ?>
+                                                                <?php echo ($row_daily['supervisor_dsign'] === 'Y') ? '<i class="fa fa-check-circle text-success" style="font-size: 18px;" title="Ditelan"></i>' : '<i class="fa fa-times-circle text-danger" style="font-size: 18px;" title="Tak Ditelan"></i>'; ?>
                                                             </td>
                                                             <td>
-                                                                <?php echo ($row_daily['supervisor_dsign'] === 'Y') ? '<i class="fa fa-check-circle text-success" style="font-size: 18px;" title="Signed"></i>' : '<i class="fa fa-times-circle text-danger" style="font-size: 18px;" title="Not Signed"></i>'; ?>
+                                                                <?php echo ($row_daily['pengawas_dsign'] === 'Y') ? '<i class="fa fa-check-circle text-success" style="font-size: 18px;" title="Ditelan"></i>' : '<i class="fa fa-times-circle text-danger" style="font-size: 18px;" title="Tak Ditelan"></i>'; ?>
                                                             </td>
                                                             <td>
-                                                                <?php echo ($row_daily['pengawas_dsign'] === 'Y') ? '<i class="fa fa-check-circle text-success" style="font-size: 18px;" title="Signed"></i>' : '<i class="fa fa-times-circle text-danger" style="font-size: 18px;" title="Not Signed"></i>'; ?>
-                                                            </td>
-                                                            <td>
-                                                                <?php echo ($row_daily['verified'] === 'Y') ? '<i class="fa fa-check-square text-success" style="font-size: 18px;" title="Verified"></i>' : '<i class="fa fa-minus-circle text-danger" style="font-size: 18px;" title="Not Verified"></i>'; ?>
+                                                                <?php echo ($row_daily['verified'] === 'Y') ? '<i class="fa fa-check-square text-success" style="font-size: 18px;" title="Disahkan"></i>' : '<i class="fa fa-minus-circle text-danger" style="font-size: 18px;" title="Tak Disahkan"></i>'; ?>
                                                             </td>
                                                         </tr>
                                                 <?php 
                                                     } else { 
                                                 ?>
                                                         <tr>
-                                                            <td style="color: #64748b;">
-                                                                <?php echo date("d M Y", $current) ?>
-                                                            </td>
-                                                            <td style="color: #64748b;">
-                                                                Session <?php echo htmlspecialchars($filter_session) ?>
-                                                            </td>
-                                                            <td colspan="4" class="text-center text-muted" style="font-style: italic;">
-                                                                <span class="badge badge-outline-secondary" style="font-size: 11px; padding: 4px 8px; border: 1px dashed #f82727ff; color: #d62525ff; background-color: transparent;">No Data</span>
+                                                            <td><?php echo gms_format_date($current, 'd M Y') ?></td>
+                                                            <td>Sesi <?php echo htmlspecialchars($filter_session) ?></td>
+                                                            <td colspan="4" class="text-center text-muted">
+                                                                <span class="gms-tag-pill" style="background:rgba(239,68,68,0.08); color:#dc2626; border:1px dashed rgba(239,68,68,0.3);"><i class="fa-solid fa-circle-xmark me-1"></i> Tiada Data</span>
                                                             </td>
                                                         </tr>
                                                 <?php 
@@ -618,22 +542,26 @@ $cid = $_GET['id'];
                         </div>
                     </div>
 
-                    <div class="row mb-4">
+                    <!-- Contract Location List -->
+                    <div class="row mb-4 gms-fade-in gms-fade-in-delay-5">
                         <div class="col-md-12 grid-margin stretch-card">
-                            <div class="modern-card w-100">
+                            <div class="card shadow gms-table-card">
                                 <div class="card-body p-4">
-                                    <div class="d-flex justify-content-between align-items-center mb-4">
-                                        <h4 class="card-title mb-0" style="font-size: 20px; font-weight: 700; color: #0f172a;">
-                                            <i class="icon-list me-2 text-primary"></i> Contract Location List
-                                        </h4>
+                                    <div class="d-flex align-items-center justify-content-between mb-4">
+                                        <div>
+                                            <h4 class="gms-section-title">
+                                                Senarai Lokasi Kontrak
+                                            </h4>
+                                            <p class="gms-section-subtitle">Kawasan dan lokasi di bawah kontrak ini</p>
+                                        </div>
                                     </div>
-                                    <div class="modern-table-wrapper">
-                                        <table class="table modern-table">
+                                    <div class="gms-table-wrapper">
+                                        <table class="gms-table">
                                             <thead>
                                                 <tr>
-                                                    <th style="width: 25%;">Area</th>
-                                                    <th style="width: 60%;">Location</th>
-                                                    <th style="width: 15%; text-align: center;">Action</th>
+                                                    <th style="width: 25%;">Kawasan</th>
+                                                    <th style="width: 60%;">Lokasi</th>
+                                                    <th style="width: 15%; text-align: center;">Tindakan</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -652,28 +580,26 @@ $cid = $_GET['id'];
                                                     while ($row = $res->fetch_assoc()) {
                                                         $loc_id = $row[$pk_col];
                                                 ?>
-                                                    
-                                                        <tr style="height:60px" id="row_<?php echo $loc_id; ?>">
-                                                            <td style="width: 20px;">
-                                                                <input type="text" id="area_<?php echo $loc_id; ?>" value="<?php echo htmlspecialchars($row['area'] ?? ''); ?>" class="form-control" readonly>
-                                                            </td>
-                                                            <td style="width: 250px">
-                                                                <textarea id="location_<?php echo $loc_id; ?>" cols="30" rows="3" class="form-control" readonly><?php echo htmlspecialchars($row['location'] ?? ''); ?></textarea>
-                                                            </td>
-                                                            <td>
-                                                                <div class="text-center">
-                                                                    <button type="button" class="action-btn-circle btn-edit-modern btn-edit" data-id="<?php echo $loc_id; ?>" title="Edit"><i class="fa fa-edit"></i></button>
-                                                                    <button type="button" class="action-btn-circle btn-save-modern btn-save d-none" data-id="<?php echo $loc_id; ?>" title="Save"><i class="fa fa-save"></i></button>
-                                                                    <button type="button" class="action-btn-circle btn-delete-modern btn-delete" data-id="<?php echo $loc_id; ?>" title="Delete"><i class="fa fa-trash"></i></button>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    
-                                                    <?php }
+                                                    <tr style="height:60px" id="row_<?php echo $loc_id; ?>">
+                                                        <td style="width: 20px;">
+                                                            <input type="text" id="area_<?php echo $loc_id; ?>" value="<?php echo htmlspecialchars($row['area'] ?? ''); ?>" class="form-control" readonly style="border-radius: 12px; border: 1px solid #e2e8f0; padding: 10px 14px;">
+                                                        </td>
+                                                        <td style="width: 250px">
+                                                            <textarea id="location_<?php echo $loc_id; ?>" cols="30" rows="3" class="form-control" readonly style="border-radius: 12px; border: 1px solid #e2e8f0; padding: 10px 14px;"><?php echo htmlspecialchars($row['location'] ?? ''); ?></textarea>
+                                                        </td>
+                                                        <td>
+                                                            <div class="text-center">
+                                                                <button type="button" class="action-btn-circle btn-circle-edit" data-id="<?php echo $loc_id; ?>" title="Kemaskini"><i class="fa fa-edit"></i></button>
+                                                                <button type="button" class="action-btn-circle btn-circle-delete" data-id="<?php echo $loc_id; ?>" title="Padam"><i class="fa fa-trash"></i></button>
+                                                                <button type="button" class="action-btn-circle btn-save-modern btn-save d-none" data-id="<?php echo $loc_id; ?>" title="Simpan"><i class="fa fa-save"></i></button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                <?php }
                                                 } else { ?>
                                                     <tr>
-                                                        <td colspan="3" class="text-center text-danger">
-                                                            <h5 class="font-weight-bold">No data available</h5>
+                                                        <td colspan="3" class="text-center text-muted py-5">
+                                                            <h5 class="font-weight-bold">Tiada data tersedia</h5>
                                                         </td>
                                                     </tr>
                                                 <?php } ?>
@@ -681,14 +607,14 @@ $cid = $_GET['id'];
                                                 <tr style="height:60px">
                                                     <td style="width: 25%;">
                                                         <input type="hidden" id="sz_id_input" value="<?php echo htmlspecialchars($row1['sz_id']); ?>">
-                                                        <input type="text" id="area_input" class="form-control" placeholder="Area" style="border-radius: 8px;">
+                                                        <input type="text" id="area_input" class="form-control" placeholder="Kawasan" style="border-radius: 12px; border: 1px solid #e2e8f0; padding: 10px 14px;">
                                                     </td>
                                                     <td style="width: 60%;">
-                                                        <textarea id="location_input" cols="30" rows="3" class="form-control" placeholder="Location" style="border-radius: 8px;"></textarea>
+                                                        <textarea id="location_input" cols="30" rows="3" class="form-control" placeholder="Lokasi" style="border-radius: 12px; border: 1px solid #e2e8f0; padding: 10px 14px;"></textarea>
                                                     </td>
                                                     <td>
                                                         <div class="text-center">
-                                                            <button type="button" id="btnAddLocation" class="action-btn-circle btn-edit-modern" style="background-color: #e0e7ff; color: #4338ca;" title="Add Location"><i class="fa fa-plus"></i></button>
+                                                            <button type="button" id="btnAddLocation" class="action-btn-circle" style="background-color: rgba(0,116,66,0.08); color: #007442;" title="Tambah Lokasi"><i class="fa fa-plus"></i></button>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -723,7 +649,7 @@ $cid = $_GET['id'];
         <script src="assets/vendors/chartist/chartist.min.js"></script>
         <script src="assets/vendors/progressbar.js/progressbar.min.js"></script>
         <script src="assets/js/jquery.cookie.js"></script>
-        <!-- End plugin js for this page -->
+        <!-- endinject -->
         <!-- inject:js -->
         <script src="assets/js/off-canvas.js"></script>
         <script src="assets/js/hoverable-collapse.js"></script>
@@ -736,7 +662,7 @@ $cid = $_GET['id'];
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <!-- End custom js for this page -->
 
-        <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAM9KnXl4SMmy68M2syalpDyMfZeNItPjk&callback=initMap"></script>
+        <script async defer src="https://maps.googleapis.com/maps/api/js?key=&#65306;redacted:AIza…&callback=initMap"></script>
         <script>
         function initMap() {
             var map = new google.maps.Map(document.getElementById('map'), {
@@ -755,7 +681,7 @@ $cid = $_GET['id'];
         }
 
         $(document).ready(function() {
-            // --- ADD LOCATION ---
+            // --- ADD LOCATION --
             $('#btnAddLocation').on('click', function(e) {
                 e.preventDefault();
                 
@@ -767,7 +693,7 @@ $cid = $_GET['id'];
                     Swal.fire({
                         icon: 'warning',
                         title: 'Oops...',
-                        text: 'Sila isi kedua-dua ruangan Area dan Location!',
+                        text: 'Sila isi kedua-dua ruangan Kawasan dan Lokasi!',
                     });
                     return;
                 }
@@ -815,7 +741,7 @@ $cid = $_GET['id'];
                 });
             });
 
-            // --- EDIT BUTTON ---
+            // --- EDIT BUTTON --
             $('.btn-edit').on('click', function() {
                 var id = $(this).data('id');
                 // Remove readonly attributes
@@ -827,7 +753,7 @@ $cid = $_GET['id'];
                 $(this).siblings('.btn-save').removeClass('d-none');
             });
 
-            // --- SAVE (UPDATE) BUTTON ---
+            // --- SAVE (UPDATE) BUTTON --
             $('.btn-save').on('click', function() {
                 var id = $(this).data('id');
                 var area = $('#area_' + id).val();
@@ -879,7 +805,7 @@ $cid = $_GET['id'];
                 });
             });
 
-            // --- DELETE BUTTON ---
+            // --- DELETE BUTTON --
             $('.btn-delete').on('click', function() {
                 var id = $(this).data('id');
                 
@@ -959,8 +885,8 @@ $cid = $_GET['id'];
             <div class="modal-dialog">
                 <div class="modal-content" style="border-radius: 12px; border: none;">
                     <div class="modal-header border-bottom-0 pb-0">
-                        <h5 class="modal-title fw-bold" id="uploadKmzModalLabel">Upload Fail KMZ</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <h5 class="modal-title fw-bold" id="uploadKmzModalLabel">Muat Naik Fail KMZ</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                     </div>
                     <form method="POST" action="contract_details.php?id=<?php echo $cid; ?>" enctype="multipart/form-data">
                         <div class="modal-body p-4">
@@ -971,16 +897,42 @@ $cid = $_GET['id'];
                             
                             <div class="mb-3">
                                 <label class="form-label fw-bold text-muted small text-uppercase">Pilih Fail KMZ</label>
-                                <input class="form-control" type="file" name="kmz_file" accept=".kmz" required style="border-radius: 8px; padding: 10px;">
+                                <input class="form-control" type="file" name="kmz_file" accept=".kmz" required style="border-radius: 12px; border: 1px solid #e2e8f0; padding: 10px 14px;">
                             </div>
                         </div>
                         <div class="modal-footer border-top-0 pt-0">
-                            <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 8px;">Batal</button>
-                            <button type="submit" class="btn btn-primary" style="border-radius: 8px;"><i class="icon-cloud-upload me-2"></i>Upload</button>
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 12px;">Batal</button>
+                            <button type="submit" class="btn btn-primary" style="border-radius: 12px;"><i class="icon-cloud-upload me-2"></i>Muat Naik</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
+
+        <!-- Action button styles (small block for btn-circle-edit/btn-circle-delete) -->
+        <style>
+            .btn-circle-edit {
+                width: 36px; height: 36px; border-radius: 50%;
+                display: inline-flex; align-items: center; justify-content: center;
+                background-color: #eff6ff; color: #3b82f6;
+                border: none; transition: all 0.2s ease;
+            }
+            .btn-circle-edit:hover {
+                background-color: #3b82f6; color: #ffffff;
+                box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+                transform: scale(1.1);
+            }
+            .btn-circle-delete {
+                width: 36px; height: 36px; border-radius: 50%;
+                display: inline-flex; align-items: center; justify-content: center;
+                background-color: #fef2f2; color: #ef4444;
+                border: none; transition: all 0.2s ease;
+            }
+            .btn-circle-delete:hover {
+                background-color: #ef4444; color: #ffffff;
+                box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+                transform: scale(1.1);
+            }
+        </style>
     </body>
 </html>

@@ -25,13 +25,13 @@ try {
     mysqli_commit($conn);
 
     $_SESSION['status'] = 'success';
-    $_SESSION['message'] = 'Zone added successfully';
+    $_SESSION['message'] = 'Zon berjaya ditambah.';
 } catch (Exception $e) {
 
     mysqli_rollback($conn);
 
     $_SESSION['status'] = 'error';
-    $_SESSION['message'] = 'Database error: ' . $e->getMessage();
+    $_SESSION['message'] = 'Ralat pangkalan data: ' . $e->getMessage();
 }
 
 header("Location: ../zone");

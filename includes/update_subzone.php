@@ -18,7 +18,7 @@ $subzone_name = $row['sz_name'];
 
 if ($name == $subzone_name && $perimeter == $row['perimeter'] && $area == $row['area'] && $zone_id == $row['zone_id']) {
     $_SESSION['status'] = 'warning';
-    $_SESSION['message'] = 'No changes made';
+    $_SESSION['message'] = 'Tiada perubahan dibuat.';
 
     header("Location: ../update_sz?szid=" . $subzone_id);
     exit();
@@ -35,13 +35,13 @@ try {
     mysqli_commit($conn);
 
     $_SESSION['status'] = 'success';
-    $_SESSION['message'] = 'Subzone updated successfully';
+    $_SESSION['message'] = 'Sub-zon berjaya dikemaskini.';
 } catch (Exception $e) {
 
     mysqli_rollback($conn);
 
     $_SESSION['status'] = 'error';
-    $_SESSION['message'] = 'Database error: ' . $e->getMessage();
+    $_SESSION['message'] = 'Ralat pangkalan data: ' . $e->getMessage();
 }
 
 header("Location: ../update_sz?szid=" . $subzone_id);

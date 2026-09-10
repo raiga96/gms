@@ -6,7 +6,7 @@ require 'includes/connection.php';
 
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ms">
 
 <head>
     <!-- Required meta tags -->
@@ -29,6 +29,7 @@ require 'includes/connection.php';
     <!-- endinject -->
     <!-- Layout styles -->
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
     <link rel="shortcut icon" href="assets/images/favicon.png" />
     <!-- End layout styles -->
     <style>
@@ -318,10 +319,10 @@ require 'includes/connection.php';
                         <div class="card modern-banner bg-dark">
                             <div class="card-body p-0 d-sm-flex align-items-center justify-content-between">
                                 <div>
-                                    <h3 class="modern-banner-title"><i class="icon-note mr-2"></i> Edit Sub-Zone Details</h3>
-                                    <p class="modern-banner-subtitle">Update sub-zone boundaries, perimeter, area, and KMZ file</p>
+                                    <h3 class="modern-banner-title"><i class="icon-note mr-2"></i> Kemaskini Butiran Sub-Zon</h3>
+                                    <p class="modern-banner-subtitle">Kemaskini sempadan, perimeter, keluasan dan fail KMZ sub-zon</p>
                                 </div>
-                                <button type="button" class="modern-btn-white mt-3 mt-sm-0" data-bs-toggle="modal" data-bs-target="#historyModal"><i class="icon-clock"></i> View History</button>
+                                <button type="button" class="modern-btn-white mt-3 mt-sm-0" data-bs-toggle="modal" data-bs-target="#historyModal"><i class="icon-clock"></i> Lihat Sejarah</button>
                             </div>
                         </div>
 
@@ -338,13 +339,13 @@ require 'includes/connection.php';
                                     <input type="text" name="subzone_id" value="<?php echo $subzone_id ?>" hidden>
                                     
                                     <div class="form-section-title">
-                                        <i class="icon-info text-primary animate-pulse"></i> General Information
+                                        <i class="icon-info text-primary animate-pulse"></i> Maklumat Am
                                     </div>
 
                                     <div class="row">
                                         <div class="col-md-12">
                                             <div class="form-group">
-                                                <label for="subzone_name">Sub-Zone Name</label>
+                                                <label for="subzone_name">Nama Sub-Zon</label>
                                                 <input type="text" class="form-control" name="subzone" id="subzone_name" value="<?php echo htmlspecialchars($row['sz_name'] ?? '') ?>" required>
                                             </div>
                                         </div>
@@ -354,7 +355,7 @@ require 'includes/connection.php';
                                         <!-- Zone selection dropdown -->
                                         <div class="col-md-4">
                                             <div class="form-group">
-                                                <label for="zone_id">Zone</label>
+                                                <label for="zone_id">Zon</label>
                                                 <select name="zone_id" id="zone_id" class="form-control">
                                                     <?php
                                                     $sql_zones = "SELECT * FROM zone";
@@ -381,14 +382,14 @@ require 'includes/connection.php';
                                         <!-- Area -->
                                         <div class="col-md-4">
                                             <div class="form-group">
-                                                <label for="area">Area (ha)</label>
+                                                <label for="area">Keluasan (ha)</label>
                                                 <input type="number" step="any" class="form-control" name="area" id="area" value="<?php echo htmlspecialchars($row['area'] ?? '') ?>">
                                             </div>
                                         </div>
                                     </div>
 
                                     <div class="form-section-title mt-4">
-                                        <i class="icon-map text-primary"></i> Location Map Preview
+                                        <i class="icon-map text-primary"></i> Pratonton Peta Lokasi
                                     </div>
 
                                     <div class="row">
@@ -408,17 +409,17 @@ require 'includes/connection.php';
                                     ?>
                                         <div class="kmz-alert-banner">
                                             <i class="icon-exclamation"></i>
-                                            <span>No KMZ boundary file found for this sub-zone. You can upload one below.</span>
+                                            <span>Tiada fail sempadan KMZ ditemui untuk sub-zon ini. Anda boleh memuat naik fail di bawah.</span>
                                         </div>
                                     <?php } ?>
 
                                     <!-- Action Button Group -->
                                     <div class="action-button-group">
-                                        <button class="btn-modern-danger" type="button" onclick="history.back()"><i class="icon-close"></i> Cancel</button>
+                                        <button class="btn-modern-danger" type="button" onclick="history.back()"><i class="icon-close"></i> Batal</button>
                                         <?php if ($has_kmz) { ?>
-                                            <button type="button" class="btn-modern-success" data-bs-toggle="modal" data-bs-target="#exampleModal"><i class="icon-cloud-upload"></i> Update KMZ</button>
+                                            <button type="button" class="btn-modern-success" data-bs-toggle="modal" data-bs-target="#exampleModal"><i class="icon-cloud-upload"></i> Kemaskini KMZ</button>
                                         <?php } ?>
-                                        <button type="submit" class="btn-modern-primary"><i class="icon-check"></i> Save Changes</button>
+                                        <button type="submit" class="btn-modern-primary"><i class="icon-check"></i> Simpan Perubahan</button>
                                     </div>
                                 </form>
 
@@ -426,20 +427,20 @@ require 'includes/connection.php';
                                 <?php if (!$has_kmz) { ?>
                                     <form action="includes/upload_kmz.php" class="pt-4 border-top mt-4" method="POST" enctype="multipart/form-data">
                                         <div class="form-section-title">
-                                            <i class="icon-cloud-upload text-primary"></i> Upload KMZ Boundary File
+                                        <i class="icon-cloud-upload text-primary"></i> Muat Naik Fail Sempadan KMZ
                                         </div>
                                         <input type="text" name="zone_id" value="<?php echo $row['zone_id'] ?>" hidden>
                                         <input type="text" name="subzone_id" value="<?php echo $subzone_id ?>" hidden>
                                         <div class="row">
                                             <div class="col-md-12">
                                                 <div class="form-group">
-                                                    <label for="new_kmz_file">Select KMZ File</label>
+                                                    <label for="new_kmz_file">Pilih Fail KMZ</label>
                                                     <input type="file" class="form-control" name="files[]" id="new_kmz_file" required>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="d-flex justify-content-end mt-3">
-                                            <button type="submit" class="btn-modern-primary"><i class="icon-cloud-upload"></i> Upload KMZ File</button>
+                                            <button type="submit" class="btn-modern-primary"><i class="icon-cloud-upload"></i> Muat Naik Fail KMZ</button>
                                         </div>
                                     </form>
                                 <?php } ?>
@@ -451,21 +452,21 @@ require 'includes/connection.php';
                             <div class="modal-dialog" role="document">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title" id="exampleModalLabel"><i class="icon-cloud-upload mr-2 text-primary"></i> Update KMZ Boundary File</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        <h5 class="modal-title" id="exampleModalLabel"><i class="icon-cloud-upload mr-2 text-primary"></i> Kemaskini Fail Sempadan KMZ</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                                     </div>
                                     <form action="includes/update_kmz.php" method="POST" enctype="multipart/form-data">
                                         <div class="modal-body">
                                             <input type="text" name="zone_id" value="<?php echo $row['zone_id'] ?>" hidden>
                                             <input type="text" name="subzone_id" value="<?php echo $subzone_id ?>" hidden>
                                             <div class="form-group">
-                                                <label for="update_kmz_file" class="form-label">Select New KMZ File</label>
+                                                <label for="update_kmz_file" class="form-label">Pilih Fail KMZ Baharu</label>
                                                 <input type="file" class="form-control" name="files[]" id="update_kmz_file" required>
                                             </div>
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn-modern-danger py-2" data-bs-dismiss="modal">Close</button>
-                                            <button type="submit" class="btn-modern-primary py-2"><i class="icon-cloud-upload"></i> Upload & Update</button>
+                                            <button type="button" class="btn-modern-danger py-2" data-bs-dismiss="modal">Tutup</button>
+                                            <button type="submit" class="btn-modern-primary py-2"><i class="icon-cloud-upload"></i> Muat Naik & Kemaskini</button>
                                         </div>
                                     </form>
                                 </div>
@@ -477,18 +478,18 @@ require 'includes/connection.php';
                             <div class="modal-dialog modal-lg" role="document">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title" id="historyModalLabel"><i class="icon-clock mr-2 text-primary"></i> KMZ Upload History</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        <h5 class="modal-title" id="historyModalLabel"><i class="icon-clock mr-2 text-primary"></i> Sejarah Muat Naik KMZ</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                                     </div>
                                     <div class="modal-body">
                                         <div class="table-responsive">
                                             <table class="table table-hover align-middle">
                                                 <thead class="table-light">
                                                     <tr>
-                                                        <th>File Name</th>
-                                                        <th style="width: 150px;">Upload Date</th>
+                                                        <th>Nama Fail</th>
+                                                        <th style="width: 150px;">Tarikh Muat Naik</th>
                                                         <th style="width: 100px; text-align: center;">Status</th>
-                                                        <th style="width: 100px; text-align: center;">Action</th>
+                                                        <th style="width: 100px; text-align: center;">Tindakan</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -498,8 +499,8 @@ require 'includes/connection.php';
                                                     if ($history_res && $history_res->num_rows > 0) {
                                                         while ($h_row = $history_res->fetch_assoc()) {
                                                             $status_badge = ($h_row['kmz_status'] == 'Y') 
-                                                                ? '<span class="badge bg-success text-white">Active</span>' 
-                                                                : '<span class="badge bg-secondary text-white">Inactive</span>';
+                                                                ? '<span class="badge bg-success text-white">Aktif</span>'
+                                                                : '<span class="badge bg-secondary text-white">Tidak Aktif</span>';
                                                     ?>
                                                             <tr>
                                                                 <td class="text-wrap" style="max-width: 250px; font-weight: 500;">
@@ -513,7 +514,7 @@ require 'includes/connection.php';
                                                                 </td>
                                                                 <td style="text-align: center;">
                                                                     <a href="<?php echo htmlspecialchars($h_row['url']) ?>" class="btn btn-sm btn-outline-primary py-1 px-2" target="_blank" download>
-                                                                        <i class="icon-cloud-download"></i> Download
+                                                                        <i class="icon-cloud-download"></i> Muat Turun
                                                                     </a>
                                                                 </td>
                                                             </tr>
@@ -523,7 +524,7 @@ require 'includes/connection.php';
                                                     ?>
                                                         <tr>
                                                             <td colspan="4" class="text-center text-muted py-4">
-                                                                <i class="icon-info mr-2"></i> No history records available.
+                                                                <i class="icon-info mr-2"></i> Tiada rekod sejarah tersedia.
                                                             </td>
                                                         </tr>
                                                     <?php } ?>
@@ -532,7 +533,7 @@ require 'includes/connection.php';
                                         </div>
                                     </div>
                                     <div class="modal-footer">
-                                        <button type="button" class="btn-modern-danger py-2" data-bs-dismiss="modal">Close</button>
+                                        <button type="button" class="btn-modern-danger py-2" data-bs-dismiss="modal">Tutup</button>
                                     </div>
                                 </div>
                             </div>
@@ -542,8 +543,8 @@ require 'includes/connection.php';
                     <!-- partial:partials/_footer.html -->
                     <footer class="footer">
                         <div class="d-sm-flex justify-content-center justify-content-sm-between">
-                            <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2024 Stellar. All rights reserved. <a href="#"> Terms of use</a><a href="#">Privacy Policy</a></span>
-                            <span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="icon-heart text-danger"></i></span>
+                            <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Hak Cipta © 2024 Stellar. Hak cipta terpelihara. <a href="#"> Terma penggunaan</a><a href="#">Dasar Privasi</a></span>
+                            <span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center">Dihasilkan dengan <i class="icon-heart text-danger"></i></span>
                         </div>
                     </footer>
                     <!-- partial -->

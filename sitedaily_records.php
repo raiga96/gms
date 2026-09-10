@@ -1,20 +1,25 @@
 <?php
 session_start();
-$cid = $_GET['id'];
+$cid = (int)($_GET['id'] ?? 0);
+
+if ($cid <= 0) {
+    http_response_code(400);
+    exit('ID rekod tidak sah.');
+}
 
 require 'includes/connection.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
-    $ver_comment = $conn->real_escape_string($_POST['ver_comment']);
+    $ver_comment = $conn->real_escape_string(trim($_POST['ver_comment'] ?? ''));
     $verify_by = isset($_SESSION['id']) ? $_SESSION['id'] : 1; 
     
     $updateSql = "UPDATE daily_records SET verified = 'Y', verify_by = '$verify_by', verified_on = NOW(), ver_comment = '$ver_comment' WHERE id = '$cid'";
     if ($conn->query($updateSql) === TRUE) {
         $_SESSION['status'] = "success";
-        $_SESSION['message'] = "Record has been verified successfully.";
+        $_SESSION['message'] = "Rekod berjaya disahkan.";
     } else {
         $_SESSION['status'] = "error";
-        $_SESSION['message'] = "Error verifying record: " . $conn->error;
+        $_SESSION['message'] = "Ralat semasa mengesahkan rekod: " . $conn->error;
     }
     
     header("Location: sitedaily_records.php?id=" . $cid);
@@ -22,20 +27,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ms">
 
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>SmartCut</title>
+    <title>Green Management System - Rekod Harian</title>
+    <!-- Google Fonts Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css">
     <!-- plugins:css -->
     <link rel="stylesheet" href="assets/vendors/simple-line-icons/css/simple-line-icons.css">
     <link rel="stylesheet" href="assets/vendors/flag-icon-css/css/flag-icons.min.css">
     <link rel="stylesheet" href="assets/vendors/css/vendor.bundle.base.css">
     <!-- endinject -->
     <!-- Plugin css for this page -->
-    <link rel="stylesheet" href="assets/vendors/font-awesome/css/font-awesome.min.css" />
     <link rel="stylesheet" href="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css">
     <link rel="stylesheet" href="assets/vendors/jvectormap/jquery-jvectormap.css">
     <link rel="stylesheet" href="assets/vendors/daterangepicker/daterangepicker.css">
@@ -45,93 +55,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
     <!-- endinject -->
     <!-- Layout styles -->
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="assets/images/favicon.png" />
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
-
-        .modern-record-container {
-            font-family: 'Outfit', sans-serif;
-            color: #334155;
-        }
-
-        .modern-record-container .card {
-            border: none;
-            border-radius: 16px !important;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 5px 15px -8px rgba(0, 0, 0, 0.05) !important;
-            background: #ffffff;
-            margin-bottom: 24px;
-            overflow: hidden;
-        }
-
-        .modern-record-container .card-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin: 0;
-            color: #0f172a;
-        }
-
-        /* Modern Tables */
-        .modern-table-wrapper {
-            overflow-x: auto;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-            background: #ffffff;
-        }
-
-        .modern-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-        }
-
-        .modern-table th {
-            background-color: #f8fafc;
-            color: #475569;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: 12px 14px;
-            border-bottom: 1px solid #e2e8f0;
-            border-right: 1px solid #e2e8f0;
-            text-align: center;
-            vertical-align: middle;
-        }
-
-        .modern-table th:last-child {
-            border-right: none;
-        }
-
-        .modern-table td {
-            padding: 12px 14px;
-            vertical-align: middle;
-            border-bottom: 1px solid #e2e8f0;
-            border-right: 1px solid #e2e8f0;
-            font-size: 13px;
-            color: #334155;
-            background-color: #ffffff;
-        }
-
-        .modern-table td:last-child {
-            border-right: none;
-        }
-
-        .modern-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .modern-table tbody tr:hover td {
-            background-color: #f8fafc;
-        }
-
-        /* Day cell styling */
-        .modern-table .day-cell {
-            font-weight: 600;
-            color: #0f172a;
-        }
-
-        /* Custom Checkbox Design */
+        /* Functional CSS preserved - styling that Bootstrap cannot replicate */
         .modern-record-container .custom-checkbox-wrapper {
             display: flex;
             justify-content: center;
@@ -175,7 +103,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
             transform: rotate(45deg);
         }
 
-        /* Input Fields styling */
         .modern-record-container .modern-input-group {
             display: flex;
             align-items: center;
@@ -212,45 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
             cursor: default;
         }
 
-        /* Weather Dashboard Widget */
-        .weather-widget {
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid #e2e8f0;
-            text-align: center;
-        }
-
-        .weather-title {
-            font-size: 12px;
-            font-weight: 600;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 12px;
-        }
-
-        .weather-clock-wrap {
-            display: flex;
-            justify-content: center;
-            margin: 15px auto;
-            background: #ffffff;
-            border-radius: 50%;
-            width: 120px;
-            height: 120px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03);
-            border: 1px solid #e2e8f0;
-            padding: 8px;
-            align-items: center;
-        }
-
-        .weather-radio-group {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            margin: 15px 0;
-        }
-
+        /* Weather radio labels - functional styling */
         .weather-radio-group input[type="radio"] {
             display: none;
         }
@@ -266,7 +155,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
             transition: all 0.2s ease;
         }
 
-        /* Active Weather Pill Styles */
         .weather-radio-group input[type="radio"]:checked + .weather-radio-label.rainy-label {
             background-color: #3b82f6;
             color: white;
@@ -288,104 +176,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
             box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
         }
 
-        .time-inspect {
-            font-size: 11px;
-            color: #94a3b8;
-            margin-top: 8px;
-        }
-
-        /* Time card styling for AM/PM & Datang/Pulang */
-        .inspection-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 16px;
-            margin-top: 16px;
-        }
-
-        .time-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .time-cell-modern {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .time-cell-title {
-            font-size: 10px;
+        /* Day cell */
+        .gms-table .day-cell {
             font-weight: 600;
-            color: #64748b;
-            text-transform: uppercase;
-            margin-bottom: 2px;
+            color: #0f172a;
         }
 
-        .time-cell-value {
-            font-size: 13px;
-            font-weight: 700;
-            color: #1e293b;
-            border: none;
-            background: transparent;
-            text-align: center;
-            width: 100%;
-            outline: none;
-            cursor: default;
-        }
-        .modern-contractor-banner {
-            background: linear-gradient(90deg, #1d384d 0%, #007442 100%);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
-            margin-bottom: 24px;
-            border: none;
-        }
-
+        /* Print media - preserve exactly as-is */
         @media print {
-            body {
-                background: white;
-            }
-            .sidebar, .navbar, .d-print-none, .modern-contractor-banner, footer {
-                display: none !important;
-            }
-            .main-panel {
-                width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-            .content-wrapper {
-                padding: 0 !important;
-                margin: 0 !important;
-                background: white;
-            }
-            .card {
-                box-shadow: none !important;
-                border: none !important;
-                margin-bottom: 0 !important;
-            }
-            .card-body {
-                padding: 0 !important;
-            }
-            .modern-table td, .modern-table th {
-                border-color: #000 !important;
-                color: #000 !important;
-            }
-            .modern-table {
-                border-color: #000 !important;
-            }
-            .badge-outline-success {
-                border-color: #000 !important;
-                color: #000 !important;
-            }
-            .page-body-wrapper {
-                padding-top: 0 !important;
-            }
+            body { background: white; }
+            .sidebar, .navbar, .d-print-none, .gms-console, .gms-hero-banner, footer { display: none !important; }
+            .main-panel { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            .content-wrapper { padding: 0 !important; margin: 0 !important; background: white; }
+            .card { box-shadow: none !important; border: none !important; margin-bottom: 0 !important; }
+            .card-body { padding: 0 !important; }
+            .gms-table td, .gms-table th { border-color: #000 !important; color: #000 !important; }
+            .gms-table { border-color: #000 !important; }
+            .badge-outline-success { border-color: #000 !important; color: #000 !important; }
+            .page-body-wrapper { padding-top: 0 !important; }
         }
     </style>
 </head>
@@ -406,7 +214,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                     <?php
                     $sqlC = "SELECT * FROM daily_records WHERE id = '$cid'";
                     $resC = $conn -> query($sqlC);
-                    $rowC = $resC -> fetch_assoc();
+                    $rowC = $resC ? $resC->fetch_assoc() : null;
+                    if (!$rowC) {
+                        http_response_code(404);
+                        exit('Rekod harian tidak ditemui.');
+                    }
+                    $row3 = $rowC;
                     $contract_id = $rowC['cid'];
                     
                     $sql = "SELECT * FROM contract WHERE contract_id = '$contract_id'";
@@ -423,16 +236,41 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
 
                     ?>
 
-                    <div class="row mt-4 mb-4">
+                    <!-- Hero Banner -->
+                    <div class="row mt-0 mb-4">
                         <div class="col-12">
-                            <div class="card modern-contractor-banner shadow border-0">
-                                <div class="card-body p-0 d-sm-flex align-items-center justify-content-between">
-                                    <div class="mb-3 mb-sm-0">
-                                        <h3 class="mb-1 text-white fw-bold"><?php echo $contractor ?></h3>
-                                        <h5 class="mb-1 text-white fw-bold"><?php echo $rowCon['address'] ?></h5>
+                            <div class="gms-hero-banner gms-fade-in">
+                                <div class="d-sm-flex align-items-center justify-content-between flex-wrap gap-3">
+                                    <div>
+                                        <h2 class="gms-hero-title mb-1"><?php echo htmlspecialchars($contractor) ?></h2>
+                                        <p class="gms-hero-subtitle mb-0">
+                                            <i class="fas fa-calendar-alt me-1"></i> <?php echo gms_format_date($row3['date'], 'd F Y') ?>
+                                            &nbsp;|&nbsp;
+                                            <i class="fas fa-map-marker-alt me-1"></i> Zon: <?php echo htmlspecialchars($row2['sz_name'] ?? 'N/A') ?>
+                                        </p>
                                     </div>
-                                    <div class="btn-group gap-2">
-                                        <a class="btn btn-light shadow-sm text-primary" href="update_contractor.php?id=<?php echo $cid ?>">Update</a>
+                                    <div class="d-flex gap-4 flex-wrap">
+                                        <div class="gms-hero-stat">
+                                            <i class="gms-hero-stat-icon fas fa-file-alt"></i>
+                                            <div>
+                                                <div class="gms-hero-stat-value">1</div>
+                                                <div class="gms-hero-stat-label">Rekod</div>
+                                            </div>
+                                        </div>
+                                        <div class="gms-hero-stat">
+                                            <i class="gms-hero-stat-icon fas fa-check-circle <?php echo $row3['verified'] === 'Y' ? 'text-success' : 'text-muted' ?>"></i>
+                                            <div>
+                                                <div class="gms-hero-stat-value"><?php echo $row3['verified'] === 'Y' ? 'Ya' : 'Tidak' ?></div>
+                                                <div class="gms-hero-stat-label">Disahkan</div>
+                                            </div>
+                                        </div>
+                                        <div class="gms-hero-stat">
+                                            <i class="gms-hero-stat-icon fas fa-pen text-primary"></i>
+                                            <div>
+                                                <div class="gms-hero-stat-value"><?php echo $row3['contractor_dsign'] === 'Y' ? 'Ya' : 'Tidak' ?></div>
+                                                <div class="gms-hero-stat-label">Kontraktor</div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -440,7 +278,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                     </div>
 
                     <?php
-                    // Anda boleh gunakan data kontrak ini untuk dipaparkan di UI
                     $sql1 = "SELECT * FROM contract WHERE cid = '" . $row['cid'] . "'";
                     $res1 = $conn->query($sql1);
                     $row1 = $res1->fetch_assoc();
@@ -449,12 +286,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                     $res2 = $conn->query($sql2);
                     $row2 = $res2->fetch_assoc();
 
-                    $sql3 = "SELECT * FROM daily_records WHERE id = '$cid'";
-                    $res3 = $conn->query($sql3);
-                    $row3 = $res3->fetch_assoc();
-
                     // --- Fetch Site Instructions & Demerits grouped by area_id ---
                     $demerits_by_area = [];
+                    $reference_by_area = [];
                     $si_numbers = [];
                     $reference = [];
                     
@@ -504,56 +338,56 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                     <div class="d-sm-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
                                         <div class="mt-3 mt-sm-0">
                                             <span class="badge badge-outline-success font-weight-bold text-uppercase" style="font-size: 12px; padding: 8px 16px; border-radius: 30px; border: 1px solid #10b981; color: #10b981; background-color: #f0fdf4;">
-                                                Zone: <?php echo $row2['sz_name'] ?>
+                                                Zon: <?php echo $row2['sz_name'] ?>
                                             </span>
                                         </div>
                                         <div class="mt-3 mt-sm-0 d-print-none d-flex gap-2">
                                             <a href="sitedaily_attachment.php?id=<?php echo $cid ?>" class="btn btn-info btn-sm text-white" style="border-radius: 8px;">
-                                                <i class="icon-paper-clip"></i> Attachment
+                                                <i class="icon-paper-clip"></i> Lampiran
                                             </a>
                                             <a href="sitedaily_si.php?id=<?php echo $cid ?>" class="btn btn-warning btn-sm text-dark" style="border-radius: 8px;">
                                                 <i class="icon-doc"></i> SI
                                             </a>
                                             <a href="sitedailyrecordpdf.php?id=<?php echo $cid ?>"  class="btn btn-primary btn-sm" style="border-radius: 8px;">
-                                                <i class="icon-printer"></i> Print
+                                                <i class="icon-printer"></i> Cetak
                                             </a>
                                         </div>
                                     </div>
                                     <div class="text-center mb-4">
-                                        <h6 class="mb-1 font-weight-bold text-dark text-uppercase" style="font-size: 16px;">Site Daily Record</h6>
-                                        <span class="text-uppercase text-muted font-weight-bold" style="font-size: 17px; letter-spacing: 0.15em;">Landscape Division</span>
+                                        <h6 class="mb-1 font-weight-bold text-dark text-uppercase" style="font-size: 16px;">Rekod Harian Tapak</h6>
+                                        <span class="text-uppercase text-muted font-weight-bold" style="font-size: 17px; letter-spacing: 0.15em;">Bahagian Landskap</span>
                                         
-                                        <p class="text-muted mb-0 text-uppercase" style="font-size: 13px;">Quality Park Maintenance - Grasscutting & Softscape</p>
+                                        <p class="text-muted mb-0 text-uppercase" style="font-size: 13px;">Penyelenggaraan Taman Berkualiti - Pemotongan Rumput & Landskap Lembut</p>
                                     </div>
                                     <div class="d-sm-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
                                         <div class="mt-3 mt-sm-0">
                                             <h6 class="text-uppercase font-weight-bold">
-                                                Zone: <?php echo $row1['contract_number'].'-'.$row2['sz_name']; ?>
+                                                Zon: <?php echo $row1['contract_number'].'-'.$row2['sz_name']; ?>
                                             </h6>
                                         </div>
                                         <div class="mt-3 mt-sm-0">
                                             <h6 class="text-uppercase">
-                                                Date: <?php echo date('d F Y', strtotime($row3['date'])); ?>
+                                                Tarikh: <?php echo gms_format_date($row3['date'], 'd F Y'); ?>
                                             </h6>
                                         </div>
                                     </div>
 
                                     <!-- Table 1: Calendar / Week Schedule -->
-                                    <div class="modern-table-wrapper mb-2">
-                                        <table class="modern-table">
+                                    <div class="gms-table-wrapper mb-2">
+                                        <table class="gms-table">
                                             <thead>
                                                 <tr>
                                                     <th rowspan="2" style="width:120px; background-color: #f8fafc;">Hari</th>
-                                                    <th colspan="3" class="section-header" style="background:#f0fdf4; color:#166534; border-bottom-color: #bbf7d0;">Grasscutting</th>
-                                                    <th colspan="3" class="section-header" style="background:#eff6ff; color:#1e40af; border-bottom-color: #bfdbfe;">Drain Cleaning</th>
+                                                    <th colspan="3" class="section-header" style="background:#f0fdf4; color:#166534; border-bottom-color: #bbf7d0;">Pemotongan Rumput</th>
+                                                    <th colspan="3" class="section-header" style="background:#eff6ff; color:#1e40af; border-bottom-color: #bfdbfe;">Pembersihan Longkang</th>
                                                 </tr>
                                                 <tr>
                                                     <th style="background:#f0fdf4; color:#166534; width: 80px;">Status</th>
-                                                    <th style="background:#f0fdf4; color:#166534; width:120px;">Session</th>
-                                                    <th style="background:#f0fdf4; color:#166534;">Day No.</th>
+                                                    <th style="background:#f0fdf4; color:#166534; width:120px;">Sesi</th>
+                                                    <th style="background:#f0fdf4; color:#166534;">Hari Ke-</th>
                                                     <th style="background:#eff6ff; color:#1e40af; width: 80px;">Status</th>
-                                                    <th style="background:#eff6ff; color:#1e40af; width:120px;">Session</th>
-                                                    <th style="background:#eff6ff; color:#1e40af;">Day No.</th>
+                                                    <th style="background:#eff6ff; color:#1e40af; width:120px;">Sesi</th>
+                                                    <th style="background:#eff6ff; color:#1e40af;">Hari Ke-</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="tbody"></tbody>
@@ -567,24 +401,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                         <div class="col-lg-8 grid-margin stretch-card">
                             <div class="card shadow h-100">
                                 <div class="card-body">
-                                    <h4 class="card-title mb-4" style="color: #0f172a; font-weight:600; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Activities Summary</h4>
+                                    <h4 class="card-title mb-4" style="color: #0f172a; font-weight:600; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Ringkasan Aktiviti</h4>
                                     
-                                    <div class="modern-table-wrapper">
-                                        <table class="modern-table">
+                                    <div class="gms-table-wrapper">
+                                        <table class="gms-table">
                                             <thead>
                                                 <tr>
                                                     <th class="no-col" style="width: 50px;">No.</th>
-                                                    <th class="act-col">Activities</th>
-                                                    <th class="workers-col">Nos. of Workers</th>
-                                                    <th class="tools-col">Machines / Tools</th>
-                                                    <th class="comment-col">Comment / Times</th>
+                                                    <th class="act-col">Aktiviti</th>
+                                                    <th class="workers-col">Bilangan Pekerja</th>
+                                                    <th class="tools-col">Mesin / Peralatan</th>
+                                                    <th class="comment-col">Catatan / Masa</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <!-- Row 1: Grass Cutting -->
                                                 <tr>
                                                     <td class="no-col">1</td>
-                                                    <td><strong>Grass Cutting</strong></td>
+                                                    <td><strong>Pemotongan Rumput</strong></td>
                                                     <td class="text-center font-weight-bold text-dark" style="font-size: 14px;"><?php echo $row3['gc_workers'] ?></td>
                                                     <td class="text-center font-weight-bold text-dark"><?php echo $row3['gc_tools'] ?></td>
                                                     <td>
@@ -598,7 +432,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                                 <!-- Row 4: Drain Cleaning -->
                                                 <tr>
                                                     <td class="no-col">2</td>
-                                                    <td class="sub-act" style=""><strong>Drain Cleaning</strong></td>
+                                                    <td class="sub-act" style=""><strong>Pembersihan Longkang</strong></td>
                                                     <td class="text-center font-weight-bold text-dark" style="font-size: 14px;"><?php echo $row3['dc_workers'] ?></td>
                                                     <td class="text-center font-weight-bold text-dark"><?php echo $row3['dc_tools'] ?></td>
                                                     <td class="text-dark font-weight-bold"><div class="modern-input-group">
@@ -608,7 +442,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                                 </tr>
                                                 <!-- Row 5: Total -->
                                                 <tr style="background-color: #f8fafc; font-weight: 600;">
-                                                    <td colspan="2" class="text-right" style="padding-right: 15px; font-weight: 600; color: #0f172a;">Total :</td>
+                                                    <td colspan="2" class="text-right" style="padding-right: 15px; font-weight: 600; color: #0f172a;">Jumlah:</td>
                                                     <td class="text-center text-primary font-weight-bold" style="font-size: 15px;"><?php 
                                                     if($row3['dc_workers'] == null || $row3['dc_workers'] == "" || $row3['dc_workers'] == '0'){ $dc_worker = 0; } else {$dc_worker = $row3['dc_workers'];} echo $row3['gc_workers'] + $dc_worker ?></td>
                                                     <td></td>
@@ -626,7 +460,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                             <div class="card shadow h-100">
                                 <div class="card-body d-flex flex-column justify-content-between">
                                     <div>
-                                        <h4 class="card-title mb-4" style="color: #0f172a; font-weight: 600; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Weather & Inspection</h4>
+                                        <h4 class="card-title mb-4" style="color: #0f172a; font-weight: 600; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Cuaca & Pemeriksaan</h4>
                                         
                                         <!-- Weather Box -->
                                         <div class="weather-widget">
@@ -645,13 +479,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                             <!-- Weather Selection Radio Buttons -->
                                             <div class="weather-radio-group">
                                                 <input type="radio" id="weather-rainy" name="weather" value="Rainy" <?php if ($row3['weather'] == 'Rainy') echo 'checked'; ?> disabled>
-                                                <label for="weather-rainy" class="weather-radio-label rainy-label">Rainy</label>
+                                                <label for="weather-rainy" class="weather-radio-label rainy-label">Hujan</label>
                                                 
                                                 <input type="radio" id="weather-cloudy" name="weather" value="Cloudy" <?php if ($row3['weather'] == 'Cloudy') echo 'checked'; ?> disabled>
-                                                <label for="weather-cloudy" class="weather-radio-label cloudy-label">Cloudy</label>
+                                                <label for="weather-cloudy" class="weather-radio-label cloudy-label">Mendung</label>
                                                 
                                                 <input type="radio" id="weather-fine" name="weather" value="Fine" <?php if ($row3['weather'] == 'Fine') echo 'checked'; ?> disabled>
-                                                <label for="weather-fine" class="weather-radio-label fine-label">Fine</label>
+                                                <label for="weather-fine" class="weather-radio-label fine-label">Cerah</label>
                                             </div>
                                             
                                             
@@ -660,15 +494,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                         <!-- AM / PM Inspection Time -->
                                         <div class="inspection-card">
                                             <div class="text-center mb-3 pt-0">
-                                                <div class="time-inspect">( Time of inspection )</div>
+                                                <div class="time-inspect">( Masa pemeriksaan )</div>
                                             </div>
                                             <div class="time-grid">
                                                 <div class="time-cell-modern">
-                                                    <span class="time-cell-title">AM Time</span>
+                                                    <span class="time-cell-title">Masa AM</span>
                                                     <input type="text" class="time-cell-value" value="" placeholder="--:--" readonly>
                                                 </div>
                                                 <div class="time-cell-modern">
-                                                    <span class="time-cell-title">PM Time</span>
+                                                    <span class="time-cell-title">Masa PM</span>
                                                     <input type="text" class="time-cell-value" value="" placeholder="--:--" readonly>
                                                 </div>
                                             </div>
@@ -680,19 +514,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                         <div class="col-lg-12 grid-margin stretch-card">
                             <div class="card shadow h-100">
                                 <div class="card-body d-flex flex-column justify-content-between">
-                                    <h4 class="card-title mb-4" style="color: #0f172a; font-weight:600; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Area</h4>
+                                    <h4 class="card-title mb-4" style="color: #0f172a; font-weight:600; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Kawasan</h4>
                                     
-                                    <div class="modern-table-wrapper">
-                                        <table class="modern-table">
+                                    <div class="gms-table-wrapper">
+                                        <table class="gms-table">
                                             <thead>
                                                 <tr>
-                                                    <th class="no-col" style="width: 50px;">Area</th>
-                                                    <th class="act-col" style="width: 300px;">Location</th>
-                                                    <th class="workers-col" style="width: 100px;">Activity</th>
-                                                    <th class="tools-col" style="width: 100px;">Progress <br> (of work)</th>
-                                                    <th class="comment-col">Comment</th>
-                                                    <th style="width: 150px;">Reference</th>
-                                                    <th class="comment-col" style="width: 100px;">Total <br> Demerit</th>
+                                                    <th class="no-col" style="width: 50px;">Kawasan</th>
+                                                    <th class="act-col" style="width: 300px;">Lokasi</th>
+                                                    <th class="workers-col" style="width: 100px;">Aktiviti</th>
+                                                    <th class="tools-col" style="width: 100px;">Kemajuan <br> (kerja)</th>
+                                                    <th class="comment-col">Catatan</th>
+                                                    <th style="width: 150px;">Rujukan</th>
+                                                    <th class="comment-col" style="width: 100px;">Jumlah <br> Mata Penalti</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -713,6 +547,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                                             '2' => '✓',
                                                             '3' => 'O'
                                                         ];
+                                                        $status_map = ['0' => 'X', '1' => '—', '2' => '✓', '3' => 'O'];
                                                         $gc_progress = isset($row1['gc_progress']) && array_key_exists($row1['gc_progress'], $status_map) ? $status_map[$row1['gc_progress']] : '-';
                                                         $gc_comment = !empty($row1['gc_comment']) ? htmlspecialchars($row1['gc_comment']) : '-';
                                                         $dc_progress = isset($row1['dc_progress']) && array_key_exists($row1['dc_progress'], $status_map) ? $status_map[$row1['dc_progress']] : '-';
@@ -749,14 +584,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                                 <tr>
                                                     <td rowspan="2"><?php echo $row['area'] ?></td>
                                                     <td rowspan="2" style="max-width: 200px; white-space: normal;"><strong style="word-break: break-word; overflow-wrap: break-word; display: block; line-height: 1.4;"><?php echo $row['location'] ?></strong></td>
-                                                    <td>Grasscutting</td>
+                                                    <td>Pemotongan Rumput</td>
                                                     <td class="text-center font-weight-bold text-dark"><?php echo $gc_progress; ?></td>
                                                     <td class="text-dark font-weight-bold"><?php echo $gc_comment; ?></td>
                                                     <td class="text-center font-weight-bold text-dark" style="vertical-align: middle;"><?php echo $ref_gc ?></td>
                                                     <td class="text-center font-weight-bold text-dark" style="vertical-align: middle;"><?php echo $demerit_val_gc; ?></td>
                                                 </tr>
                                                 <tr>
-                                                    <td>Drain Cleaning</td>
+                                                    <td>Pembersihan Longkang</td>
                                                     <td class="text-center font-weight-bold text-dark"><?php echo $dc_progress; ?></td>
                                                     <td class="text-dark font-weight-bold"><?php echo $dc_comment; ?></td>
                                                     <td class="text-center font-weight-bold text-dark" style="vertical-align: middle;"><?php echo $ref_dc ?></td>
@@ -774,16 +609,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                         <div class="col-lg-12 grid-margin stretch-card">
                             <div class="card shadow h-100">
                                 <div class="card-body d-flex flex-column justify-content-between">
-                                    <h5 class="font-weight-bold text-dark mb-3">Site Safety Record</h5>
-                                        <div class="modern-table-wrapper">
-                                            <table class="modern-table">
+                                    <h5 class="font-weight-bold text-dark mb-3">Rekod Keselamatan Tapak</h5>
+                                        <div class="gms-table-wrapper">
+                                            <table class="gms-table">
                                                 <tbody>
                                                     <tr>
-                                                        <td >Instructions to contractor : </td>
+                                                        <td >Arahan kepada kontraktor: </td>
                                                         <td colspan="3" style="width: 500px;" class="text-center">
                                                             S.I No. <?php echo !empty($si_numbers) ? implode(', ', array_unique($si_numbers)) : '......................./Lisan'; ?>
                                                         </td>
-                                                        <td style="width: 200px;">No</td>  
+                                                        <td style="width: 200px;">Tidak</td>
                                                     </tr>
                                                     <tr>
                                                         <td colspan="5"><small class="text-muted">Nota: Wakil Kontraktor hendaklah menyemak dan memahami catatan ini sebelum menandatangani</small></td>
@@ -792,13 +627,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                                 </tbody>
                                             </table>
                                         </div>
-                                         <div class="modern-table-wrapper">
-                                            <table class="modern-table">
+                                         <div class="gms-table-wrapper">
+                                            <table class="gms-table">
                                                 <tbody>
                                                     <tr>
-                                                        <td class="text-center" style="font-weight: 600; background-color: #f8fafc; height: 40px; width: 33.33%;">Contractor's Representative <br> Signature</td>
-                                                        <td class="text-center" style="font-weight: 600; background-color: #f8fafc; height: 40px; width: 33.33%;">Superintending Officer Representatives <br> (Supervisor) Signature</td>
-                                                        <td class="text-center" style="font-weight: 600; background-color: #f8fafc; height: 40px; width: 33.33%;">Superintending Officer Representatives <br> (Pengawas) Signature</td>
+                                                        <td class="text-center" style="font-weight: 600; background-color: #f8fafc; height: 40px; width: 33.33%;">Wakil Kontraktor <br> Tandatangan</td>
+                                                        <td class="text-center" style="font-weight: 600; background-color: #f8fafc; height: 40px; width: 33.33%;">Wakil Pegawai Penguasa <br> (Penyelia) Tandatangan</td>
+                                                        <td class="text-center" style="font-weight: 600; background-color: #f8fafc; height: 40px; width: 33.33%;">Wakil Pegawai Penguasa <br> (Pengawas) Tandatangan</td>
                                                     </tr>
                                                     <tr style="height: 110px; vertical-align: middle;">
                                                         <td class="text-center">
@@ -858,7 +693,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                                     </tr>
                                                     <tr>
                                                         <td colspan="3" class="text-center" style="font-weight: 600; padding: 12px; background-color: #f8fafc; position: relative;">
-                                                            Verified & Comments By ASO
+                                                            Pengesahan &amp; Catatan Oleh ASO
                                                         </td>
                                                     </tr>
                                                     <tr style="min-height: 60px;">
@@ -892,13 +727,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                                                     $instructions[] = htmlspecialchars($row_si['instruction']);
                                                                 }
                                                             }
-                                                            echo !empty($instructions) ? implode('; ', array_unique($instructions)) : 'No comment from ASO';
+                                                            echo !empty($instructions) ? implode('; ', array_unique($instructions)) : 'Tiada catatan daripada ASO';
                                                             ?>
                                                             <div class="m-2"></div>
                                                             <br>
                                                             <?php if ($row3 && $row3['verified'] == 'N'): ?>
                                                                 <button type="button" class="btn btn-primary btn-md" style="" data-bs-toggle="modal" data-bs-target="#verifyModal">
-                                                                    <i class="icon-check"></i> Verify
+                                                                    <i class="icon-check"></i> Sahkan
                                                                 </button>
                                                             <?php endif; ?>
                                                         </td>
@@ -920,19 +755,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                         <div class="modal-content">
                             <form method="POST" action="">
                                 <div class="modal-header">
-                                    <h5 class="modal-title" id="verifyModalLabel">Verify Site Daily Record</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    <h5 class="modal-title" id="verifyModalLabel">Sahkan Rekod Harian Tapak</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <p>Are you sure you want to verify this record?</p>
+                                    <p>Adakah anda pasti mahu mengesahkan rekod ini?</p>
                                     <div class="form-group">
-                                        <label for="ver_comment">Comment (Optional)</label>
-                                        <textarea class="form-control" id="ver_comment" name="ver_comment" rows="3" placeholder="Enter any comments here..."></textarea>
+                                        <label for="ver_comment">Catatan (Pilihan)</label>
+                                        <textarea class="form-control" id="ver_comment" name="ver_comment" rows="3" placeholder="Masukkan sebarang catatan di sini..."></textarea>
                                     </div>
                                 </div>
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" name="verify_aso" class="btn btn-primary">Verify</button>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                    <button type="submit" name="verify_aso" class="btn btn-primary">Sahkan</button>
                                 </div>
                             </form>
                         </div>
@@ -941,7 +776,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
 
                 <!-- content-wrapper ends -->
                 <!-- partial:partials/_footer.html -->
-                <!-- <?php// include 'partials/footer.php' ?> -->
+                <?php include 'partials/footer.php' ?>
                 <!-- partial -->
                  
             </div>
@@ -976,7 +811,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- End custom js for this page -->
     <script>
-        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const days = [
+            { english: 'Monday', malay: 'Isnin' },
+            { english: 'Tuesday', malay: 'Selasa' },
+            { english: 'Wednesday', malay: 'Rabu' },
+            { english: 'Thursday', malay: 'Khamis' },
+            { english: 'Friday', malay: 'Jumaat' },
+            { english: 'Saturday', malay: 'Sabtu' }
+        ];
         const tbody = document.getElementById('tbody');
 
         // Ambil data dari PHP dengan fallback jika data null/undefined
@@ -993,7 +835,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
             const tr = document.createElement('tr');
             
             // Semak jika hari dalam loop sepadan dengan hari rekod
-            const isMatch = (day.toLowerCase() === recordDay.toLowerCase());
+            const isMatch = (day.english.toLowerCase() === recordDay.toLowerCase());
             
             // Set data jika hari sepadan
             const gcCheckedAttr = (isMatch && gcChecked === 1) ? 'checked' : '';
@@ -1005,7 +847,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
             const dmDayNoVal    = isMatch ? dmDayNo : '';
 
             tr.innerHTML = `
-                <td class="day-cell">${day}</td>
+                <td class="day-cell">${day.malay}</td>
                 <td class="checkbox-cell">
                     <div class="custom-checkbox-wrapper">
                         <input type="checkbox" class="custom-checkbox" ${gcCheckedAttr} disabled>

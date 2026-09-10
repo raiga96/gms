@@ -34,7 +34,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         VALUES (?, ?, ?, ?, ?)");
 
     if (!$stmt) {
-        die("Prepare failed: " . $conn->error);
+        die("Penyediaan pertanyaan gagal: " . $conn->error);
     }
 
     // Bind parameters
@@ -50,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Execute
     if ($stmt->execute()) {
         $_SESSION['status'] = 'success';
-        $_SESSION['message'] = 'Contractor added successfully';
+        $_SESSION['message'] = 'Kontraktor berjaya ditambah.';
 
         if ($page == 'con') {
             header("Location: ../contractor_list.php");
@@ -59,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     } else {
         $_SESSION['status'] = 'error';
-        $_SESSION['message'] = 'Database error: ' . $stmt->error;
+        $_SESSION['message'] = 'Ralat pangkalan data: ' . $stmt->error;
     }
 
     // Close

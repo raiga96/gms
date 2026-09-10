@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SITE DAILY RECORD - ZONE: DEKU/COS/P/S/40/28-SATOK B</title>
+    <title>REKOD HARIAN TAPAK - ZON: DEKU/COS/P/S/40/28-SATOK B</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         @media print {
@@ -55,18 +55,18 @@
         </div>
 
         <div class="text-center border-b-2 border-black pb-4 mb-6">
-            <h1 class="text-xl font-bold tracking-wider">SITE DAILY RECORD</h1>
+            <h1 class="text-xl font-bold tracking-wider">REKOD HARIAN TAPAK</h1>
             <p class="text-sm font-semibold">DEKULNP/5A-28</p>
-            <p class="text-md font-bold mt-1">LANDSCAPE DIVISION</p>
-            <p class="text-xs italic">QUALITY GRASSCUTTING & DRAIN CLEANING</p>
+            <p class="text-md font-bold mt-1">BAHAGIAN LANDSKAP</p>
+            <p class="text-xs italic">PEMOTONGAN RUMPUT & PEMBERSIHAN LONGKANG</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 border border-gray-200">
             <div>
-                <p class="text-sm"><span class="font-bold">ZONE:</span> DEKU/COS/P/S/40/28-SATOK B</p>
+                <p class="text-sm"><span class="font-bold">ZON:</span> DEKU/COS/P/S/40/28-SATOK B</p>
             </div>
             <div class="md:text-right">
-                <p class="text-sm"><span class="font-bold">DATE:</span> 7/5/26</p>
+                <p class="text-sm"><span class="font-bold">TARIKH:</span> 7/5/26</p>
             </div>
         </div>
 
@@ -74,94 +74,94 @@
             <table class="w-full text-left border-collapse text-xs table-atas">
                 <thead>
                     <tr>
-                        <th class="border border-black p-2" style="width:50px">DAY</th>
-                        <th class="border border-black p-2">GRASSCUTTING</th>
-                        <th class="border border-black p-2">DRAIN CLEANING</th>
+                        <th class="border border-black p-2" style="width:50px">HARI</th>
+                        <th class="border border-black p-2">MEMOTONG RUMPUT</th>
+                        <th class="border border-black p-2">MEMBERSIHKAN LONGKANG</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="border border-black p-2 font-semibold text-right">Monday</td>
+                        <td class="border border-black p-2 font-semibold text-right">Isnin</td>
                         <td class="border border-black p-2 text-center">
                             <div class="baris-selari">
                                 <div class="kotak-persegi-panjang"></div>
-                                <span class="teks-sesi">(Session......)</span>
-                                <span class="teks-sesi">Day No : ......</span>
+                                <span class="teks-sesi">(Sesi......)</span>
+                                <span class="teks-sesi">Hari Ke-: ......</span>
                             </div>
                         </td>
                         <td class="border border-black p-2 text-center">
                             <div class="baris-selari">
                                 <div class="kotak-persegi-panjang"></div>
-                                <span class="teks-sesi">(Session......)</span>
-                                <span class="teks-sesi">Day No : ......</span>
+                                <span class="teks-sesi">(Sesi......)</span>
+                                <span class="teks-sesi">Hari Ke-: ......</span>
                             </div>
                         </td>
                     </tr>
                     <tr>
-                        <td class="border border-black p-2 font-semibold text-right">Tuesday</td>
+                        <td class="border border-black p-2 font-semibold text-right">Selasa</td>
                          <td class="border border-black p-2 text-center">
                             <div class="baris-selari">
                                 <div class="kotak-persegi-panjang"></div>
-                                <span class="teks-sesi">(Session......)</span>
-                                <span class="teks-sesi">Day No : ......</span>
+                                <span class="teks-sesi">(Sesi......)</span>
+                                <span class="teks-sesi">Hari Ke-: ......</span>
                             </div>
                         </td>
                         <td class="border border-black p-2 text-center">
                             <div class="baris-selari">
                                 <div class="kotak-persegi-panjang"></div>
-                                <span class="teks-sesi">(Session......)</span>
-                                <span class="teks-sesi">Day No : ......</span>
+                                <span class="teks-sesi">(Sesi......)</span>
+                                <span class="teks-sesi">Hari Ke-: ......</span>
                             </div>
                         </td>
                     </tr>
                     <tr>
-                        <td class="border border-black p-2 font-semibold text-right">Wednesday</td>
+                        <td class="border border-black p-2 font-semibold text-right">Rabu</td>
                          <td class="border border-black p-2 text-center">
                             <div class="baris-selari">
                                 <div class="kotak-persegi-panjang"></div>
-                                <span class="teks-sesi">(Session......)</span>
-                                <span class="teks-sesi">Day No : ......</span>
+                                <span class="teks-sesi">(Sesi......)</span>
+                                <span class="teks-sesi">Hari Ke-: ......</span>
                             </div>
                         </td>
                         <td class="border border-black p-2 text-center">
                             <div class="baris-selari">
                                 <div class="kotak-persegi-panjang"></div>
-                                <span class="teks-sesi">(Session......)</span>
-                                <span class="teks-sesi">Day No : ......</span>
+                                <span class="teks-sesi">(Sesi......)</span>
+                                <span class="teks-sesi">Hari Ke-: ......</span>
                             </div>
                         </td>
                     </tr>
                     <tr>
-                        <td class="border border-black p-2 font-semibold text-right">Thursday</td>
+                        <td class="border border-black p-2 font-semibold text-right">Khamis</td>
                          <td class="border border-black p-2 text-center">
                             <div class="baris-selari">
                                 <div class="kotak-persegi-panjang"></div>
-                                <span class="teks-sesi">(Session......)</span>
-                                <span class="teks-sesi">Day No : ......</span>
+                                <span class="teks-sesi">(Sesi......)</span>
+                                <span class="teks-sesi">Hari Ke-: ......</span>
                             </div>
                         </td>
                         <td class="border border-black p-2 text-center">
                             <div class="baris-selari">
                                 <div class="kotak-persegi-panjang"></div>
-                                <span class="teks-sesi">(Session......)</span>
-                                <span class="teks-sesi">Day No : ......</span>
+                                <span class="teks-sesi">(Sesi......)</span>
+                                <span class="teks-sesi">Hari Ke-: ......</span>
                             </div>
                         </td>
                     </tr>
                     <tr>
-                        <td class="border border-black p-2 font-semibold text-right">Friday</td>
+                        <td class="border border-black p-2 font-semibold text-right">Jumaat</td>
                          <td class="border border-black p-2 text-center">
                             <div class="baris-selari">
                                 <div class="kotak-persegi-panjang"></div>
-                                <span class="teks-sesi">(Session......)</span>
-                                <span class="teks-sesi">Day No : ......</span>
+                                <span class="teks-sesi">(Sesi......)</span>
+                                <span class="teks-sesi">Hari Ke-: ......</span>
                             </div>
                         </td>
                         <td class="border border-black p-2 text-center">
                             <div class="baris-selari">
                                 <div class="kotak-persegi-panjang"></div>
-                                <span class="teks-sesi">(Session......)</span>
-                                <span class="teks-sesi">Day No : ......</span>
+                                <span class="teks-sesi">(Sesi......)</span>
+                                <span class="teks-sesi">Hari Ke-: ......</span>
                             </div>
                         </td>
                     </tr>
@@ -173,38 +173,38 @@
             <table class="w-full text-left border-collapse border border-black text-xs">
                 <thead>
                     <tr class="bg-gray-100">
-                        <th class="border border-black p-2">ACTIVITY</th>
-                        <th class="border border-black p-2 text-center">NOS. OF WORKERS</th>
-                        <th class="border border-black p-2 text-center">MACHINES/TOOLS</th>
-                        <th class="border border-black p-2 colspan-2 text-center">LOG / TIME</th>
-                        <th class="border border-black p-2">WEATHER & INSPECTION</th>
+                        <th class="border border-black p-2">AKTIVITI</th>
+                        <th class="border border-black p-2 text-center">BILANGAN PEKERJA</th>
+                        <th class="border border-black p-2 text-center">MESIN/PERALATAN</th>
+                        <th class="border border-black p-2 colspan-2 text-center">LOG / MASA</th>
+                        <th class="border border-black p-2">CUACA & PEMERIKSAAN</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="border border-black p-2 font-semibold">GRASSCUTTING</td>
+                        <td class="border border-black p-2 font-semibold">PEMOTONGAN RUMPUT</td>
                         <td class="border border-black p-2 text-center">3</td>
                         <td class="border border-black p-2 text-center">B/C</td>
-                        <td class="border border-black p-2">START: 8:00</td>
+                        <td class="border border-black p-2">MULA: 8:00</td>
                         <td class="border border-black p-2">0000</td>
                         <td class="border border-black p-2 rowspan-3 valign-top">
-                            <p class="font-bold">Weather:</p>
-                            <p>[ ] Cloudy</p>
-                            <p>[ ] Rainy</p>
-                            <p class="mt-2 font-bold">(Time of inspection):</p>
+                            <p class="font-bold">Cuaca:</p>
+                            <p>[ ] Mendung</p>
+                            <p>[ ] Hujan</p>
+                            <p class="mt-2 font-bold">(Masa pemeriksaan):</p>
                             <p>P: 14:30</p>
                             <p>AM: 9:50</p>
                         </td>
                     </tr>
                     <tr>
-                        <td class="border border-black p-2 font-semibold">DRAIN CLEANING</td>
+                        <td class="border border-black p-2 font-semibold">PEMBERSIHAN LONGKANG</td>
                         <td class="border border-black p-2 text-center">3</td>
                         <td class="border border-black p-2 text-center">Siap/cakar</td>
-                        <td class="border border-black p-2">END: 17:00</td>
+                        <td class="border border-black p-2">TAMAT: 17:00</td>
                         <td class="border border-black p-2">5000 / 1900</td>
                     </tr>
                     <tr class="bg-gray-50 font-bold">
-                        <td class="border border-black p-2">TOTAL</td>
+                        <td class="border border-black p-2">JUMLAH</td>
                         <td class="border border-black p-2 text-center">6</td>
                         <td class="border border-black p-2"></td>
                         <td class="border border-black p-2" colspan="2"></td>
@@ -217,12 +217,12 @@
             <table class="w-full text-left border-collapse border border-black text-xs">
                 <thead>
                     <tr class="bg-gray-100">
-                        <th class="border border-black p-2 text-center" style="width:20px">AREA</th>
-                        <th class="border border-black p-2" style="width:220px">LOCATION</th>
-                        <th class="border border-black p-2" style="width:20px">ACTIVITY</th>
-                        <th class="border border-black p-2 text-center" style="width:50px">PROGRESS</th>
-                        <th class="border border-black p-2">COMMENT</th>
-                        <th class="border border-black p-2 text-center" style="width:20px">TOTAL DEMERIT</th>
+                        <th class="border border-black p-2 text-center" style="width:20px">KAWASAN</th>
+                        <th class="border border-black p-2" style="width:220px">LOKASI</th>
+                        <th class="border border-black p-2" style="width:20px">AKTIVITI</th>
+                        <th class="border border-black p-2 text-center" style="width:50px">KEMAJUAN</th>
+                        <th class="border border-black p-2">CATATAN</th>
+                        <th class="border border-black p-2 text-center" style="width:20px">JUMLAH MATA PENALTI</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -232,13 +232,13 @@
                             Part of Jln. Dtk Ajibah Abol, Part of Jln. Muhibah, Part of Jln. Patinggan, 
                             Jln. Tanjung Selatan, Jln. Hj. Kassan, Jln. Paduka Sitom, A/RD within Kpg. No. 5 & 6
                         </td>
-                        <td class="border border-black p-2">Grasscutting</td>
+                        <td class="border border-black p-2">Memotong Rumput</td>
                         <td class="border border-black p-2 text-center"></td>
                         <td class="border border-black p-2"></td>
                         <td class="border border-black p-2 text-center"></td>
                     </tr>
                     <tr>
-                        <td class="border border-black p-2 text-center">Drain Cleaning</td>
+                        <td class="border border-black p-2 text-center">Membersihkan Longkang</td>
                         <td class="border border-black p-2 text-center"></td>
                         <td class="border border-black p-2">A(i) 30,C(ii) 20</td>
                     </tr>
@@ -248,7 +248,7 @@
         </div>
 
         <div class="mb-6 text-xs border border-black p-3 bg-gray-50">
-            <p class="font-bold">Comments By SOR (JAKUIKB):</p>
+            <p class="font-bold">Catatan Oleh SOR (JAKUIKB):</p>
             <p class="mt-1 italic">"Road Verges", "utand", sempadan pemandian, anthem, dan seperti asampattan kaik</p>
         </div>
 
@@ -260,8 +260,8 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
                 <div class="flex flex-col justify-between border border-dashed border-gray-300 p-2">
                     <div>
-                        <p class="font-bold underline">Contractor's Representative</p>
-                        <p class="text-[10px] text-gray-500">Signature</p>
+                        <p class="font-bold underline">Wakil Kontraktor</p>
+                        <p class="text-[10px] text-gray-500">Tandatangan</p>
                     </div>
                     <div class="my-6 font-mono tracking-widest text-gray-400">[ TANDATANGAN ]</div>
                     <div>
@@ -272,8 +272,8 @@
 
                 <div class="flex flex-col justify-between border border-dashed border-gray-300 p-2">
                     <div>
-                        <p class="font-bold underline">Superintending Officer Representative</p>
-                        <p class="text-[10px] text-gray-500">(Superior)</p>
+                        <p class="font-bold underline">Wakil Pegawai Penguasa</p>
+                        <p class="text-[10px] text-gray-500">(Penyelia)</p>
                     </div>
                     <div class="my-6 font-mono tracking-widest text-gray-400">[ TANDATANGAN ]</div>
                     <div>
@@ -284,8 +284,8 @@
 
                 <div class="flex flex-col justify-between border border-dashed border-gray-300 p-2">
                     <div>
-                        <p class="font-bold underline">Superintending Officer Representative</p>
-                        <p class="text-[10px] text-gray-500">(Verifier)</p>
+                        <p class="font-bold underline">Wakil Pegawai Penguasa</p>
+                        <p class="text-[10px] text-gray-500">(Pengesah)</p>
                     </div>
                     <div class="my-6 font-mono tracking-widest text-gray-400">[ TANDATANGAN ]</div>
                     <div>
@@ -297,7 +297,7 @@
         </div>
 
         <div class="mt-6 border-t border-gray-200 pt-2 text-[10px] text-gray-500 flex justify-between">
-            <div><span class="font-bold">PROGRESS OF WORK:</span> [ ☑ ] Sedang dijalankan | [ Bap ] Siap | [ X ] Tidak berkaitan</div>
+            <div><span class="font-bold">KEMAJUAN KERJA:</span> [ ☑ ] Sedang dijalankan | [ Bap ] Siap | [ X ] Tidak berkaitan</div>
             <div>Halaman 1 daripada 1</div>
         </div>
 

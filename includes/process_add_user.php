@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if ($check_res && $check_res->num_rows > 0) {
         $_SESSION['status'] = 'error';
-        $_SESSION['message'] = 'Username or Email is already registered!';
+                $_SESSION['message'] = 'Nama pengguna atau e-mel telah didaftarkan!';
     } else {
         // Insert into users
         $insert_user_sql = "INSERT INTO users (user_type, user_id, user_email, user_password, access_level, status) 
@@ -38,19 +38,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             
             if ($conn->query($insert_info_sql)) {
                 $_SESSION['status'] = 'success';
-                $_SESSION['message'] = 'User successfully created!';
+                $_SESSION['message'] = 'Pengguna berjaya dicipta!';
             } else {
                 $_SESSION['status'] = 'error';
-                $_SESSION['message'] = 'User created but failed to save userinfo: ' . $conn->error;
+                $_SESSION['message'] = 'Pengguna dicipta tetapi maklumat pengguna gagal disimpan: ' . $conn->error;
             }
         } else {
             $_SESSION['status'] = 'error';
-            $_SESSION['message'] = 'Failed to create user: ' . $conn->error;
+            $_SESSION['message'] = 'Gagal mencipta pengguna: ' . $conn->error;
         }
     }
 } else {
     $_SESSION['status'] = 'error';
-    $_SESSION['message'] = 'Invalid request.';
+    $_SESSION['message'] = 'Permintaan tidak sah.';
 }
 
 header("Location: ../users_management.php");

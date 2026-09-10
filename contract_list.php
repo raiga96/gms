@@ -2,596 +2,469 @@
 session_start();
 require 'includes/connection.php';
 
-//Total Zone
-$sql = "SELECT COUNT(*) AS total_contract FROM contract";
-$res = $conn->query($sql);
-$row = $res->fetch_assoc();
-$total_zone = $row['total_contract'];
+if (($_GET['action'] ?? '') === 'new') {
+    header('Location: new_contract.php');
+    exit;
+}
 
-//Total sub-zone
-$sql1 = "SELECT COUNT(*) AS total_contractor FROM contractor";
-$res1 = $conn->query($sql1);
-$row1 = $res1->fetch_assoc();
-$total_subzone = $row1['total_contractor'];
+// =============================================================================
+// KPI METRICS (single optimized query — no N+1)
+// =============================================================================
+// Total Contract
+$sql_tc = "SELECT COUNT(*) AS total_contract FROM contract";
+$res_tc = $conn->query($sql_tc);
+$total_contract = ($res_tc && $row = $res_tc->fetch_assoc()) ? (int)$row['total_contract'] : 0;
 
-// Total Perimeter(m) by zone
-$sql2 = "SELECT SUM(fund) AS total_contract_value FROM contract";
-$res2 = $conn->query($sql2);
-$row2 = $res2->fetch_assoc();
-$total_perimeter = $row2['total_contract_value'] ?? 0;
+// Total Contractor
+$sql_tcon = "SELECT COUNT(*) AS total_contractor FROM contractor";
+$res_tcon = $conn->query($sql_tcon);
+$total_contractor = ($res_tcon && $row = $res_tcon->fetch_assoc()) ? (int)$row['total_contractor'] : 0;
 
-// Total Area(ha) by zone
-$sql3 = "SELECT SUM(area) AS total_area FROM subzone";
-$res3 = $conn->query($sql3);
-$row3 = $res3->fetch_assoc();
-$total_area = $row3['total_area'] ?? 0;
+// Total Contract Value (sum of all contract funds)
+$sql_value = "SELECT COALESCE(SUM(CAST(fund AS DECIMAL(14,2))), 0) AS total_value FROM contract";
+$res_value = $conn->query($sql_value);
+$total_contract_value = ($res_value && $row = $res_value->fetch_assoc()) ? (float)$row['total_value'] : 0;
+
+// Total Active Contract (c_status = 'Y')
+$sql_active = "SELECT COUNT(*) AS active_contract FROM contract WHERE c_status = 'Y'";
+$res_active = $conn->query($sql_active);
+$active_contract = ($res_active && $row = $res_active->fetch_assoc()) ? (int)$row['active_contract'] : 0;
+
+// =============================================================================
+// CONTRACT LISTING (single JOIN query — eliminates legacy N+1 per-row queries)
+// =============================================================================
+$contracts_list = [];
+$sql_contracts = "
+    SELECT ct.contract_id, ct.contract_number, ct.fund, ct.c_status, ct.sz_id, ct.cid,
+           c.name AS contractor_name,
+           sz.sz_name,
+           z.zone_id, z.zone_name
+    FROM contract ct
+    LEFT JOIN contractor c ON ct.cid = c.cid
+    LEFT JOIN subzone sz ON ct.sz_id = sz.sz_id
+    LEFT JOIN zone z ON sz.zone_id = z.zone_id
+    ORDER BY ct.contract_number ASC
+";
+$res_contracts = $conn->query($sql_contracts);
+if ($res_contracts && $res_contracts->num_rows > 0) {
+    while ($row = $res_contracts->fetch_assoc()) {
+        $contracts_list[] = $row;
+    }
+}
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ms">
 
 <head>
-    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>SmartCut</title>
+    <title>Senarai Kontrak — Green Management System (DBKU)</title>
     <link rel="shortcut icon" href="assets/images/favicon.png" />
-    <!-- plugins:css -->
     <link rel="stylesheet" href="assets/vendors/simple-line-icons/css/simple-line-icons.css">
     <link rel="stylesheet" href="assets/vendors/flag-icon-css/css/flag-icons.min.css">
     <link rel="stylesheet" href="assets/vendors/css/vendor.bundle.base.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css" integrity="sha512-5Hs3dF2AEPkpNAR7UiOHba+lRSJNeM2ECkwxUIxC1Q/FLycGTbNapWXB4tP889k5T5Ju8fs4b1P5z/iB4nMfSQ==" crossorigin="anonymous" referrerpolicy="no-referrer">
-
-    <!-- endinject -->
-    <!-- Plugin css for this page -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css">
+    <link rel="stylesheet" href="assets/vendors/mdi/css/materialdesignicons.min.css">
     <link rel="stylesheet" href="assets/vendors/font-awesome/css/font-awesome.min.css" />
     <link rel="stylesheet" href="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css">
-    <link rel="stylesheet" href="assets/vendors/jvectormap/jquery-jvectormap.css">
     <link rel="stylesheet" href="assets/vendors/daterangepicker/daterangepicker.css">
-    <link rel="stylesheet" href="assets/vendors/chartist/chartist.min.css">
-    <!-- End plugin css for this page -->
-    <!-- inject:css -->
-    <!-- endinject -->
-    <!-- Layout styles -->
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
-    <!-- End layout styles -->
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
-
-        .modern-zone-container {
-            font-family: 'Outfit', sans-serif;
-            color: #334155;
-        }
-
-        /* Metric Cards Styling */
-        .metric-card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-
-        .metric-card-modern {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 5px 15px -8px rgba(0, 0, 0, 0.05);
-            transition: all 0.25s ease;
-        }
-
-        .metric-card-modern:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.08), 0 8px 20px -8px rgba(0, 0, 0, 0.08);
-            border-color: #cbd5e1;
-        }
-
-        .metric-card-content {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .metric-card-title {
-            font-size: 11px;
-            font-weight: 600;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 6px;
-        }
-
-        .metric-card-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: #0f172a;
-            margin: 0;
-        }
-
-        .metric-card-icon-wrapper {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 20px;
-            color: #ffffff;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-        }
-
-        .icon-green {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-        }
-
-        .icon-red {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
-        }
-
-        .icon-blue {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-        }
-
-        .icon-yellow {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
-        }
-
-        /* Action Banner / Header */
-        .modern-banner {
-            background: linear-gradient(90deg, #1d384d 0%, #00311c 100%);
-            border-radius: 16px;
-            padding: 20px 24px;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
-            margin-bottom: 24px;
-            border: none;
-        }
-
-        .modern-banner-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #ffffff;
-            margin: 0;
-        }
-
-        .modern-btn-white {
-            background-color: #ffffff;
-            color: #1e3a5f !important;
-            font-weight: 600;
-            font-size: 13px;
-            padding: 8px 16px;
-            border-radius: 30px;
-            border: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s ease;
-            text-decoration: none;
-        }
-
-        .modern-btn-white:hover {
-            background-color: #f1f5f9;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            text-decoration: none;
-        }
-
-        /* Modern Table Card */
-        .modern-zone-container .card {
-            border: none;
-            border-radius: 16px !important;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 5px 15px -8px rgba(0, 0, 0, 0.05) !important;
-            background: #ffffff;
-            overflow: hidden;
-        }
-
-        .modern-zone-container .card-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #0f172a;
-            margin: 0;
-        }
-
-        .modern-table-wrapper {
-            overflow-x: auto;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-            background: #ffffff;
-            margin-top: 15px;
-        }
-
-        .modern-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-        }
-
-        .modern-table th {
-            background-color: #f8fafc;
-            color: #475569;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: 14px 16px;
-            border-bottom: 1px solid #e2e8f0;
-            border-right: 1px solid #e2e8f0;
-            text-align: left;
-        }
-
-        .modern-table th:last-child {
-            border-right: none;
-        }
-
-        .modern-table td {
-            padding: 14px 16px;
-            vertical-align: middle;
-            border-bottom: 1px solid #e2e8f0;
-            border-right: 1px solid #e2e8f0;
-            font-size: 14px;
-            color: #334155;
-            background-color: #ffffff;
-        }
-
-        .modern-table td:last-child {
-            border-right: none;
-        }
-
-        .modern-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .modern-table tbody tr:hover td {
-            background-color: #f8fafc;
-        }
-
-        /* Action Buttons */
-        .action-btn-group {
-            display: inline-flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .btn-circle-edit {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #eff6ff;
-            color: #3b82f6;
-            border: none;
-            font-size: 13px;
-            transition: all 0.2s ease;
-            text-decoration: none;
-        }
-
-        .btn-circle-edit:hover {
-            background-color: #3b82f6;
-            color: #ffffff;
-            transform: scale(1.05);
-            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
-            text-decoration: none;
-        }
-
-        .btn-circle-delete {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #fef2f2;
-            color: #ef4444;
-            border: none;
-            font-size: 13px;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        .btn-circle-delete:hover {
-            background-color: #ef4444;
-            color: #ffffff;
-            transform: scale(1.05);
-            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);
-        }
-
-        /* Zone Link */
-        .zone-link {
-            color: #1e3a8a;
-            font-weight: 600;
-            text-decoration: none;
-            transition: color 0.15s ease;
-        }
-
-        .zone-link:hover {
-            color: #3b82f6;
-            text-decoration: none;
-        }
-    </style>
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
 </head>
 
 <body>
     <div class="container-scroller">
-        <!-- partial:partials/_navbar.html -->
-        <?php include 'partials/navbar.php' ?>
-        <!-- partial -->
+        <?php include 'partials/navbar.php'; ?>
+
         <div class="container-fluid page-body-wrapper">
-            <!-- partial:partials/_sidebar.html -->
-            <?php include 'partials/sidebar.php' ?>
-            <!-- partial -->
+            <?php include 'partials/sidebar.php'; ?>
+
             <div class="main-panel" style="height: 100%;">
                 <div class="content-wrapper">
-                    <!-- Report Summary Start -->
-                    <div class="modern-zone-container">
-                        <!-- Metrics Grid -->
-                        <div class="metric-card-grid">
-                            <!-- Card 1: Total Contract -->
-                            <div class="metric-card-modern">
-                                <div class="metric-card-content">
-                                    <span class="metric-card-title">Total Contract</span>
-                                    <h3 class="metric-card-value"><?php echo $total_zone ?></h3>
+
+                    <!-- ============================================================== -->
+                    <!-- PAGE HEADER BANNER                                              -->
+                    <!-- ============================================================== -->
+                    <div class="gms-hero-banner gms-fade-in" style="padding: 1.5rem 2rem;">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap g-3">
+                            <div>
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="gms-pulse-dot" style="background:#34d399;"></span>
+                                    <span class="gms-hero-subtitle" style="color: rgba(255,255,255,0.75);">Modul Pengurusan Kontrak</span>
                                 </div>
-                                <div class="metric-card-icon-wrapper icon-green">
-                                    <i class="icon-briefcase"></i>
-                                </div>
+                                <h1 class="gms-hero-title mb-1">Pengurusan Senarai Kontrak</h1>
+                                <p class="gms-hero-subtitle">Daftar, pandang dan urus kontrak pemotongan rumput DBKU</p>
                             </div>
-                            
-                            <!-- Card 2: Total Contractor -->
-                            <div class="metric-card-modern">
-                                <div class="metric-card-content">
-                                    <span class="metric-card-title">Total Contractor</span>
-                                    <h3 class="metric-card-value"><?php echo $total_subzone ?></h3>
-                                </div>
-                                <div class="metric-card-icon-wrapper icon-red">
-                                    <i class="icon-people"></i>
-                                </div>
+                            <div>
+                                <a href="contract_list.php?action=new" class="btn btn-light btn-sm rounded-pill px-3 py-2 font-weight-bold" style="color: #007442;">
+                                    <i class="fa-solid fa-plus me-1"></i> Daftar Kontrak Baharu
+                                </a>
                             </div>
-                            
-                            <!-- Card 3: Total Contract Value -->
-                            <div class="metric-card-modern">
-                                <div class="metric-card-content">
-                                    <span class="metric-card-title">Total Contract Value</span>
-                                    <h3 class="metric-card-value">RM <?php echo number_format($total_perimeter,2) ?></h3>
+                        </div>
+                    </div>
+
+                    <!-- ============================================================== -->
+                    <!-- KPI METRIC CARDS (Donezo-inspired — first card gradient green) -->
+                    <!-- ============================================================== -->
+                    <div class="row g-3 mb-4 gms-fade-in gms-fade-in-delay-1">
+                        <!-- KPI 1: Total Contract (featured gradient) -->
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="gms-kpi-card kpi-featured">
+                                <div>
+                                    <div class="gms-kpi-header">
+                                        <span class="gms-kpi-label">Jumlah Kontrak</span>
+                                        <div class="gms-kpi-icon">
+                                            <i class="icon-doc"></i>
+                                        </div>
+                                    </div>
+                                    <div class="gms-kpi-value" data-countup="<?php echo $total_contract; ?>">0</div>
                                 </div>
-                                <div class="metric-card-icon-wrapper icon-blue">
-                                    <i class="icon-wallet"></i>
+                                <div class="gms-kpi-footer">
+                                    <span style="background: rgba(255,255,255,0.12); color: #6ee7b7; padding: 3px 9px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">
+                                        <i class="fa-solid fa-file-contract"></i> Kontrak Rasmi
+                                    </span>
+                                    <span>Tender DBKU</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Action Banner / Header -->
-                        <!-- <div class="card modern-banner bg-dark">
-                            <div class="card-body p-0 d-sm-flex align-items-center justify-content-between">
-                                <h4 class="modern-banner-title"><i class="icon-settings mr-2"></i> Zone Settings & Management</h4>
-                                <a href="add_zone.php" class="modern-btn-white mt-3 mt-sm-0"><i class="icon-plus"></i> Add New Zone</a>
+                        <!-- KPI 2: Total Contractor -->
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="gms-kpi-card kpi-soft kpi-cyan">
+                                <div>
+                                    <div class="gms-kpi-header">
+                                        <span class="gms-kpi-label">Jumlah Kontraktor</span>
+                                        <div class="gms-kpi-icon">
+                                            <i class="icon-people"></i>
+                                        </div>
+                                    </div>
+                                    <div class="gms-kpi-value" data-countup="<?php echo $total_contractor; ?>">0</div>
+                                </div>
+                                <div class="gms-kpi-footer">
+                                    <span class="gms-kpi-badge badge-cyan-soft">
+                                        <i class="fa-solid fa-circle-check"></i> Aktif Beroperasi
+                                    </span>
+                                    <span>Firma Berdaftar</span>
+                                </div>
                             </div>
-                        </div> -->
+                        </div>
 
-                        <!-- Table Section -->
-                        <div class="row">
-                            <div class="col-md-12 grid-margin stretch-card">
-                                <div class="card shadow">
-                                    <div class="card-body">
-                                        <div class="d-sm-flex align-items-center justify-content-between mb-3">
-                                            <h4 class="card-title">Contract Listing</h4>
+                        <!-- KPI 3: Total Contract Value -->
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="gms-kpi-card kpi-soft kpi-indigo">
+                                <div>
+                                    <div class="gms-kpi-header">
+                                        <span class="gms-kpi-label">Jumlah Nilai Kontrak</span>
+                                        <div class="gms-kpi-icon">
+                                            <i class="icon-wallet"></i>
                                         </div>
-                                        <div class="modern-table-wrapper">
-                                            <table class="modern-table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Contract Number</th>
-                                                        <th>Contractor Name</th>
-                                                        <th>Contract Value</th>
-                                                        <th>Zone</th>
-                                                        <th style="width: 120px; text-align: center;">Actions</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <?php
-                                                    $sql = "SELECT * FROM contract ORDER BY contract_number ASC";
-                                                    $res = $conn->query($sql);
-                                                    if ($res->num_rows > 0) {
-                                                        while ($row = $res->fetch_assoc()) {
-                                                            // Total subzone by zone
-                                                            $sql1 = "SELECT * FROM subzone WHERE sz_id = '" . $row['sz_id'] . "'";
-                                                            $res1 = $conn->query($sql1);
-                                                            $row1 = $res1->fetch_assoc();
+                                    </div>
+                                    <div class="gms-kpi-value">RM <?php echo number_format($total_contract_value / 1000, 2); ?><small style="font-size: 0.9rem; font-weight: 600;"></small></div>
+                                </div>
+                                <div class="gms-kpi-footer">
+                                    <span class="gms-kpi-badge badge-indigo-soft">
+                                        <i class="fa-solid fa-coins"></i> Peruntukan Keseluruhan
+                                    </span>
+                                    <span>Ringgit Malaysia</span>
+                                </div>
+                            </div>
+                        </div>
 
-                                                            // Total Perimeter(m) by zone
-                                                            $sql2 = "SELECT * FROM zone WHERE zone_id = '" . $row1['zone_id'] . "'";
-                                                            $res2 = $conn->query($sql2);
-                                                            $row2 = $res2->fetch_assoc();
+                        <!-- KPI 4: Active Contract -->
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="gms-kpi-card kpi-soft kpi-amber">
+                                <div>
+                                    <div class="gms-kpi-header">
+                                        <span class="gms-kpi-label">Kontrak Aktif</span>
+                                        <div class="gms-kpi-icon">
+                                            <i class="icon-check"></i>
+                                        </div>
+                                    </div>
+                                    <div class="gms-kpi-value" data-countup="<?php echo $active_contract; ?>">0</div>
+                                </div>
+                                <div class="gms-kpi-footer">
+                                    <span class="gms-kpi-badge badge-amber-soft">
+                                        <i class="fa-solid fa-rotate"></i> Beroperasi Kini
+                                    </span>
+                                    <span>Status: Aktif</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- KPI END -->
 
-                                                            // Total Area(ha) by zone
-                                                            $sql3 = "SELECT SUM(fund) AS total_value FROM contract WHERE contract_id = '" . $row['contract_id'] . "'";
-                                                            $res3 = $conn->query($sql3);
-                                                            $row3 = $res3->fetch_assoc();
-                                                            $total_value = $row3['total_value'];
-                                                            
-                                                            // Contractor name
-                                                            $sql4 = "SELECT * FROM contractor WHERE cid = '" . $row['cid'] . "'";
-                                                            $res4 = $conn->query($sql4);
-                                                            $row4 = $res4->fetch_assoc();
-                                                    ?>
-                                                            <tr>
-                                                                <td>
-                                                                    <a class="zone-link" href="contract_details.php?id=<?php echo $row['contract_id'] ?>">
-                                                                        <?php echo htmlspecialchars($row['contract_number']) ?>
-                                                                    </a>
-                                                                </td>
-                                                                <td class="font-weight-bold text-dark"><?php echo $row4['name'] ?></td>
-                                                                <td>RM <?php echo number_format($total_value, 2) ?></td>
-                                                                <td><?php echo $row2['zone_name']  ?></td>
-                                                                <td style="text-align: center;">
-                                                                    <div class="action-btn-group">
-                                                                        <a href="update_zone.php?id=<?php  ?>" class="btn-circle-edit" title="Edit Zone">
-                                                                            <i class="fa fa-pencil"></i>
-                                                                        </a>
-                                                                        <button type="button" class="btn-circle-delete" data-id="<?php  ?>" onclick="deleteDb(this)" title="Delete Zone">
-                                                                            <i class="fa fa-trash"></i>
-                                                                        </button>
+                    <!-- ============================================================== -->
+                    <!-- CONTRACT LISTING TABLE                                          -->
+                    <!-- ============================================================== -->
+                    <div class="row mb-4 gms-fade-in gms-fade-in-delay-2">
+                        <div class="col-12">
+                            <div class="card shadow gms-table-card">
+                                <div class="card-body p-4">
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
+                                        <div>
+                                            <h4 class="gms-section-title">Senarai Kontrak DBKU</h4>
+                                            <p class="gms-section-subtitle">Klik nombor kontrak untuk butiran terperinci sub-zon dan kontraktor.</p>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="gms-table-search">
+                                                <i class="icon-magnifier"></i>
+                                                <input type="text" id="contractTableSearch" placeholder="Cari nombor kontrak, kontraktor atau zon..." autocomplete="off">
+                                            </div>
+                                            <a href="contract_list.php?action=new" class="btn btn-success btn-sm rounded-pill px-3 py-2 font-weight-semibold">
+                                                <i class="fa-solid fa-plus me-1"></i> Kontrak Baharu
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    <div class="gms-table-wrapper">
+                                        <table class="gms-table" id="contractTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nombor Kontrak</th>
+                                                    <th>Nama Kontraktor</th>
+                                                    <th class="text-end">Nilai Kontrak (RM)</th>
+                                                    <th>Zon</th>
+                                                    <th class="text-center">Status</th>
+                                                    <th style="width: 120px; text-align: center;">Tindakan</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php
+                                                if (!empty($contracts_list)) {
+                                                    foreach ($contracts_list as $ct_row) {
+                                                        $ct_id = (int)$ct_row['contract_id'];
+                                                        $ct_number = htmlspecialchars($ct_row['contract_number']);
+                                                        $ct_fund = (float)$ct_row['fund'];
+                                                        $ct_status = $ct_row['c_status'];
+                                                        $ct_contractor = htmlspecialchars($ct_row['contractor_name'] ?? 'Tidak diketahui');
+                                                        $ct_zone = htmlspecialchars($ct_row['zone_name'] ?? '-');
+                                                        $ct_zone_id = (int)$ct_row['zone_id'];
+                                                        $first_letter = mb_strtoupper(mb_substr($ct_row['contractor_name'] ?? '?', 0, 1));
+                                                        $is_active = ($ct_status === 'Y');
+
+                                                        echo "<tr>";
+                                                        echo "<td>
+                                                                <a class=\"zone-link font-weight-bold text-dark\" href=\"contract_details.php?id={$ct_id}\" style=\"text-decoration: none;\">
+                                                                    <span class=\"gms-contractor-avatar me-2 shadow-sm\" style=\"width: 32px; height: 32px; font-size: 0.8rem; border-radius: 8px; background: rgba(0, 116, 66, 0.08); color: #007442; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle;\">
+                                                                        <i class=\"fa-solid fa-file-contract\"></i>
+                                                                    </span>
+                                                                    {$ct_number}
+                                                                </a>
+                                                              </td>";
+                                                        echo "<td>
+                                                                <div class='d-flex align-items-center'>
+                                                                    <div class='gms-contractor-avatar me-3 shadow-sm'>{$first_letter}</div>
+                                                                    <div>
+                                                                        <div class='font-weight-bold text-dark' style='font-size: 0.9rem;'>{$ct_contractor}</div>
+                                                                        <small class='text-muted'>CID: #" . htmlspecialchars($ct_row['cid'] ?? '-') . "</small>
                                                                     </div>
-                                                                </td>
-                                                            </tr>
-                                                        <?php }
-                                                    } else { ?>
-                                                        <tr>
-                                                            <td colspan="5" class="text-center text-danger font-weight-bold py-4">
-                                                                <i class="icon-info mr-2"></i> No zone data available.
-                                                            </td>
-                                                        </tr>
-                                                    <?php } ?>
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                                </div>
+                                                              </td>";
+                                                        echo "<td class=\"text-end font-weight-semibold text-secondary\" style=\"font-family: monospace;\">RM " . number_format($ct_fund, 2) . "</td>";
+                                                        echo "<td>";
+                                                        if (!empty($ct_row['zone_name'])) {
+                                                            echo "<a class=\"zone-link\" href=\"zone_details.php?id={$ct_zone_id}\" style=\"text-decoration: none;\">
+                                                                    <span class=\"gms-tag-pill\"><i class=\"fa-solid fa-location-dot me-1\"></i>{$ct_zone}</span>
+                                                                  </a>";
+                                                        } else {
+                                                            echo "<span class=\"text-muted\">-</span>";
+                                                        }
+                                                        echo "</td>";
+                                                        echo "<td class=\"text-center\">";
+                                                        if ($is_active) {
+                                                            echo "<span class=\"badge bg-success bg-opacity-10 text-success rounded-pill px-2\" style=\"font-size: 0.65rem;\"><i class=\"fa-solid fa-circle-check me-1\"></i>Aktif</span>";
+                                                        } else {
+                                                            echo "<span class=\"badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-2\" style=\"font-size: 0.65rem;\"><i class=\"fa-solid fa-circle-minus me-1\"></i>Tidak Aktif</span>";
+                                                        }
+                                                        echo "</td>";
+                                                        echo "<td style=\"text-align: center;\">";
+                                                        echo "<div class=\"action-btn-group d-inline-flex gap-2\">";
+                                                        echo "<a href=\"contract_details.php?id={$ct_id}\" class=\"btn-circle-edit\" title=\"Pandang & Kemaskini Kontrak\">
+                                                                <i class=\"fa fa-eye\"></i>
+                                                              </a>";
+                                                        echo "<button type=\"button\" class=\"btn-circle-delete\" data-id=\"{$ct_id}\" onclick=\"deleteDb(this)\" title=\"Padam Kontrak\">
+                                                                <i class=\"fa fa-trash\"></i>
+                                                              </button>";
+                                                        echo "</div>";
+                                                        echo "</td>";
+                                                        echo "</tr>";
+                                                    }
+                                                } else {
+                                                    echo "<tr><td colspan='6' class='text-center text-muted py-5'><i class='icon-info me-2'></i>Tiada rekod kontrak ditemui</td></tr>";
+                                                }
+                                                ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between mt-4 gap-3">
+                                        <p class="text-muted mb-0 small" id="tableRecordCount">Memaparkan <?php echo count($contracts_list); ?> kontrak berdaftar DBKU</p>
+                                        <span class="badge bg-light text-muted border rounded-pill small px-3 py-1">
+                                            <i class="fa-solid fa-database me-1 text-success"></i> Data Langsung
+                                        </span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    <!-- TABLE END -->
 
                 </div>
                 <!-- content-wrapper ends -->
-                <!-- partial:partials/_footer.html -->
-                <footer class="footer">
-                    <div class="d-sm-flex justify-content-center justify-content-sm-between">
-                        <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2024 Stellar. All rights reserved. <a href="#"> Terms of use</a><a href="#">Privacy Policy</a></span>
-                        <span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="icon-heart text-danger"></i></span>
-                    </div>
-                </footer>
-                <!-- partial -->
+
+                <?php include 'partials/footer.php'; ?>
             </div>
             <!-- main-panel ends -->
         </div>
         <!-- page-body-wrapper ends -->
     </div>
     <!-- container-scroller -->
-    <!-- plugins:js -->
+
+    <!-- JS -->
     <script src="assets/vendors/js/vendor.bundle.base.js"></script>
-    <!-- endinject -->
-    <!-- Plugin js for this page -->
-    <script src="assets/vendors/chart.js/chart.umd.js"></script>
-    <script src="assets/vendors/jvectormap/jquery-jvectormap.min.js"></script>
-    <script src="assets/vendors/jvectormap/jquery-jvectormap-world-mill-en.js"></script>
     <script src="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.js"></script>
     <script src="assets/vendors/moment/moment.min.js"></script>
     <script src="assets/vendors/daterangepicker/daterangepicker.js"></script>
-    <script src="assets/vendors/chartist/chartist.min.js"></script>
-    <script src="assets/vendors/progressbar.js/progressbar.min.js"></script>
     <script src="assets/js/jquery.cookie.js"></script>
-    <!-- End plugin js for this page -->
-    <!-- inject:js -->
     <script src="assets/js/off-canvas.js"></script>
     <script src="assets/js/hoverable-collapse.js"></script>
     <script src="assets/js/misc.js"></script>
     <script src="assets/js/settings.js"></script>
     <script src="assets/js/todolist.js"></script>
-    <!-- endinject -->
-    <!-- Custom js for this page -->
-    <script src="assets/js/dashboard.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- End custom js for this page -->
+
+    <!-- Action button styles (moved from inline CSS to keep consistent) -->
+    <style>
+        .action-btn-group .btn-circle-edit {
+            width: 34px; height: 34px; border-radius: 50%;
+            display: inline-flex; align-items: center; justify-content: center;
+            background: rgba(0, 116, 66, 0.08); color: #007442;
+            border: 1px solid rgba(0, 116, 66, 0.15);
+            font-size: 0.8rem; text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .action-btn-group .btn-circle-edit:hover {
+            background: #007442; color: #fff; border-color: #007442;
+            transform: scale(1.08); box-shadow: 0 4px 10px rgba(0, 116, 66, 0.2);
+            text-decoration: none;
+        }
+        .action-btn-group .btn-circle-delete {
+            width: 34px; height: 34px; border-radius: 50%;
+            display: inline-flex; align-items: center; justify-content: center;
+            background: rgba(239, 68, 68, 0.08); color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.15);
+            font-size: 0.8rem; cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .action-btn-group .btn-circle-delete:hover {
+            background: #ef4444; color: #fff; border-color: #ef4444;
+            transform: scale(1.08); box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);
+        }
+    </style>
+
     <script>
         function deleteDb(btn) {
-
             let id = btn.dataset.id;
             let row = btn.closest("tr");
-
-            // ambil nama contractor
-            let zone = row.cells[0].innerText.trim();
+            let contract = row.cells[0].innerText.trim();
 
             Swal.fire({
-                title: "Delete Subzone?",
-                html: "Are you sure want to delete <b>" + zone + "</b> and all it subzone ?",
+                title: "Padam Kontrak?",
+                html: "Adakah anda pasti mahu memadam kontrak <b>" + contract + "</b>? Semua rekod berkaitan akan terjejas.",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#d33",
-                cancelButtonColor: "#3085d6",
-                confirmButtonText: "Yes, delete",
-                cancelButtonText: "Cancel"
+                cancelButtonColor: "#007442",
+                confirmButtonText: "Ya, padam",
+                cancelButtonText: "Batal"
             }).then((result) => {
-
                 if (result.isConfirmed) {
-
-                    fetch("includes/delete_zone.php", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/x-www-form-urlencoded"
-                            },
-                            body: "id=" + id
-                        })
-                        .then(res => res.text())
-                        .then(data => {
-
-                            if (data.trim() == "success") {
-
-                                Swal.fire({
-                                    title: "Deleted!",
-                                    text: zone + " has been removed.",
-                                    icon: "success"
-                                }).then(() => {
-                                    location.reload(); // refresh page
-                                });
-
-                            } else {
-
-                                Swal.fire(
-                                    "Error!",
-                                    "Failed to delete subzone.",
-                                    "error"
-                                );
-
-                            }
-
-                        });
-
+                    fetch("includes/delete_contract.php", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: "id=" + id
+                    })
+                    .then(res => res.text())
+                    .then(data => {
+                        if (data.trim() == "success") {
+                            Swal.fire({
+                                title: "Dipadam!",
+                                text: contract + " telah dialih keluar.",
+                                icon: "success"
+                            }).then(() => { location.reload(); });
+                        } else {
+                            Swal.fire("Ralat!", "Gagal memadam kontrak. Sila cuba lagi.", "error");
+                        }
+                    });
                 }
-
             });
-
         }
+
+        // Table live search
+        document.addEventListener("DOMContentLoaded", function() {
+            var searchInput = document.getElementById('contractTableSearch');
+            var table = document.getElementById('contractTable');
+            var countLabel = document.getElementById('tableRecordCount');
+            if (searchInput && table) {
+                searchInput.addEventListener('keyup', function() {
+                    var filter = searchInput.value.toLowerCase().trim();
+                    var rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+                    var visibleCount = 0;
+                    for (var i = 0; i < rows.length; i++) {
+                        var text = rows[i].textContent.toLowerCase();
+                        if (text.indexOf(filter) > -1) {
+                            rows[i].style.display = '';
+                            visibleCount++;
+                        } else {
+                            rows[i].style.display = 'none';
+                        }
+                    }
+                    if (countLabel) {
+                        if (filter === '') {
+                            countLabel.textContent = 'Memaparkan <?php echo count($contracts_list); ?> kontrak berdaftar DBKU';
+                        } else {
+                            countLabel.textContent = 'Ditemui ' + visibleCount + ' kontrak sepadan dengan carian "' + filter + '"';
+                        }
+                    }
+                });
+            }
+
+            // Count-up animation for KPI values
+            var countEls = document.querySelectorAll('[data-countup]');
+            countEls.forEach(function(el) {
+                var target = parseFloat(el.getAttribute('data-countup')) || 0;
+                if (target === 0) { el.textContent = '0'; return; }
+                var duration = 1000;
+                var startTime = null;
+                function step(ts) {
+                    if (!startTime) startTime = ts;
+                    var progress = Math.min((ts - startTime) / duration, 1);
+                    var eased = 1 - Math.pow(1 - progress, 4);
+                    var current = target * eased;
+                    el.textContent = Math.floor(current).toLocaleString();
+                    if (progress < 1) { requestAnimationFrame(step); }
+                    else { el.textContent = target.toLocaleString(); }
+                }
+                requestAnimationFrame(step);
+            });
+        });
     </script>
 
     <?php
-    // Check if there is a status message in the session
+    // Session status message (SweetAlert)
     if (isset($_SESSION['status'])) {
-        $status = $_SESSION['status'];   // 'success' or 'error'
-        $message = $_SESSION['message']; // Error or success message
-
-        // Clear session message after use
+        $status = $_SESSION['status'];
+        $message = $_SESSION['message'];
         unset($_SESSION['status']);
         unset($_SESSION['message']);
-
-        if ($status == 'success') {
-            echo '<script>
-                            document.addEventListener("DOMContentLoaded", function() {
-                                Swal.fire({
-                                    title: "' . $message . '",
-                                    text: "",
-                                    icon: "success",
-                                });
-                            });
-                        </script>';
-        } else {
-            echo '<script>
-                            document.addEventListener("DOMContentLoaded", function() {
-                                Swal.fire({
-                                    title: "' . $message . '",
-                                    icon: "error",
-                                });
-                            });
-                        </script>';
-        }
+        $icon = ($status == 'success') ? 'success' : 'error';
+        echo '<script>
+            document.addEventListener("DOMContentLoaded", function() {
+                Swal.fire({ title: "' . addslashes($message) . '", icon: "' . $icon . '" });
+            });
+        </script>';
     }
     ?>
-
-
 </body>
 
 </html>

@@ -1,162 +1,73 @@
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-.sidebar {
-    font-family: 'Poppins', sans-serif !important;
+<?php
+$current_page = basename($_SERVER['PHP_SELF']);
+function is_active($page, $current) {
+    if ($page === 'index' && ($current === 'index.php' || $current === 'index')) return 'active';
+    if (strpos($current, $page) !== false) return 'active';
+    return '';
 }
-.sidebar .nav .nav-category .nav-link {
-    font-family: 'Poppins', sans-serif !important;
-}
-</style>
+?>
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
     <ul class="nav">
-        <li class="nav-item navbar-brand-mini-wrapper">
-            <a class="nav-link navbar-brand brand-logo-mini" href="index.html"><img src="assets/images/gms.png" alt="logo" style="height:50px"/></a>
-        </li>
-        <!-- <li class="nav-item nav-profile">
-            <a href="#" class="nav-link">
-                <div class="profile-image">
-                    <img class="img-xs rounded-circle" src="assets/images/faces/face8.jpg" alt="profile image">
-                    <div class="dot-indicator bg-success"></div>
-                </div>
-                <div class="text-wrapper">
-                    <p class="profile-name">DBKU ADMIN</p>
-                    <p class="designation">Administrator</p>
-                </div>
-                <div class="icon-container">
-                    <i class="icon-bubbles"></i>
-                    <div class="dot-indicator bg-danger"></div>
-                </div>
+        <!-- Brand Header for Mobile / Collapsed View -->
+        <li class="nav-item navbar-brand-mini-wrapper d-none">
+            <a class="nav-link navbar-brand brand-logo-mini" href="index.php">
+                <img src="assets/images/gms.png" alt="logo" style="height:36px"/>
             </a>
-        </li> -->
+        </li>
+
+        <!-- Menu Section (Donezo Style) -->
         <li class="nav-item nav-category">
-            <span class="nav-link">Dashboard</span>
+            <span class="nav-link">Menu</span>
         </li>
-        <li class="nav-item">
-            <a class="nav-link" href="index">
-                <span class="menu-title">Dashboard</span>
-                <i class="icon-screen-desktop menu-icon"></i>
-            </a>
-        </li>
-        <li class="nav-item nav-category"><span class="nav-link">Management</span></li>
-        <li class="nav-item">
-            <a class="nav-link" href="zone">
-                <span class="menu-title">Zone</span>
-                <i class="icon-layers menu-icon"></i>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="contract_list">
-                <span class="menu-title">Contract</span>
-                <i class="icon-list menu-icon"></i>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="contractor_list">
-                <span class="menu-title">Contractor</span>
-                <i class="icon-user menu-icon"></i>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="users_management">
-                <span class="menu-title">User Management</span>
-                <i class="icon-people menu-icon"></i>
-            </a>
-        </li>
-        
-        <!-- <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="collapse" href="#ui-basic" aria-expanded="false" aria-controls="ui-basic">
-                <span class="menu-title">Basic UI Elements</span>
-                <i class="icon-layers menu-icon"></i>
-            </a>
-            <div class="collapse" id="ui-basic">
-                <ul class="nav flex-column sub-menu">
-                    <li class="nav-item"> <a class="nav-link" href="pages/ui-features/buttons.html">Zone</a></li>
-                    <li class="nav-item"> <a class="nav-link" href="pages/ui-features/dropdowns.html">Dropdowns</a></li>
-                    <li class="nav-item"> <a class="nav-link" href="pages/ui-features/typography.html">Typography</a></li>
-                </ul>
-            </div>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="collapse" href="#icons" aria-expanded="false" aria-controls="icons">
-                <span class="menu-title">Zone</span>
-                <i class="icon-globe menu-icon"></i>
-            </a>
-            <div class="collapse" id="icons">
-                <ul class="nav flex-column sub-menu">
-                    <li class="nav-item"> <a class="nav-link" href="pages/icons/font-awesome.html">Font Awesome</a></li>
-                </ul>
-            </div>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="collapse" href="#forms" aria-expanded="false" aria-controls="forms">
-                <span class="menu-title">Forms</span>
-                <i class="icon-book-open menu-icon"></i>
-            </a>
-            <div class="collapse" id="forms">
-                <ul class="nav flex-column sub-menu">
-                    <li class="nav-item"> <a class="nav-link" href="pages/forms/basic_elements.html">Form Elements</a></li>
-                </ul>
-            </div>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="collapse" href="#charts" aria-expanded="false" aria-controls="charts">
-                <span class="menu-title">Charts</span>
-                <i class="icon-chart menu-icon"></i>
-            </a>
-            <div class="collapse" id="charts">
-                <ul class="nav flex-column sub-menu">
-                    <li class="nav-item"> <a class="nav-link" href="pages/charts/chartjs.html">ChartJs</a></li>
-                </ul>
-            </div>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="collapse" href="#tables" aria-expanded="false" aria-controls="tables">
-                <span class="menu-title">Tables</span>
+        <li class="nav-item <?php echo is_active('index', $current_page); ?>">
+            <a class="nav-link" href="index.php">
                 <i class="icon-grid menu-icon"></i>
+                <span class="menu-title">Papan Pemuka</span>
             </a>
-            <div class="collapse" id="tables">
-                <ul class="nav flex-column sub-menu">
-                    <li class="nav-item"> <a class="nav-link" href="pages/tables/basic-table.html">Basic Table</a></li>
-                </ul>
-            </div>
-        </li> -->
-        <!-- <li class="nav-item nav-category"><span class="nav-link">COMPONENTS</span></li>
-        <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="collapse" href="#data" aria-expanded="false" aria-controls="auth">
-                <span class="menu-title">DATA ENTRY</span>
-                <i class="icon-disc menu-icon"></i>
+        </li>
+        <li class="nav-item <?php echo is_active('zone', $current_page); ?>">
+            <a class="nav-link" href="zone.php">
+                <i class="icon-layers menu-icon"></i>
+                <span class="menu-title">Pengurusan Zon</span>
             </a>
-            <div class="collapse" id="data">
-                <ul class="nav flex-column sub-menu">
-                    <li class="nav-item"> <a class="nav-link disabled" href="pages/samples/blank-page.html"> DATA ENTRY </a></li>
-                    <li class="nav-item"> <a class="nav-link disabled" href="pages/samples/login.html"> DATA UPDATE </a></li>
-                    <li class="nav-item"> <a class="nav-link disabled" href="pages/samples/register.html"> CONTRACTOR </a></li>
-                    <li class="nav-item"> <a class="nav-link disabled" href="pages/samples/error-404.html"> PAYMENT UPDATE </a></li>
-                    <li class="nav-item"> <a class="nav-link disabled" href="pages/samples/error-500.html"> PERFORMANCE </a></li>
-                </ul>
-            </div>
+        </li>
+        <li class="nav-item <?php echo is_active('contract_list', $current_page); ?>">
+            <a class="nav-link" href="contract_list.php">
+                <i class="icon-doc menu-icon"></i>
+                <span class="menu-title">Kontrak</span>
+            </a>
+        </li>
+        <li class="nav-item <?php echo is_active('contractor', $current_page); ?>">
+            <a class="nav-link" href="contractor_list.php">
+                <i class="icon-people menu-icon"></i>
+                <span class="menu-title">Kontraktor</span>
+            </a>
+        </li>
+
+        <!-- General Section (Donezo Style) -->
+        <li class="nav-item nav-category">
+            <span class="nav-link">General</span>
+        </li>
+        <li class="nav-item <?php echo is_active('users_management', $current_page); ?>">
+            <a class="nav-link" href="users_management.php">
+                <i class="icon-settings menu-icon"></i>
+                <span class="menu-title">Pengurusan Pengguna</span>
+            </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="collapse" href="#details" aria-expanded="false" aria-controls="auth">
-                <span class="menu-title">WORK DETAILS</span>
-                <i class="icon-disc menu-icon"></i>
-            </a>
-            <div class="collapse" id="details">
-                <ul class="nav flex-column sub-menu">
-                    <li class="nav-item"> <a class="nav-link disabled" href="pages/samples/blank-page.html"> WORK SCHEDULE </a></li>
-                    <li class="nav-item"> <a class="nav-link disabled" href="pages/samples/login.html"> DAILY DIARY </a></li>
-                    <li class="nav-item"> <a class="nav-link disabled" href="pages/samples/register.html"> Register </a></li>
-                    <li class="nav-item"> <a class="nav-link disabled" href="pages/samples/error-404.html"> 404 </a></li>
-                    <li class="nav-item"> <a class="nav-link disabled" href="pages/samples/error-500.html"> 500 </a></li>
-                </ul>
-            </div>
-        </li> -->
-        <li class="nav-item nav-category"><span class="nav-link">REPORTING</span></li>
-        <li class="nav-item">
-            <a class="nav-link disabled" href="../../docs/documentation.html" target="_blank">
-                <span class="menu-title">REPORTS</span>
-                <i class="icon-folder-alt menu-icon"></i>
+            <a class="nav-link" href="docs/documentation.html" target="_blank">
+                <i class="icon-question menu-icon"></i>
+                <span class="menu-title">Dokumentasi & Bantuan</span>
             </a>
         </li>
     </ul>
+
+    <!-- Bottom Telemetry Card (Donezo / Executive High-Tech Dark Style) -->
+    <div class="sidebar-system-status d-none d-xl-block">
+        <div class="d-flex align-items-center mb-1">
+            <span class="gms-pulse-dot me-2"></span>
+            <span style="font-size: 11px; font-weight: 700; color: #10b981; letter-spacing: 0.04em;">Green Management System</span>
+        </div>
+        <p class="mb-0" style="font-size: 11px; color: #7e9e92; line-height: 1.3;">Enjin Pemantauan Dalam Talian</p>
+    </div>
 </nav>

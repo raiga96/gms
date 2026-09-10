@@ -23,354 +23,235 @@ $row3 = $res3->fetch_assoc();
 $total_area = $row3['total_area'] ?? 0;
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ms">
 
 <head>
-    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>SmartCut</title>
-    <!-- plugins:css -->
+    <title>Lantik Kontraktor — Green Management System (DBKU)</title>
+    <link rel="shortcut icon" href="assets/images/favicon.png" />
     <link rel="stylesheet" href="assets/vendors/simple-line-icons/css/simple-line-icons.css">
     <link rel="stylesheet" href="assets/vendors/flag-icon-css/css/flag-icons.min.css">
     <link rel="stylesheet" href="assets/vendors/css/vendor.bundle.base.css">
-    <!-- endinject -->
-    <!-- Plugin css for this page -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css">
+    <link rel="stylesheet" href="assets/vendors/mdi/css/materialdesignicons.min.css">
     <link rel="stylesheet" href="assets/vendors/font-awesome/css/font-awesome.min.css" />
     <link rel="stylesheet" href="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css">
-    <link rel="stylesheet" href="assets/vendors/jvectormap/jquery-jvectormap.css">
     <link rel="stylesheet" href="assets/vendors/daterangepicker/daterangepicker.css">
-    <link rel="stylesheet" href="assets/vendors/chartist/chartist.min.css">
-    <!-- End plugin css for this page -->
-    <!-- inject:css -->
-    <!-- endinject -->
-    <!-- Layout styles -->
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
-    <!-- End layout styles -->
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+        /* Donezo-inspired form page scoped styles (use theme CSS variables) */
+        .gms-form-card .card-body { padding: 2rem !important; }
 
-        .modern-assign-container {
-            font-family: 'Outfit', sans-serif;
-            color: #334155;
+        .gms-parameter-grid {
+            align-items: flex-start;
         }
 
-        /* Modern Banner / Header */
-        .modern-banner {
-            background: linear-gradient(90deg, #1d384d 0%, #00311c 100%);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
-            margin-bottom: 24px;
-            border: none;
+        .gms-parameter-grid > [class*="col-"] {
+            min-width: 0;
         }
 
-        .modern-banner-title {
-            font-size: 22px;
-            font-weight: 700;
-            color: #ffffff;
-            margin: 0;
-            letter-spacing: -0.02em;
+        .gms-parameter-grid .gms-input-group,
+        .gms-parameter-grid .gms-form-control {
+            min-width: 0;
+            width: 100%;
         }
 
-        .modern-banner-subtitle {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.7);
-            margin: 4px 0 0 0;
+        @media (max-width: 991.98px) {
+            .gms-form-card .card-body { padding: 1.5rem !important; }
         }
 
-        /* Metric Cards Styling */
-        .metric-card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 24px;
+        @media (max-width: 575.98px) {
+            .gms-form-card .card-body { padding: 1.25rem !important; }
         }
 
-        .metric-card-modern {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 18px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 5px 15px -8px rgba(0, 0, 0, 0.05);
-            transition: all 0.25s ease;
-        }
-
-        .metric-card-modern:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.08), 0 8px 20px -8px rgba(0, 0, 0, 0.08);
-            border-color: #cbd5e1;
-        }
-
-        .metric-card-content {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .metric-card-title {
-            font-size: 11px;
+        .gms-form-label {
+            display: block;
+            font-size: 0.8125rem;
             font-weight: 600;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 6px;
+            color: var(--gms-text-secondary);
+            letter-spacing: 0.02em;
+            margin-bottom: 0.5rem;
         }
+        .gms-form-label .text-danger { color: #ef4444; }
 
-        .metric-card-value {
-            font-size: 22px;
-            font-weight: 700;
-            color: #0f172a;
-            margin: 0;
-        }
-
-        .metric-card-icon-wrapper {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
+        .gms-input-group {
+            position: relative;
             display: flex;
+            align-items: stretch;
+        }
+        .gms-input-icon {
+            display: flex;
+            align-items: center;
             justify-content: center;
-            align-items: center;
-            font-size: 18px;
-            color: #ffffff;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            width: 46px;
+            flex-shrink: 0;
+            background: rgba(0, 116, 66, 0.06);
+            color: var(--gms-primary);
+            border: 1px solid var(--gms-border);
+            border-right: none;
+            border-radius: 12px 0 0 12px;
+            font-size: 1rem;
+            transition: var(--gms-transition);
         }
-
-        .icon-blue {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        .gms-input-group:focus-within .gms-input-icon {
+            background: rgba(0, 116, 66, 0.12);
+            color: #059669;
+            border-color: var(--gms-border-focus);
         }
-
-        .icon-yellow {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
-        }
-
-        /* Modern Card Details */
-        .modern-assign-container .card {
-            border: none;
-            border-radius: 16px !important;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 5px 15px -8px rgba(0, 0, 0, 0.05) !important;
-            background: #ffffff;
-            overflow: hidden;
-            margin-bottom: 24px;
-        }
-
-        .modern-assign-container .card-body {
-            padding: 28px !important;
-        }
-
-        .modern-assign-container .card-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #1e293b;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .form-section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 12px;
-            margin-bottom: 20px;
-        }
-
-        /* Custom Form Controls */
-        .modern-assign-container .form-group {
-            margin-bottom: 0px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .modern-assign-container label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #475569;
-            margin-bottom: 0px;
-        }
-
-        .modern-assign-container .form-control {
-            border: 1px solid #cbd5e1;
-            border-radius: 10px !important;
-            padding: 10px 14px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #1e293b;
-            background-color: #ffffff;
-            transition: all 0.2s ease;
-            height: auto;
-        }
-
-        .modern-assign-container select.form-control {
-            padding: 10px 14px !important;
-            cursor: pointer;
-        }
-
-        .modern-assign-container .form-control:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        .gms-form-control {
+            flex: 1 1 auto;
+            padding: 12px 16px;
+            border: 1px solid var(--gms-border);
+            border-radius: 0 12px 12px 0;
+            background: #f8fafc;
+            color: var(--gms-text-primary);
+            font-size: 0.9rem;
+            font-family: inherit;
             outline: none;
-            background-color: #ffffff;
-            color: #1e293b;
+            transition: var(--gms-transition);
+        }
+        .gms-form-control::placeholder { color: var(--gms-text-muted); }
+        .gms-form-control:focus {
+            background: #ffffff;
+            border-color: var(--gms-border-focus);
+            box-shadow: 0 0 0 3px rgba(0, 116, 66, 0.12);
+        }
+        textarea.gms-form-control {
+            border-radius: 0 12px 12px 12px;
+        }
+        select.gms-form-control {
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 18px;
+            padding-right: 40px;
         }
 
-        /* Profile details view */
-        .profile-summary-box {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 18px;
-            display: flex;
-            gap: 16px;
-            align-items: center;
-            height: 100%;
-        }
-
-        .profile-summary-icon {
-            width: 54px;
-            height: 54px;
-            background: #eff6ff;
-            color: #3b82f6;
-            border-radius: 12px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-        }
-
-        .profile-meta-title {
-            font-size: 11px;
+        .gms-btn-primary {
+            padding: 12px 28px;
+            border-radius: var(--gms-pill-radius);
             font-weight: 600;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin: 0 0 4px 0;
-        }
-
-        .profile-meta-value {
-            font-size: 15px;
-            font-weight: 700;
-            color: #0f172a;
-            margin: 0;
-        }
-
-        .profile-meta-sub {
-            font-size: 12px;
-            color: #64748b;
-            margin: 2px 0 0 0;
-        }
-
-        .info-card-box {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 18px;
-            height: 100%;
-        }
-
-        .info-card-item {
-            margin-bottom: 12px;
-        }
-
-        .info-card-item:last-child {
-            margin-bottom: 0;
-        }
-
-        /* Buttons styling */
-        .btn-modern-primary {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            color: #ffffff !important;
-            font-weight: 600;
-            font-size: 13px;
-            padding: 10px 24px;
-            border-radius: 30px;
+            font-size: 0.875rem;
+            background: linear-gradient(135deg, #10b981 0%, #007442 100%);
+            color: #ffffff;
             border: none;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-            transition: all 0.2s ease;
+            box-shadow: 0 6px 18px rgba(0, 116, 66, 0.3);
+            transition: var(--gms-transition);
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            text-decoration: none;
+            gap: 8px;
         }
-
-        .btn-modern-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
-            text-decoration: none;
+        .gms-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(0, 116, 66, 0.4);
+            color: #ffffff;
         }
-
-        .btn-modern-success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: #ffffff !important;
+        .gms-btn-outline {
+            padding: 12px 28px;
+            border-radius: var(--gms-pill-radius);
             font-weight: 600;
-            font-size: 13px;
-            padding: 10px 24px;
-            border-radius: 30px;
-            border: none;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-            transition: all 0.2s ease;
+            font-size: 0.875rem;
+            background: #ffffff;
+            color: var(--gms-primary);
+            border: 1px solid rgba(0, 116, 66, 0.3);
+            transition: var(--gms-transition);
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            cursor: pointer;
+            gap: 8px;
             text-decoration: none;
         }
-
-        .btn-modern-success:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+        .gms-btn-outline:hover {
+            background: rgba(0, 116, 66, 0.06);
+            border-color: rgba(0, 116, 66, 0.5);
+            transform: translateY(-2px);
             text-decoration: none;
         }
-
-        .btn-modern-danger {
+        .gms-btn-light {
+            padding: 12px 28px;
+            border-radius: var(--gms-pill-radius);
+            font-weight: 600;
+            font-size: 0.875rem;
             background: #f1f5f9;
-            color: #475569 !important;
-            font-weight: 600;
-            font-size: 13px;
-            padding: 10px 24px;
-            border-radius: 30px;
-            border: 1px solid #cbd5e1;
-            transition: all 0.2s ease;
+            color: var(--gms-text-secondary);
+            border: 1px solid var(--gms-border);
+            transition: var(--gms-transition);
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            text-decoration: none;
             cursor: pointer;
+        }
+        .gms-btn-light:hover {
+            background: #e2e8f0;
+            color: var(--gms-text-primary);
+            transform: translateY(-2px);
             text-decoration: none;
         }
 
-        .btn-modern-danger:hover {
-            background-color: #e2e8f0;
-            color: #334155 !important;
-            transform: translateY(-1px);
-            text-decoration: none;
+        /* Profile summary tiles (dynamic contractor details) */
+        .gms-profile-tile {
+            background: #ffffff;
+            border: 1px solid var(--gms-border);
+            border-radius: 14px;
+            padding: 1.1rem 1.25rem;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: var(--gms-transition);
+        }
+        .gms-profile-tile:hover {
+            box-shadow: var(--gms-shadow-sm);
+            border-color: rgba(203, 213, 225, 0.9);
+        }
+        .gms-profile-tile-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+            background: rgba(0, 116, 66, 0.08);
+            color: var(--gms-primary);
+        }
+        .gms-profile-tile-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--gms-text-muted);
+            margin-bottom: 2px;
+        }
+        .gms-profile-tile-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--gms-text-primary);
+            word-break: break-word;
+            line-height: 1.3;
         }
     </style>
-    <link rel="shortcut icon" href="assets/images/favicon.png" />
 </head>
 
 <body>
     <div class="container-scroller">
-        <!-- partial:partials/_navbar.html -->
-        <?php include 'partials/navbar.php' ?>
-        <!-- partial -->
+        <?php include 'partials/navbar.php'; ?>
+
         <div class="container-fluid page-body-wrapper">
-            <!-- partial:partials/_sidebar.html -->
-            <?php include 'partials/sidebar.php' ?>
-            <!-- partial -->
+            <?php include 'partials/sidebar.php'; ?>
+
             <div class="main-panel" style="height: 100%;">
                 <div class="content-wrapper">
 
-                    <!-- Performance Indicator Start -->
+                    <!-- ============================================================== -->
+                    <!-- PAGE HEADER BANNER (Donezo-inspired hero)                       -->
+                    <!-- ============================================================== -->
                     <?php
                     $sql = "SELECT * FROM subzone AS a JOIN zone AS b ON b.zone_id = a.zone_id WHERE a.sz_id = '$subzone_id'";
                     $res = $conn->query($sql);
@@ -379,229 +260,339 @@ $total_area = $row3['total_area'] ?? 0;
                     $subzone_name = $row['sz_name'];
                     $zone_id = $row['zone_id'];
                     ?>
-
-                    <div class="modern-assign-container">
-                        <!-- Action Banner / Header -->
-                        <div class="card modern-banner bg-dark">
-                            <div class="card-body p-0 d-sm-flex align-items-center justify-content-between text-white">
-                                <div>
-                                    <h3 class="modern-banner-title"><i class="icon-user-follow mr-2"></i> Assign Contractor</h3>
-                                    <p class="modern-banner-subtitle">Configure contractor details and assign work for <?php echo htmlspecialchars($subzone_name) ?></p>
+                    <div class="gms-hero-banner gms-fade-in" style="padding: 1.5rem 2rem;">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap g-3">
+                            <div>
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="gms-pulse-dot" style="background:#34d399;"></span>
+                                    <span class="gms-hero-subtitle" style="color: rgba(255,255,255,0.75);">Modul Lantikan Kontraktor</span>
                                 </div>
+                                <h1 class="gms-hero-title mb-1">Lantik Kontraktor</h1>
+                                <p class="gms-hero-subtitle">Konfigurasi butiran kontraktor &amp; tetapkan kerja bagi <?php echo htmlspecialchars($subzone_name); ?> (Zon <?php echo htmlspecialchars($zone_name); ?>)</p>
                             </div>
-                        </div>
-
-                        <!-- Metrics Grid -->
-                        <div class="metric-card-grid">
-                            <!-- Card 1: Sub-Zone Perimeter -->
-                            <div class="metric-card-modern">
-                                <div class="metric-card-content">
-                                    <span class="metric-card-title">Perimeter</span>
-                                    <h3 class="metric-card-value"><?php echo number_format($total_perimeter) ?> m</h3>
-                                </div>
-                                <div class="metric-card-icon-wrapper icon-blue">
-                                    <i class="icon-size-fullscreen"></i>
-                                </div>
-                            </div>
-                            
-                            <!-- Card 2: Sub-Zone Area -->
-                            <div class="metric-card-modern">
-                                <div class="metric-card-content">
-                                    <span class="metric-card-title">Area</span>
-                                    <h3 class="metric-card-value"><?php echo number_format($total_area, 2) ?> ha</h3>
-                                </div>
-                                <div class="metric-card-icon-wrapper icon-yellow">
-                                    <i class="icon-pie-chart"></i>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Step 1: Choose Contractor Select -->
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="form-section-header">
-                                    <h4 class="card-title"><i class="icon-people text-primary mr-1"></i> Choose Contractor</h4>
-                                    <a class="btn-modern-primary py-2 px-3" href="new_contractor.php"><i class="icon-plus"></i> New Contractor</a>
-                                </div>
-                                <div class="form-group mt-2">
-                                    <label for="contractorSelect">Select Contractor Profile</label>
-                                    <select name="contractor_id" id="contractorSelect" class="form-control">
-                                        <option value="" selected>-- Select Contractor --</option>
-                                        <?php
-                                        $sql = "SELECT * FROM contractor ";
-                                        $res1 = $conn->query($sql);
-                                        if ($res1->num_rows > 0) {
-                                            while ($row1 = $res1->fetch_assoc()) {
-                                        ?>
-                                                <option value="<?php echo $row1['cid'] ?>"><?php echo htmlspecialchars($row1['name']) ?></option>
-                                        <?php }
-                                        } ?>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Step 2: Contractor Details Form (Displays Dynamically) -->
-                        <div id="contractorDetails" style="display: none; flex-direction: column; gap: 24px;">
-                            <!-- Contractor Profile Information Card -->
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="form-section-header mb-3">
-                                        <h4 class="card-title"><i class="icon-badge text-primary mr-1"></i> Profile Information</h4>
-                                    </div>
-                                    <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <div class="profile-summary-box">
-                                                <div class="profile-summary-icon">
-                                                    <i class="icon-user"></i>
-                                                </div>
-                                                <div>
-                                                    <p class="profile-meta-title">Contractor</p>
-                                                    <h5 class="profile-meta-value" id="contractorName">-</h5>
-                                                    <p class="profile-meta-sub">PIC: <span id="contractorId">-</span></p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-4">
-                                            <div class="info-card-box">
-                                                <div class="info-card-item">
-                                                    <p class="profile-meta-title">Email Address</p>
-                                                    <h6 class="profile-meta-value text-primary"><i class="fa fa-envelope me-1"></i> <span id="contractorEmail">--</span></h6>
-                                                </div>
-                                                <div class="info-card-item">
-                                                    <p class="profile-meta-title">Phone Number</p>
-                                                    <h6 class="profile-meta-value"><i class="icon-phone me-1"></i> <span id="contractorPhone">--</span></h6>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-4">
-                                            <div class="info-card-box">
-                                                <p class="profile-meta-title">Business Address</p>
-                                                <h6 class="profile-meta-value text-secondary" style="font-size:13px; line-height:1.4;" id="contractorAddress">--</h6>
-                                            </div>
-                                        </div>
+                            <div class="d-flex flex-wrap align-items-center gap-2 justify-content-lg-end">
+                                <div class="gms-hero-stat">
+                                    <div class="gms-hero-stat-icon"><i class="icon-size-fullscreen"></i></div>
+                                    <div>
+                                        <div class="gms-hero-stat-label">Perimeter</div>
+                                        <div class="gms-hero-stat-value"><?php echo number_format($total_perimeter); ?> m</div>
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- Assignment Parameters Input Card -->
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="form-section-header">
-                                        <h4 class="card-title"><i class="icon-doc text-primary mr-1"></i> Assignment Parameters</h4>
+                                <div class="gms-hero-stat">
+                                    <div class="gms-hero-stat-icon"><i class="icon-globe"></i></div>
+                                    <div>
+                                        <div class="gms-hero-stat-label">Keluasan</div>
+                                        <div class="gms-hero-stat-value"><?php echo number_format($total_area, 2); ?> ha</div>
                                     </div>
-                                    
-                                    <form action="includes/assign_contractor_action.php" method="POST" class="forms-sample">
-                                        <input type="text" name="zid" value="<?php echo $zone_id ?>" hidden>
-                                        <input type="text" name="sz_id" value="<?php echo $subzone_id ?>" hidden>
-                                        <input type="text" name="cid" id="contractorIdc" hidden>
-
-                                        <div class="row g-3">
-                                            <!-- Contract Number & Dates -->
-                                            <div class="col-md-4">
-                                                <div class="form-group mb-3">
-                                                    <label for="contract_number">Contract Number</label>
-                                                    <input type="text" name="contract_number" id="contract_number" class="form-control" placeholder="Enter Contract Number" required>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-md-6 form-group">
-                                                        <label for="start_date">Start Date</label>
-                                                        <input type="date" name="start_date" id="start_date" class="form-control" required>
-                                                    </div>
-                                                    <div class="col-md-6 form-group">
-                                                        <label for="end_date">End Date</label>
-                                                        <input type="date" name="end_date" id="end_date" class="form-control" required>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Supervisors -->
-                                            <div class="col-md-4">
-                                                <div class="row g-2 mb-3">
-                                                    <label class="col-12">Supervisor 1</label>
-                                                    <div class="col-md-6 form-group">
-                                                        <input type="text" name="supervisor1_name" class="form-control" placeholder="Name">
-                                                    </div>
-                                                    <div class="col-md-6 form-group">
-                                                        <input type="text" name="supervisor1_contact" class="form-control" placeholder="Contact Number">
-                                                    </div>
-                                                </div>
-                                                <div class="row g-2">
-                                                    <label class="col-12">Supervisor 2</label>
-                                                    <div class="col-md-6 form-group">
-                                                        <input type="text" name="supervisor2_name" class="form-control" placeholder="Name">
-                                                    </div>
-                                                    <div class="col-md-6 form-group">
-                                                        <input type="text" name="supervisor2_contact" class="form-control" placeholder="Contact Number">
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Funding & Remarks -->
-                                            <div class="col-md-4">
-                                                <div class="form-group mb-3">
-                                                    <label for="fund">Fund</label>
-                                                    <input type="text" name="fund" id="fund" class="form-control" placeholder="Enter Fund Details">
-                                                </div>
-                                                <div class="form-group">
-                                                    <label for="remarks">Remarks</label>
-                                                    <textarea name="remarks" id="remarks" cols="30" rows="3" class="form-control" placeholder="Enter Remarks"></textarea>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Submission Row -->
-                                        <div class="action-button-group mt-4">
-                                            <button class="btn-modern-danger" type="button" onclick="history.back()"><i class="icon-close"></i> Cancel</button>
-                                            <button type="submit" class="btn-modern-success"><i class="icon-check"></i> Assign Contractor</button>
-                                        </div>
-                                    </form>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <!-- Jika ada contractor row ini akan appear -->
+
+                    <!-- ============================================================== -->
+                    <!-- KPI METRIC CARDS (Donezo-inspired)                              -->
+                    <!-- ============================================================== -->
+                    <div class="row g-3 mb-4 gms-fade-in gms-fade-in-delay-1">
+                        <!-- KPI 1: Sub-Zone Perimeter (featured gradient green) -->
+                        <div class="col-sm-6 col-xl-6">
+                            <div class="gms-kpi-card kpi-featured">
+                                <div>
+                                    <div class="gms-kpi-header">
+                                        <span class="gms-kpi-label">Perimeter Sub-Zon</span>
+                                        <div class="gms-kpi-icon">
+                                            <i class="icon-size-fullscreen"></i>
+                                        </div>
+                                    </div>
+                                    <div class="gms-kpi-value" data-countup="<?php echo (float)$total_perimeter; ?>">0</div>
+                                </div>
+                                <div class="gms-kpi-footer">
+                                    <span style="background: rgba(255,255,255,0.12); color: #6ee7b7; padding: 3px 9px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">
+                                        <i class="fa-solid fa-ruler"></i> Ukuran Sempadan
+                                    </span>
+                                    <span>meter (m)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- KPI 2: Sub-Zone Area -->
+                        <div class="col-sm-6 col-xl-6">
+                            <div class="gms-kpi-card kpi-soft kpi-amber">
+                                <div>
+                                    <div class="gms-kpi-header">
+                                        <span class="gms-kpi-label">Keluasan Sub-Zon</span>
+                                        <div class="gms-kpi-icon">
+                                            <i class="icon-pie-chart"></i>
+                                        </div>
+                                    </div>
+                                    <div class="gms-kpi-value"><?php echo number_format($total_area, 2); ?> <small style="font-size: 0.9rem; font-weight: 600;">ha</small></div>
+                                </div>
+                                <div class="gms-kpi-footer">
+                                    <span class="gms-kpi-badge badge-amber-soft">
+                                        <i class="fa-solid fa-chart-area"></i> Kawasan Operasi
+                                    </span>
+                                    <span>hektar (ha)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- KPI END -->
+
+                    <!-- ============================================================== -->
+                    <!-- STEP 1: CHOOSE CONTRACTOR SELECT                               -->
+                    <!-- ============================================================== -->
+                    <div class="row mb-4 gms-fade-in gms-fade-in-delay-2">
+                        <div class="col-12">
+                            <div class="card shadow gms-form-card">
+                                <div class="card-body">
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 pb-3 border-bottom gap-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="gms-kpi-icon me-3" style="background: rgba(0, 116, 66, 0.08); color: var(--gms-primary);">
+                                                <i class="fa-solid fa-people-group"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="gms-section-title">Pilih Kontraktor</h4>
+                                                <p class="gms-section-subtitle mb-0">Pilih profil kontraktor daripada senarai berdaftar DBKU.</p>
+                                            </div>
+                                        </div>
+                                        <a href="new_contractor.php" class="gms-btn-outline">
+                                            <i class="fa-solid fa-user-plus"></i> Kontraktor Baharu
+                                        </a>
+                                    </div>
+                                    <div class="row g-4 align-items-end">
+                                        <div class="col-md-8">
+                                            <label for="contractorSelect" class="gms-form-label">Profil Kontraktor <span class="text-danger">*</span></label>
+                                            <div class="gms-input-group">
+                                                <span class="gms-input-icon"><i class="fa-solid fa-building"></i></span>
+                                                <select name="contractor_id" id="contractorSelect" class="gms-form-control" required>
+                                                    <option value="" selected>-- Pilih Kontraktor --</option>
+                                                    <?php
+                                                    $sql = "SELECT * FROM contractor ";
+                                                    $res1 = $conn->query($sql);
+                                                    if ($res1->num_rows > 0) {
+                                                        while ($row1 = $res1->fetch_assoc()) {
+                                                    ?>
+                                                            <option value="<?php echo $row1['cid'] ?>"><?php echo htmlspecialchars($row1['name']) ?></option>
+                                                    <?php }
+                                                    } ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="d-flex align-items-center gap-2 p-3 rounded-3" style="background: rgba(0,116,66,0.05); border: 1px dashed rgba(0,116,66,0.25);">
+                                                <i class="fa-solid fa-circle-info" style="color: var(--gms-primary);"></i>
+                                                <small class="text-secondary">Butiran kontraktor akan dipaparkan selepas pilihan dibuat.</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============================================================== -->
+                    <!-- STEP 2: CONTRACTOR DETAILS + ASSIGNMENT FORM (DYNAMIC)          -->
+                    <!-- ============================================================== -->
+                    <div id="contractorDetails" style="display: none; flex-direction: column; gap: 1.5rem;">
+
+                        <!-- Contractor Profile Information -->
+                        <div class="row g-4 gms-fade-in gms-fade-in-delay-3">
+                            <div class="col-12">
+                                <div class="card shadow gms-form-card">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+                                            <div class="gms-kpi-icon me-3" style="background: rgba(0, 116, 66, 0.08); color: var(--gms-primary);">
+                                                <i class="fa-solid fa-id-badge"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="gms-section-title">Maklumat Profil Kontraktor</h4>
+                                                <p class="gms-section-subtitle mb-0">Butiran syarikat &amp; maklumat hubungan.</p>
+                                            </div>
+                                        </div>
+                                        <div class="row g-3">
+                                            <div class="col-md-4">
+                                                <div class="gms-profile-tile">
+                                                    <div class="gms-profile-tile-icon">
+                                                        <i class="fa-solid fa-user"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="gms-profile-tile-label">Kontraktor</div>
+                                                        <div class="gms-profile-tile-value" id="contractorName">-</div>
+                                                        <small class="text-muted">PIC: <span id="contractorId">-</span></small>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="gms-profile-tile">
+                                                    <div class="gms-profile-tile-icon" style="background: rgba(6, 182, 212, 0.1); color: #0891b2;">
+                                                        <i class="fa-solid fa-envelope"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="gms-profile-tile-label">Alamat Emel</div>
+                                                        <div class="gms-profile-tile-value" id="contractorEmail">--</div>
+                                                        <small class="text-muted"><i class="fa-solid fa-phone me-1"></i><span id="contractorPhone">--</span></small>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="gms-profile-tile">
+                                                    <div class="gms-profile-tile-icon" style="background: rgba(99, 102, 241, 0.1); color: #4f46e5;">
+                                                        <i class="fa-solid fa-location-dot"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="gms-profile-tile-label">Alamat Perniagaan</div>
+                                                        <div class="gms-profile-tile-value" style="font-size: 0.85rem; font-weight: 600; line-height: 1.5;" id="contractorAddress">--</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Assignment Parameters Form -->
+                        <div class="row g-4 gms-fade-in gms-fade-in-delay-4">
+                            <div class="col-12">
+                                <div class="card shadow gms-form-card">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+                                            <div class="gms-kpi-icon me-3" style="background: rgba(0, 116, 66, 0.08); color: var(--gms-primary);">
+                                                <i class="fa-solid fa-file-pdf"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="gms-section-title">Parameter Lantikan</h4>
+                                                <p class="gms-section-subtitle mb-0">Lengkapkan nombor kontrak, tarikh, penyelia &amp; peruntukan.</p>
+                                            </div>
+                                        </div>
+
+                                        <form action="includes/assign_contractor_action.php" method="POST" class="forms-sample">
+                                            <input type="text" name="zid" value="<?php echo $zone_id ?>" hidden>
+                                            <input type="text" name="sz_id" value="<?php echo $subzone_id ?>" hidden>
+                                            <input type="text" name="cid" id="contractorIdc" hidden>
+
+                                            <div class="row g-4 gms-parameter-grid">
+                                                <!-- Contract Number & Dates -->
+                                                <div class="col-lg-4">
+                                                    <label for="contract_number" class="gms-form-label">Nombor Kontrak <span class="text-danger">*</span></label>
+                                                    <div class="gms-input-group mb-3">
+                                                        <span class="gms-input-icon"><i class="fa-solid fa-hashtag"></i></span>
+                                                        <input type="text" name="contract_number" id="contract_number" class="gms-form-control" placeholder="cth. DBKU/CT/2025/001" required>
+                                                    </div>
+                                                    <div class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <label for="start_date" class="gms-form-label">Tarikh Mula <span class="text-danger">*</span></label>
+                                                            <div class="gms-input-group">
+                                                                <span class="gms-input-icon"><i class="fa-solid fa-calendar-day"></i></span>
+                                                                <input type="date" name="start_date" id="start_date" class="gms-form-control" required>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="end_date" class="gms-form-label">Tarikh Tamat <span class="text-danger">*</span></label>
+                                                            <div class="gms-input-group">
+                                                                <span class="gms-input-icon"><i class="fa-solid fa-calendar-check"></i></span>
+                                                                <input type="date" name="end_date" id="end_date" class="gms-form-control" required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Supervisors -->
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3">
+                                                        <label class="gms-form-label">Penyelia 1</label>
+                                                        <div class="row g-2">
+                                                            <div class="col-md-6">
+                                                                <div class="gms-input-group">
+                                                                    <span class="gms-input-icon"><i class="fa-solid fa-user"></i></span>
+                                                                    <input type="text" name="supervisor1_name" class="gms-form-control" placeholder="Nama">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="gms-input-group">
+                                                                    <span class="gms-input-icon"><i class="fa-solid fa-phone"></i></span>
+                                                                    <input type="text" name="supervisor1_contact" class="gms-form-control" placeholder="Nombor Hubungan">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label class="gms-form-label">Penyelia 2</label>
+                                                        <div class="row g-2">
+                                                            <div class="col-md-6">
+                                                                <div class="gms-input-group">
+                                                                    <span class="gms-input-icon"><i class="fa-solid fa-user"></i></span>
+                                                                    <input type="text" name="supervisor2_name" class="gms-form-control" placeholder="Nama">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="gms-input-group">
+                                                                    <span class="gms-input-icon"><i class="fa-solid fa-phone"></i></span>
+                                                                    <input type="text" name="supervisor2_contact" class="gms-form-control" placeholder="Nombor Hubungan">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Funding & Remarks -->
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3">
+                                                        <label for="fund" class="gms-form-label">Peruntukan (Fund)</label>
+                                                        <div class="gms-input-group">
+                                                            <span class="gms-input-icon"><i class="fa-solid fa-money-bill-trend-up"></i></span>
+                                                            <input type="text" name="fund" id="fund" class="gms-form-control" placeholder="cth. RM 50,000">
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label for="remarks" class="gms-form-label">Catatan</label>
+                                                        <div class="gms-input-group">
+                                                            <span class="gms-input-icon" style="align-items: flex-start; padding-top: 12px;"><i class="fa-solid fa-comment-dots"></i></span>
+                                                            <textarea name="remarks" id="remarks" cols="30" rows="3" class="gms-form-control" placeholder="Masukkan catatan tambahan..."></textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <hr class="my-4 border-light">
+
+                                            <!-- Submission Row -->
+                                            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                                                <button type="button" class="gms-btn-light" onclick="history.back()"><i class="fa-solid fa-xmark me-1"></i> Batal</button>
+                                                <button type="submit" class="gms-btn-primary"><i class="fa-solid fa-check me-1"></i> Lantik Kontraktor</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- contractorDetails END -->
+
                 </div>
-
-
                 <!-- content-wrapper ends -->
-                <!-- partial:partials/_footer.html -->
+
                 <?php include 'partials/footer.php'; ?>
-                <!-- partial -->
             </div>
             <!-- main-panel ends -->
         </div>
         <!-- page-body-wrapper ends -->
     </div>
     <!-- container-scroller -->
-    <!-- plugins:js -->
+
+    <!-- JS -->
     <script src="assets/vendors/js/vendor.bundle.base.js"></script>
-    <!-- endinject -->
-    <!-- Plugin js for this page -->
-    <script src="assets/vendors/chart.js/chart.umd.js"></script>
-    <script src="assets/vendors/jvectormap/jquery-jvectormap.min.js"></script>
-    <script src="assets/vendors/jvectormap/jquery-jvectormap-world-mill-en.js"></script>
     <script src="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.js"></script>
     <script src="assets/vendors/moment/moment.min.js"></script>
     <script src="assets/vendors/daterangepicker/daterangepicker.js"></script>
-    <script src="assets/vendors/chartist/chartist.min.js"></script>
-    <script src="assets/vendors/progressbar.js/progressbar.min.js"></script>
     <script src="assets/js/jquery.cookie.js"></script>
-    <!-- End plugin js for this page -->
-    <!-- inject:js -->
     <script src="assets/js/off-canvas.js"></script>
     <script src="assets/js/hoverable-collapse.js"></script>
     <script src="assets/js/misc.js"></script>
     <script src="assets/js/settings.js"></script>
     <script src="assets/js/todolist.js"></script>
-    <!-- endinject -->
-    <!-- Custom js for this page -->
-    <script src="assets/js/dashboard.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- End custom js for this page -->
-
 
     <?php
     // Check if there is a status message in the session
@@ -613,29 +604,17 @@ $total_area = $row3['total_area'] ?? 0;
         unset($_SESSION['status']);
         unset($_SESSION['message']);
 
-        if ($status == 'success') {
-            echo '<script>
-                            document.addEventListener("DOMContentLoaded", function() {
-                                Swal.fire({
-                                    title: "' . $message . '",
-                                    text: "",
-                                    icon: "success",
-                                });
-                            });
-                        </script>';
-        } else {
-            echo '<script>
-                            document.addEventListener("DOMContentLoaded", function() {
-                                Swal.fire({
-                                    title: "' . $message . '",
-                                    icon: "error",
-                                });
-                            });
-                        </script>';
-        }
+        $icon = ($status == 'success') ? 'success' : 'error';
+        echo '<script>
+            document.addEventListener("DOMContentLoaded", function() {
+                Swal.fire({ title: "' . addslashes($message) . '", icon: "' . $icon . '" });
+            });
+        </script>';
     }
     ?>
+
     <script>
+        // Contractor select → load profile details via fetch
         document.getElementById("contractorSelect").addEventListener("change", function() {
             var cid = this.value;
             var details = document.getElementById("contractorDetails");
@@ -658,9 +637,28 @@ $total_area = $row3['total_area'] ?? 0;
                 details.style.display = "none";
             }
         });
-    </script>
 
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAM9KnXl4SMmy68M2syalpDyMfZeNItPjk&callback=initMap"></script>
+        // Count-up animation for KPI values
+        document.addEventListener("DOMContentLoaded", function() {
+            var countEls = document.querySelectorAll('[data-countup]');
+            countEls.forEach(function(el) {
+                var target = parseFloat(el.getAttribute('data-countup')) || 0;
+                if (target === 0) { el.textContent = '0'; return; }
+                var duration = 1000;
+                var startTime = null;
+                function step(ts) {
+                    if (!startTime) startTime = ts;
+                    var progress = Math.min((ts - startTime) / duration, 1);
+                    var eased = 1 - Math.pow(1 - progress, 4);
+                    var current = target * eased;
+                    el.textContent = Math.floor(current).toLocaleString();
+                    if (progress < 1) { requestAnimationFrame(step); }
+                    else { el.textContent = target.toLocaleString(); }
+                }
+                requestAnimationFrame(step);
+            });
+        });
+    </script>
 
 </body>
 

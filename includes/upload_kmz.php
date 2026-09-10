@@ -10,7 +10,7 @@ $zone_id = (int)$_POST['zone_id'];
 $subzone_id = (int)$_POST['subzone_id'];
 
 $status = 'success';
-$message = 'KMZ upload successfully';
+$message = 'Fail KMZ berjaya dimuat naik.';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -37,22 +37,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!$stmt->execute()) {
                     $status = 'error';
-                    $message = 'DB insert failed: ' . $stmt->error;
+                    $message = 'Gagal menyimpan ke pangkalan data: ' . $stmt->error;
                 }
 
                 $stmt->close();
             } else {
                 $status = 'error';
-                $message = 'Fail upload file';
+                $message = 'Gagal memuat naik fail.';
             }
         }
     } else {
         $status = 'error';
-        $message = 'No file selected';
+        $message = 'Tiada fail dipilih.';
     }
 } else {
     $status = 'error';
-    $message = 'Invalid request';
+    $message = 'Permintaan tidak sah.';
 }
 
 $_SESSION['status'] = $status;

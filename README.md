@@ -17,21 +17,18 @@ Greens Management System (DBKU - Dewan Bandaraya Kuching Utara) adalah sebuah ap
 - **Frontend:** HTML, CSS, JavaScript
 - **Backend:** PHP (Vanilla)
 - **Pangkalan Data:** MySQL
-- **Lain-lain:** Dompdf (untuk penjanaan PDF), Cesium (Sistem Pemetaan Web 3D)
+- **Lain-lain:** Dompdf (untuk penjanaan PDF), Google Maps API & KMZ (Sistem Pemetaan Kawasan)
 
 ## 📂 Struktur Direktori (Directory Structure)
 
 ```text
-dbku/
+gms/
 ├── assets/         # Fail-fail statik seperti CSS, JS, imej
-├── Cesium/         # Pustaka (Library) untuk pemetaan web 3D
 ├── docs/           # Dokumentasi tambahan
 ├── dompdf/         # Pustaka (Library) PHP untuk menjana laporan PDF
-├── includes/       # Skrip PHP yang disertakan (seperti sambungan pangkalan data - connection.php)
+├── includes/       # Skrip PHP logik pangkalan data & pemprosesan
 ├── kmz/            # Fail-fail geodata / pemetaan (KMZ files)
-├── pages/          # Fail-fail halaman sekunder atau templat
-├── partials/       # Sebahagian elemen UI (header, footer, sidebar)
-├── src/            # Kod sumber utama (JavaScript, dll)
+├── partials/       # Elemen UI dinamik (header/navbar, footer, sidebar)
 ├── index.php       # Halaman utama (Dashboard)
 ├── login.php       # Halaman log masuk sistem
 └── [Fail PHP Lain] # Modul-modul pengurusan (kontraktor, zon, rekod harian)

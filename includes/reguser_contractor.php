@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if (!empty($row)) {
         $_SESSION['status'] = 'error';
-        $_SESSION['message'] = "This email has been registered in the system!";
+        $_SESSION['message'] = "E-mel ini telah didaftarkan dalam sistem!";
     } else {
         $query = "INSERT INTO users (user_type, user_id, user_email, user_password, access_level, status) 
         VALUES ('$user_type', '$username', '$email', '$pwdhash', '1', 'Y')";
@@ -45,13 +45,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         if ($insertuser) {
             $_SESSION['status'] = 'success';
-            $_SESSION['message'] = 'Contractor Account Successfully Created!';
+            $_SESSION['message'] = 'Akaun kontraktor berjaya dicipta!';
 
             header("Location: ../contractor_details?id=" . $_POST['id']);
             exit();
         } else {
             $_SESSION['status'] = 'error';
-            $_SESSION['message'] = 'Failed to register account: ' . mysqli_error($conn);
+            $_SESSION['message'] = 'Gagal mendaftarkan akaun: ' . mysqli_error($conn);
 
             header("Location: ../contractor_details?id=" . $_POST['id']);
             exit();
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 } else {
     $_SESSION['status'] = 'error';
-    $_SESSION['message'] = 'No data received';
+    $_SESSION['message'] = 'Tiada data diterima.';
     // Send JSON response
     header("Location: ../contractor_details?id=" . $_POST['id']);
     exit();

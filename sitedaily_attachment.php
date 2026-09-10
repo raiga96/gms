@@ -37,13 +37,13 @@ if (count($attachments) > 0) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ms">
 
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>SmartCut - Attachment</title>
+    <title>SmartCut - Lampiran</title>
     <!-- plugins:css -->
     <link rel="stylesheet" href="assets/vendors/simple-line-icons/css/simple-line-icons.css">
     <link rel="stylesheet" href="assets/vendors/flag-icon-css/css/flag-icons.min.css">
@@ -57,6 +57,7 @@ if (count($attachments) > 0) {
     <!-- endinject -->
     <!-- Layout styles -->
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="assets/images/favicon.png" />
     <style>
@@ -191,13 +192,13 @@ if (count($attachments) > 0) {
                     <div class="row">
                         <div class="col-12 mb-4">
                             <a href="sitedaily_records.php?id=<?php echo $cid; ?>" class="btn btn-light shadow-sm">
-                                <i class="icon-arrow-left"></i> Back to Daily Records
+                                <i class="icon-arrow-left"></i> Kembali ke Rekod Harian
                             </a>
                         </div>
                         <div class="col-12 grid-margin stretch-card">
                             <div class="card">
                                 <div class="card-body">
-                                    <h4 class="card-title text-dark font-weight-bold mb-4">Attachments</h4>
+                                    <h4 class="card-title text-dark font-weight-bold mb-4">Lampiran</h4>
                                     
                                     <?php if(count($attachments) > 0): ?>
                                         <div class="gallery-grid">
@@ -205,7 +206,7 @@ if (count($attachments) > 0) {
                                                 $src = $att[$imgCol];
                                             ?>
                                                 <div class="gallery-item" onclick="openLightbox(<?php echo $index; ?>)">
-                                                    <img src="<?php echo htmlspecialchars($src); ?>" alt="Attachment <?php echo $index + 1; ?>" onerror="this.src='assets/images/placeholder.png';">
+                                                    <img src="<?php echo htmlspecialchars($src); ?>" alt="Lampiran <?php echo $index + 1; ?>" onerror="this.src='assets/images/placeholder.png';">
                                                     <div class="gallery-overlay">
                                                         <i class="icon-magnifier-add"></i>
                                                     </div>
@@ -215,8 +216,8 @@ if (count($attachments) > 0) {
                                     <?php else: ?>
                                         <div class="alert text-center py-5" style="background-color: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px;">
                                             <i class="icon-picture text-muted mb-2" style="font-size: 48px; opacity: 0.5;"></i>
-                                            <h5 class="text-dark font-weight-bold mt-4">No Attachments Found</h5>
-                                            <p class="text-muted mb-0">There are no images attached to this record.</p>
+                                            <h5 class="text-dark font-weight-bold mt-4">Tiada Lampiran Ditemui</h5>
+                                            <p class="text-muted mb-0">Tiada imej dilampirkan pada rekod ini.</p>
                                         </div>
                                     <?php endif; ?>
                                     
@@ -231,11 +232,11 @@ if (count($attachments) > 0) {
 
     <!-- Lightbox Element -->
     <div class="lightbox" id="lightbox">
-        <button class="lightbox-close" onclick="closeLightbox()" title="Close">&times;</button>
-        <button class="lightbox-prev" onclick="changeImage(-1)" title="Previous"><i class="icon-arrow-left"></i></button>
-        <button class="lightbox-next" onclick="changeImage(1)" title="Next"><i class="icon-arrow-right"></i></button>
+        <button class="lightbox-close" onclick="closeLightbox()" title="Tutup">&times;</button>
+        <button class="lightbox-prev" onclick="changeImage(-1)" title="Sebelumnya"><i class="icon-arrow-left"></i></button>
+        <button class="lightbox-next" onclick="changeImage(1)" title="Seterusnya"><i class="icon-arrow-right"></i></button>
         <div class="lightbox-content">
-            <img src="" alt="Fullscreen Image" class="lightbox-img" id="lightboxImg">
+            <img src="" alt="Imej skrin penuh" class="lightbox-img" id="lightboxImg">
         </div>
     </div>
     

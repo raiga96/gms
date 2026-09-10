@@ -6,7 +6,7 @@ require 'includes/connection.php';
 
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ms">
 
 <head>
     <!-- Required meta tags -->
@@ -29,6 +29,7 @@ require 'includes/connection.php';
     <!-- endinject -->
     <!-- Layout styles -->
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="assets/images/favicon.png" />
 </head>
@@ -52,7 +53,7 @@ require 'includes/connection.php';
                             <div class="card shadow border-0" style="background: linear-gradient(90deg, #1d384d 0%, #00311c 100%);">
                                 <div class="card-body d-sm-flex align-items-center justify-content-between text-white">
                                     <div class="mb-3 mb-sm-0">
-                                        <h3 class="mb-1 text-white fw-bold">Update Zone</h3>
+                                        <h3 class="mb-1 text-white fw-bold">Kemaskini Zon</h3>
                                     </div>
                                 </div>
                             </div>
@@ -70,7 +71,7 @@ require 'includes/connection.php';
                             <div class="card shadow">
                                 <div class="card-body d-sm-flex align-items-center justify-content-between text-white ms-auto">
                                     <div class="btn-group gap-2">
-                                        <a class="btn btn-success shadow-sm text-primary" href="history.php?szid=<?php echo $zone_id ?>">History</a>
+                                        <a class="btn btn-success shadow-sm text-primary" href="history.php?szid=<?php echo $zone_id ?>">Sejarah</a>
                                     </div>
                                 </div>
                                 <div class="card-body">
@@ -81,17 +82,17 @@ require 'includes/connection.php';
                                                     <form class="forms-sample" action="includes/update_zone.php" method="POST">
                                                         <input type="text" name="zone_id" value="<?php echo $zone_id ?>" hidden>
                                                         <div class="form-group">
-                                                            <label for="exampleInputName1" class="mb-4 font-weight-bold">Zone Name</label>
+                                                            <label for="exampleInputName1" class="mb-4 font-weight-bold">Nama Zon</label>
                                                             <input type="text" class="form-control" name="zone_name" id="exampleInputName1" value="<?php echo $row['zone_name'] ?>">
                                                         </div>
 
 
                                                         <div class="d-flex justify-content-sm-center">
                                                             <div class="">
-                                                                <button type="submit" class="btn btn-primary me-2">Update</button>
+                                                                <button type="submit" class="btn btn-primary me-2">Kemaskini</button>
                                                             </div>
                                                             <div class="">
-                                                                <button class="btn btn-danger" type="button">Cancel</button>
+                                                                <button class="btn btn-danger" type="button">Batal</button>
                                                             </div>
                                                         </div>
                                                     </form>
@@ -107,8 +108,8 @@ require 'includes/connection.php';
                     <!-- partial:partials/_footer.html -->
                     <footer class="footer">
                         <div class="d-sm-flex justify-content-center justify-content-sm-between">
-                            <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2024 Stellar. All rights reserved. <a href="#"> Terms of use</a><a href="#">Privacy Policy</a></span>
-                            <span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="icon-heart text-danger"></i></span>
+                            <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Hak Cipta © 2024 Stellar. Hak cipta terpelihara. <a href="#"> Terma penggunaan</a><a href="#">Dasar Privasi</a></span>
+                            <span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center">Dihasilkan dengan <i class="icon-heart text-danger"></i></span>
                         </div>
                     </footer>
                     <!-- partial -->

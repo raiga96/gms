@@ -7,7 +7,7 @@ require 'includes/connection.php';
 
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ms">
 
 <head>
     <!-- Required meta tags -->
@@ -30,6 +30,7 @@ require 'includes/connection.php';
     <!-- endinject -->
     <!-- Layout styles -->
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="assets/images/favicon.png" />
     <style>
@@ -72,7 +73,7 @@ require 'includes/connection.php';
                                         <h4 class="mb-1 text-white fw-bold"><?php echo $row['address'] ?></h4>
                                     </div>
                                     <div class="btn-group gap-2">
-                                        <a class="btn btn-light shadow-sm text-primary" href="update_contractor.php?id=<?php echo $cid ?>">Update</a>
+                                        <a class="btn btn-light shadow-sm text-primary" href="update_contractor.php?id=<?php echo $cid ?>">Kemaskini</a>
                                     </div>
                                 </div>
                             </div>
@@ -92,25 +93,25 @@ require 'includes/connection.php';
                             <div class="card shadow">
                                 <div class="card-body">
                                     <div class="d-sm-flex align-items-center mb-4">
-                                        <h4 class="card-title mb-sm-0">Site Daily Record</h4>
+                                        <h4 class="card-title mb-sm-0">Rekod Harian Tapak</h4>
                                     </div>
                                     <div class="table-responsive border rounded p-1">
                                         <table class="table table-hover table-striped">
                                             <thead class="thead-dark">
                                                 <th>
-                                                    <h5>Title</h5>
+                                                    <h5>Tajuk</h5>
                                                 </th>
                                                 <th>
-                                                    <h5>Contract Number</h5>
+                                                    <h5>Nombor Kontrak</h5>
                                                 </th>
                                                 <th>
-                                                    <h5>Supervisor</h5>
+                                                    <h5>Penyelia</h5>
                                                 </th>
                                                 <th>
-                                                    <h5>Mandour</h5>
+                                                    <h5>Mandur</h5>
                                                 </th>
                                                 <th>
-                                                    <h5>Duration</h5>
+                                                    <h5>Tempoh</h5>
                                                 </th>
                                                 </tr>
                                             </thead>
@@ -149,7 +150,7 @@ require 'includes/connection.php';
                                                         <tr style="height:60px">
                                                             <td style="width: 500px;word-wrap: break-word;overflow-wrap: break-word; white-space: normal;">
                                                                 <a href="daily_details.php?id=<?php echo $row['contract_id']; ?>">
-                                                                    <h6 class="text-uppercase">GRASS CUTTING AND DRAIN CLEANING WORKS WITHIN DBKU AREA OF ZONE <?php echo $row2['zone_name'] ?></h6>
+                                                            <h6 class="text-uppercase">KERJA-KERJA MEMOTONG RUMPUT DAN MEMBERSIHKAN LONGKANG DALAM KAWASAN DBKU ZON <?php echo $row2['zone_name'] ?></h6>
                                                                 </a>
                                                             </td>
                                                             <td style="width: 250px;word-wrap: break-word;overflow-wrap: break-word; white-space: normal;">
@@ -166,15 +167,15 @@ require 'includes/connection.php';
                                                                 <h5><?php  ?></h5>
                                                             </td>
                                                             <td style="width:220px">
-                                                                <h6><?php echo date("d M Y", strtotime($row['start_date'])) ?> - <?php echo date("d M Y", strtotime($row['end_date'])) ?></h6>
-                                                                <small><?php echo $duration_months ?> months</small>
+                                                                <h6><?php echo gms_format_date($row['start_date'], 'd M Y') ?> - <?php echo gms_format_date($row['end_date'], 'd M Y') ?></h6>
+                                                                <small><?php echo $duration_months ?> bulan</small>
                                                             </td>
                                                         </tr>
                                                     <?php }
                                                 } else { ?>
                                                     <tr>
                                                         <td colspan="6" class="text-center text-danger">
-                                                            <h5 class="font-weight-bold">No data available</h5>
+                                                            <h5 class="font-weight-bold">Tiada data tersedia</h5>
                                                         </td>
                                                     </tr>
                                                 <?php } ?>
@@ -191,30 +192,30 @@ require 'includes/connection.php';
                         <div class="modal-dialog">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="modal-title" id="exampleModalLabel">Register Contractor ID</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    <h5 class="modal-title" id="exampleModalLabel">Daftar ID Kontraktor</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                                 </div>
                                 <div class="modal-body">
                                     <form action="includes/reguser_contractor.php" method="POST" enctype="multipart/form-data">
                                         <input type="text" name="id" value="<?php echo $cid  ?>" hidden>
                                         <div class="row">
                                             <div class="col-md-12">
-                                                <label for="username" class="form-label"><small class="font-weight-bold">Name</small></label>
+                                                <label for="username" class="form-label"><small class="font-weight-bold">Nama</small></label>
                                                 <input type="text" class="form-control" name="fname" value="<?php echo $contractor ?>">
                                             </div>
                                             <div class="col-md-12 mt-4">
-                                                <label for="username" class="form-label"><small class="font-weight-bold">Email</small></label>
+                                                <label for="username" class="form-label"><small class="font-weight-bold">E-mel</small></label>
                                                 <input type="email" class="form-control" name="email" value="<?php echo $email ?>">
                                             </div>
                                             <hr class="mt-4">
                                             <div class="col-md-12 mt-2">
-                                                <label for="username" class="form-label"><small class="font-weight-bold">Username</small></label>
-                                                <input type="text" class="form-control" name="username" placeholder="Username">
+                                                <label for="username" class="form-label"><small class="font-weight-bold">Nama Pengguna</small></label>
+                                                <input type="text" class="form-control" name="username" placeholder="Nama pengguna">
                                             </div>
                                             <div class="col-md-12 mt-4">
-                                                <label for="password" class="form-label"><small class="font-weight-bold">Password</small></label>
+                                                <label for="password" class="form-label"><small class="font-weight-bold">Kata Laluan</small></label>
                                                 <div class="input-group">
-                                                    <input type="password" class="form-control" id="pwd" name="pwd" placeholder="Password">
+                                                    <input type="password" class="form-control" id="pwd" name="pwd" placeholder="Kata laluan">
                                                     <div class="input-group-append" style="cursor: pointer;">
                                                         <span class="input-group-text">
                                                             <i class='fa fa-eye text-dark' id="toggleIcon" onclick="togglePassword()"></i>
@@ -224,7 +225,7 @@ require 'includes/connection.php';
                                             </div>
                                         </div>
                                         <div class="text-center mt-4">
-                                            <button type="submit" class="btn btn-info">Register</button>
+                                            <button type="submit" class="btn btn-info">Daftar</button>
                                         </div>
                                     </form>
                                 </div>

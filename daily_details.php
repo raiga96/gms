@@ -7,20 +7,25 @@ require 'includes/connection.php';
 
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ms">
 
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>SmartCut</title>
+    <title>Green Management System - Butiran Harian</title>
+    <!-- Google Fonts Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css">
     <!-- plugins:css -->
     <link rel="stylesheet" href="assets/vendors/simple-line-icons/css/simple-line-icons.css">
     <link rel="stylesheet" href="assets/vendors/flag-icon-css/css/flag-icons.min.css">
     <link rel="stylesheet" href="assets/vendors/css/vendor.bundle.base.css">
     <!-- endinject -->
     <!-- Plugin css for this page -->
-    <link rel="stylesheet" href="assets/vendors/font-awesome/css/font-awesome.min.css" />
     <link rel="stylesheet" href="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css">
     <link rel="stylesheet" href="assets/vendors/jvectormap/jquery-jvectormap.css">
     <link rel="stylesheet" href="assets/vendors/daterangepicker/daterangepicker.css">
@@ -30,104 +35,22 @@ require 'includes/connection.php';
     <!-- endinject -->
     <!-- Layout styles -->
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="assets/images/favicon.png" />
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
-
-        .modern-record-container {
-            font-family: 'Outfit', sans-serif;
-            color: #334155;
-        }
-
-        .modern-record-container .card {
-            border: none;
-            border-radius: 16px !important;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 5px 15px -8px rgba(0, 0, 0, 0.05) !important;
-            background: #ffffff;
-            margin-bottom: 24px;
-            overflow: hidden;
-        }
-
-        .modern-record-container .card-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin: 0;
-            color: #0f172a;
-        }
-
-        /* Modern Tables */
-        .modern-table-wrapper {
-            overflow-x: auto;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-            background: #ffffff;
-        }
-
-        .modern-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-        }
-
-        .modern-table th {
-            background-color: #f8fafc;
-            color: #475569;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: 12px 14px;
-            border-bottom: 1px solid #e2e8f0;
-            border-right: 1px solid #e2e8f0;
-            text-align: center;
-            vertical-align: middle;
-        }
-
-        .modern-table th:last-child {
-            border-right: none;
-        }
-
-        .modern-table td {
-            padding: 12px 14px;
-            vertical-align: middle;
-            border-bottom: 1px solid #e2e8f0;
-            border-right: 1px solid #e2e8f0;
-            font-size: 13px;
-            color: #334155;
-            background-color: #ffffff;
-            text-align: center;
-        }
-
-        .modern-table td:last-child {
-            border-right: none;
-        }
-
-        .modern-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .modern-table tbody tr:hover td {
-            background-color: #f8fafc;
-        }
-        
-        .modern-table td a {
-            color: #3b82f6;
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.2s ease;
-        }
-        
-        .modern-table td a:hover {
-            color: #2563eb;
-        }
-        .modern-contractor-banner {
-            background: linear-gradient(90deg, #1d384d 0%, #007442 100%);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
-            margin-bottom: 24px;
-            border: none;
+        /* Print media - preserve exactly as-is */
+        @media print {
+            body { background: white; }
+            .sidebar, .navbar, .d-print-none, .gms-console, .gms-hero-banner, footer { display: none !important; }
+            .main-panel { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            .content-wrapper { padding: 0 !important; margin: 0 !important; background: white; }
+            .card { box-shadow: none !important; border: none !important; margin-bottom: 0 !important; }
+            .card-body { padding: 0 !important; }
+            .gms-table td, .gms-table th { border-color: #000 !important; color: #000 !important; }
+            .gms-table { border-color: #000 !important; }
+            .badge-outline-success { border-color: #000 !important; color: #000 !important; }
+            .page-body-wrapper { padding-top: 0 !important; }
         }
     </style>
 </head>
@@ -153,21 +76,21 @@ require 'includes/connection.php';
 
                     $sql1 = "SELECT * FROM contractor WHERE cid = '".$row['cid']."'";
                     $res1 = $conn -> query($sql1);
-                    $row1 = $res1 -> fetch_assoc();
-                    $contractor = $row1['name'];
-                    $email = $row1['email'];
+                    $row1 = $res1 ? $res1->fetch_assoc() : [];
+                    $contractor = $row1['name'] ?? 'Kontraktor';
+                    $email = $row1['email'] ?? '';
                     ?>
 
                     <div class="row mt-4 mb-0">
                         <div class="col-12">
-                            <div class="card  modern-contractor-banner shadow border-0">
+                            <div class="card gms-console shadow">
                                 <div class="card-body p-0 d-sm-flex align-items-center justify-content-between">
                                     <div class="mb-3 mb-sm-0">
-                                        <h3 class="mb-1 text-white fw-bold"><?php echo $row1['name'] ?></h3>
-                                        <h5 class="mb-1 text-white fw-bold"><?php echo $row1['address'] ?></h5>
+                                        <h3 class="mb-1 text-white fw-bold"><?php echo htmlspecialchars($contractor); ?></h3>
+                                        <h5 class="mb-1 text-white fw-bold"><?php echo htmlspecialchars($row1['address'] ?? ''); ?></h5>
                                     </div>
                                     <div class="btn-group gap-2">
-                                        <a class="btn btn-light shadow-sm text-primary" href="update_contractor.php?id=<?php echo $cid ?>">Update</a>
+                                        <a class="btn btn-light shadow-sm text-primary" href="update_contractor.php?id=<?php echo $cid ?>">Kemaskini</a>
                                     </div>
                                 </div>
                             </div>
@@ -176,10 +99,6 @@ require 'includes/connection.php';
 
                     <?php
                     // Anda boleh gunakan data kontrak ini untuk dipaparkan di UI
-                    $sql1 = "SELECT * FROM contract WHERE contract_id = '" . $row['contract_id'] . "'";
-                    $res1 = $conn->query($sql1);
-                    $row1 = $res1->fetch_assoc();
-
                     // --- Session Filter Logic ---
                     $current_year = date("Y");
                     $current_month = date("n");
@@ -236,12 +155,65 @@ require 'includes/connection.php';
                     ?>
 
 
+                    <?php
+                    // Build KPI stats for the hero banner
+                    $total_records = $res_records ? $res_records->num_rows : 0;
+                    $confirmed_records = 0;
+                    $pending_records = 0;
+                    if (isset($daily_data) && !empty($daily_data)) {
+                        foreach ($daily_data as $dr) {
+                            if ($dr['verified'] === 'Y') $confirmed_records++;
+                            else $pending_records++;
+                        }
+                    }
+                    ?>
+                    <!-- Hero Banner -->
+                    <div class="row mt-0 mb-4">
+                        <div class="col-12">
+                            <div class="gms-hero-banner gms-fade-in">
+                                <div class="d-sm-flex align-items-center justify-content-between flex-wrap gap-3">
+                                    <div>
+                                        <h2 class="gms-hero-title mb-1">Rekod Harian - <?php echo htmlspecialchars($contractor); ?></h2>
+                                        <p class="gms-hero-subtitle mb-0">
+                                            <i class="fas fa-calendar-alt me-1"></i> Sesi <?php echo htmlspecialchars($filter_session) ?> · <?php echo htmlspecialchars($filter_year) ?>
+                                            &nbsp;|&nbsp;
+                                            <i class="fas fa-map-marker-alt me-1"></i> Kontrak: <?php echo htmlspecialchars($row['contract_number'] ?? $contract_id) ?>
+                                        </p>
+                                    </div>
+                                    <div class="d-flex gap-4 flex-wrap">
+                                        <div class="gms-hero-stat">
+                                            <i class="gms-hero-stat-icon fas fa-list"></i>
+                                            <div>
+                                                <div class="gms-hero-stat-value"><?php echo $total_records ?></div>
+                                                <div class="gms-hero-stat-label">Keseluruhan</div>
+                                            </div>
+                                        </div>
+                                        <div class="gms-hero-stat">
+                                            <i class="gms-hero-stat-icon fas fa-check-circle text-success"></i>
+                                            <div>
+                                                <div class="gms-hero-stat-value"><?php echo $confirmed_records ?></div>
+                                                <div class="gms-hero-stat-label">Disahkan</div>
+                                            </div>
+                                        </div>
+                                        <div class="gms-hero-stat">
+                                            <i class="gms-hero-stat-icon fas fa-clock text-warning"></i>
+                                            <div>
+                                                <div class="gms-hero-stat-value"><?php echo $pending_records ?></div>
+                                                <div class="gms-hero-stat-label">Belum Sahkan</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="row modern-record-container">
                         <div class="col-md-12 grid-margin stretch-card">
                             <div class="card shadow">
                                 <div class="card-body">
                                     <div class="d-sm-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
-                                        <h4 class="card-title mb-sm-0">Site Daily Record</h4>
+                                        <h4 class="card-title mb-sm-0">Rekod Harian Tapak</h4>
                                         <form method="GET" action="daily_details.php" class="d-flex align-items-center gap-2 m-0">
                                             <input type="hidden" name="id" value="<?php echo $cid; ?>">
                                             <select name="filter_year" class="form-select form-select-sm" style="min-width: 100px; border-radius: 8px;">
@@ -256,23 +228,23 @@ require 'includes/connection.php';
                                                 <?php
                                                 for($i=1; $i<=24; $i++) {
                                                     $sel = ($i == $filter_session) ? 'selected' : '';
-                                                    echo "<option value='$i' $sel>Session $i</option>";
+                                                    echo "<option value='$i' $sel>Sesi $i</option>";
                                                 }
                                                 ?>
                                             </select>
-                                            <button type="submit" class="btn btn-primary btn-sm" style="border-radius: 8px;">Filter</button>
+                                            <button type="submit" class="btn btn-primary btn-sm" style="border-radius: 8px;">Tapis</button>
                                         </form>
                                     </div>
-                                    <div class="modern-table-wrapper mb-2">
-                                        <table class="modern-table">
+                                    <div class="gms-table-wrapper mb-2">
+                                        <table class="gms-table">
                                             <thead>
                                                 <tr>
-                                                    <th>Dates</th>
-                                                    <th>Session</th>
-                                                    <th>Contractor</th>
-                                                    <th>Supervisor</th>
+                                                    <th>Tarikh</th>
+                                                    <th>Sesi</th>
+                                                    <th>Kontraktor</th>
+                                                    <th>Penyelia</th>
                                                     <th>Pengawas</th>
-                                                    <th>Verified</th>
+                                                    <th>Disahkan</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -288,23 +260,23 @@ require 'includes/connection.php';
                                                         <tr>
                                                             <td style="word-wrap: break-word;overflow-wrap: break-word; white-space: normal;">
                                                                 <a href="sitedaily_records.php?id=<?php echo $row['id'] ?>">
-                                                                    <?php echo date("d M Y", strtotime($row['date'])) ?>
+                                                                    <?php echo gms_format_date($row['date'], 'd M Y') ?>
                                                                 </a>
                                                             </td>
                                                             <td style="word-wrap: break-word;overflow-wrap: break-word; white-space: normal;">
-                                                                Session <?php echo htmlspecialchars($row['gc_session']) ?>
+                                                                Sesi <?php echo htmlspecialchars($row['gc_session']) ?>
                                                             </td>
                                                             <td>
-                                                                <?php echo ($row['contractor_dsign'] === 'Y') ? '<i class="fa fa-check-circle text-success" style="font-size: 18px;" title="Signed"></i>' : '<i class="fa fa-times-circle text-danger" style="font-size: 18px;" title="Not Signed"></i>'; ?>
+                                                                <?php echo ($row['contractor_dsign'] === 'Y') ? '<i class="fa fa-check-circle text-success" style="font-size: 18px;" title="Ditandatangani"></i>' : '<i class="fa fa-times-circle text-danger" style="font-size: 18px;" title="Belum ditandatangani"></i>'; ?>
                                                             </td>
                                                             <td>
-                                                                <?php echo ($row['supervisor_dsign'] === 'Y') ? '<i class="fa fa-check-circle text-success" style="font-size: 18px;" title="Signed"></i>' : '<i class="fa fa-times-circle text-danger" style="font-size: 18px;" title="Not Signed"></i>'; ?>
+                                                                <?php echo ($row['supervisor_dsign'] === 'Y') ? '<i class="fa fa-check-circle text-success" style="font-size: 18px;" title="Ditandatangani"></i>' : '<i class="fa fa-times-circle text-danger" style="font-size: 18px;" title="Belum ditandatangani"></i>'; ?>
                                                             </td>
                                                             <td>
-                                                                <?php echo ($row['pengawas_dsign'] === 'Y') ? '<i class="fa fa-check-circle text-success" style="font-size: 18px;" title="Signed"></i>' : '<i class="fa fa-times-circle text-danger" style="font-size: 18px;" title="Not Signed"></i>'; ?>
+                                                                <?php echo ($row['pengawas_dsign'] === 'Y') ? '<i class="fa fa-check-circle text-success" style="font-size: 18px;" title="Ditandatangani"></i>' : '<i class="fa fa-times-circle text-danger" style="font-size: 18px;" title="Belum ditandatangani"></i>'; ?>
                                                             </td>
                                                             <td>
-                                                                <?php echo ($row['verified'] === 'Y') ? '<i class="fa fa-check-square text-success" style="font-size: 18px;" title="Verified"></i>' : '<i class="fa fa-minus-circle text-danger" style="font-size: 18px;" title="Not Verified"></i>'; ?>
+                                                                <?php echo ($row['verified'] === 'Y') ? '<i class="fa fa-check-square text-success" style="font-size: 18px;" title="Disahkan"></i>' : '<i class="fa fa-minus-circle text-danger" style="font-size: 18px;" title="Belum disahkan"></i>'; ?>
                                                             </td>
                                                         </tr>
                                                 <?php 
@@ -312,13 +284,13 @@ require 'includes/connection.php';
                                                 ?>
                                                         <tr>
                                                             <td style="color: #64748b;">
-                                                                <?php echo date("d M Y", $current) ?>
+                                                                <?php echo gms_format_date($current, 'd M Y') ?>
                                                             </td>
                                                             <td style="color: #64748b;">
-                                                                Session <?php echo htmlspecialchars($filter_session) ?>
+                                                                Sesi <?php echo htmlspecialchars($filter_session) ?>
                                                             </td>
                                                             <td colspan="4" class="text-center text-muted" style="font-style: italic;">
-                                                                <span class="badge badge-outline-secondary" style="font-size: 11px; padding: 4px 8px; border: 1px dashed #f82727ff; color: #d62525ff; background-color: transparent;">No Data</span>
+                                                                <span class="badge badge-outline-secondary" style="font-size: 11px; padding: 4px 8px; border: 1px dashed #f82727ff; color: #d62525ff; background-color: transparent;">Tiada data</span>
                                                             </td>
                                                         </tr>
                                                 <?php 
@@ -339,30 +311,30 @@ require 'includes/connection.php';
                         <div class="modal-dialog">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="modal-title" id="exampleModalLabel">Register Contractor ID</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    <h5 class="modal-title" id="exampleModalLabel">Daftar ID Kontraktor</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                                 </div>
                                 <div class="modal-body">
                                     <form action="includes/reguser_contractor.php" method="POST" enctype="multipart/form-data">
                                         <input type="text" name="id" value="<?php echo $cid  ?>" hidden>
                                         <div class="row">
                                             <div class="col-md-12">
-                                                <label for="username" class="form-label"><small class="font-weight-bold">Name</small></label>
+                                                <label for="username" class="form-label"><small class="font-weight-bold">Nama</small></label>
                                                 <input type="text" class="form-control" name="fname" value="<?php echo $contractor ?>">
                                             </div>
                                             <div class="col-md-12 mt-4">
-                                                <label for="username" class="form-label"><small class="font-weight-bold">Email</small></label>
+                                                <label for="username" class="form-label"><small class="font-weight-bold">E-mel</small></label>
                                                 <input type="email" class="form-control" name="email" value="<?php echo $email ?>">
                                             </div>
                                             <hr class="mt-4">
                                             <div class="col-md-12 mt-2">
-                                                <label for="username" class="form-label"><small class="font-weight-bold">Username</small></label>
-                                                <input type="text" class="form-control" name="username" placeholder="Username">
+                                                <label for="username" class="form-label"><small class="font-weight-bold">Nama Pengguna</small></label>
+                                                <input type="text" class="form-control" name="username" placeholder="Nama pengguna">
                                             </div>
                                             <div class="col-md-12 mt-4">
-                                                <label for="password" class="form-label"><small class="font-weight-bold">Password</small></label>
+                                                <label for="password" class="form-label"><small class="font-weight-bold">Kata Laluan</small></label>
                                                 <div class="input-group">
-                                                    <input type="password" class="form-control" id="pwd" name="pwd" placeholder="Password">
+                                                    <input type="password" class="form-control" id="pwd" name="pwd" placeholder="Kata laluan">
                                                     <div class="input-group-append" style="cursor: pointer;">
                                                         <span class="input-group-text">
                                                             <i class='fa fa-eye text-dark' id="toggleIcon" onclick="togglePassword()"></i>
@@ -372,7 +344,7 @@ require 'includes/connection.php';
                                             </div>
                                         </div>
                                         <div class="text-center mt-4">
-                                            <button type="submit" class="btn btn-info">Register</button>
+                                            <button type="submit" class="btn btn-info">Daftar</button>
                                         </div>
                                     </form>
                                 </div>

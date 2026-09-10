@@ -5,13 +5,13 @@ $cid = $_GET['id'];
 require 'includes/connection.php';
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ms">
 
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>SmartCut - Site Instruction (SI)</title>
+    <title>SmartCut - Arahan Tapak (SI)</title>
     <!-- plugins:css -->
     <link rel="stylesheet" href="assets/vendors/simple-line-icons/css/simple-line-icons.css">
     <link rel="stylesheet" href="assets/vendors/flag-icon-css/css/flag-icons.min.css">
@@ -25,6 +25,7 @@ require 'includes/connection.php';
     <!-- endinject -->
     <!-- Layout styles -->
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="assets/images/favicon.png" />
     <style>
@@ -106,36 +107,36 @@ require 'includes/connection.php';
                     <div class="row justify-content-center">
                         <div class="col-12 mb-4">
                             <a href="sitedaily_records.php?id=<?php echo $cid; ?>" class="btn btn-light shadow-sm">
-                                <i class="icon-arrow-left"></i> Back to Daily Records
+                                <i class="icon-arrow-left"></i> Kembali ke Rekod Harian
                             </a>
                         </div>
                         <div class="col-8 grid-margin stretch-card">
                             <div class="card">
                                 <div class="card-body">
-                                    <h4 class="card-title text-dark font-weight-bold mb-4">Site Instruction (SI)</h4>
+                                    <h4 class="card-title text-dark font-weight-bold mb-4">Arahan Tapak (SI)</h4>
                                     
                                     <!-- Placeholder for SI Content -->
                                    <div class="modern-table-wrapper mb-4">
                                         <table class="modern-table">
                                             <tbody>
                                                 <tr>
-                                                    <td><strong>SI Number</strong></td>
+                                                    <td><strong>Nombor SI</strong></td>
                                                     <td><strong>SC_3067</strong></td>
                                                 </tr>
                                                 <tr>
-                                                    <td class="no-col">Project</td>
-                                                    <td><strong>GRASS CUTTING AND DRAIN CLEANING WORKS WITHIN DBKU AREA OF ZONE</strong></td>
+                                                    <td class="no-col">Projek</td>
+                                                    <td><strong>KERJA-KERJA MEMOTONG RUMPUT DAN MEMBERSIHKAN LONGKANG DALAM KAWASAN DBKU ZON</strong></td>
                                                 </tr>
                                                 <tr>
-                                                    <td>Contract No</td>
+                                                    <td>Nombor Kontrak</td>
                                                     <td>DBKU/CQS/S/50/25</td>
                                                 </tr>
                                                 <tr>
-                                                    <td>Contractor</td>
+                                                    <td>Kontraktor</td>
                                                     <td>ABRAR MAJU SDN BHD</td>
                                                 </tr>
                                                 <tr>
-                                                    <td>Date</td>
+                                                    <td>Tarikh</td>
                                                     <td>19/07/2026</td>
                                                 </tr>
                                             </tbody>
@@ -145,11 +146,11 @@ require 'includes/connection.php';
                                     <div class="modern-table-wrapper mb-4">
                                         <table class="modern-table">
                                             <thead>
-                                                <th style="text-align: left;"><strong>Subject</strong></th>
+                                                <th style="text-align: left;"><strong>Perkara</strong></th>
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td><strong>Description</strong></td>
+                                                    <td><strong>Perihalan</strong></td>
                                                 </tr>
                                                 
                                             </tbody>
@@ -159,12 +160,12 @@ require 'includes/connection.php';
                                     <div class="modern-table-wrapper">
                                         <table class="modern-table">
                                             <thead>
-                                                <th style="text-align: left; width:90%"><strong>Instuction</strong></th>
-                                                <th>Reference</th>
+                                                <th style="text-align: left; width:90%"><strong>Arahan</strong></th>
+                                                <th>Rujukan</th>
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td><strong>Description</strong></td>
+                                                    <td><strong>Perihalan</strong></td>
                                                     <td></td>
                                                 </tr>
                                                 

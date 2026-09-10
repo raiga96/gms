@@ -7,7 +7,7 @@ require 'includes/connection.php';
 
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ms">
 
 <head>
     <!-- Required meta tags -->
@@ -30,6 +30,7 @@ require 'includes/connection.php';
     <!-- endinject -->
     <!-- Layout styles -->
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="assets/images/favicon.png" />
     <style>
@@ -163,7 +164,7 @@ require 'includes/connection.php';
                                         <h4 class="mb-1 text-white fw-bold"><?php echo $row['address'] ?></h4>
                                     </div>
                                     <div class="btn-group gap-2">
-                                        <a class="btn btn-light shadow-sm text-primary" href="update_contractor.php?id=<?php echo $cid ?>">Update</a>
+                                        <a class="btn btn-light shadow-sm text-primary" href="update_contractor.php?id=<?php echo $cid ?>">Kemaskini</a>
                                     </div>
                                 </div>
                             </div>
@@ -181,8 +182,8 @@ require 'includes/connection.php';
                             <div class="card shadow border-0">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h4 class="card-title mb-0"><i class="icon-user-following me-2 text-success"></i>Contractor Details</h4>
-                                        <span class="badge badge-success px-3 py-2">Active</span>
+                                        <h4 class="card-title mb-0"><i class="icon-user-following me-2 text-success"></i>Butiran Kontraktor</h4>
+                                        <span class="badge badge-success px-3 py-2">Aktif</span>
                                     </div>
                                     <hr>
                                     <div class="row g-4">
@@ -191,7 +192,7 @@ require 'includes/connection.php';
                                             <div class="border-box h-100 position-relative d-flex flex-column">
                                                 <div class="text-center mb-4">
                                                     <span class="badge bg-soft-info text-info px-3 py-2 text-uppercase fw-bold rounded-pill" style="background-color: #e0f2fe; color: #0284c7;">
-                                                        <i class="icon-info me-1"></i> Company Details
+                                                        <i class="icon-info me-1"></i> Butiran Syarikat
                                                     </span>
                                                 </div>
                                                 
@@ -200,7 +201,7 @@ require 'includes/connection.php';
                                                         <i class="icon-briefcase" style="font-size: 20px;"></i>
                                                     </div>
                                                     <div>
-                                                        <p class="text-muted mb-1 small text-uppercase fw-bold" style="letter-spacing: 0.5px;">Contractor Name</p>
+                                                        <p class="text-muted mb-1 small text-uppercase fw-bold" style="letter-spacing: 0.5px;">Nama Kontraktor</p>
                                                         <h5 class="mb-1 fw-bold text-dark"><?php echo $row1['name']; ?></h5>
                                                         <p class="small text-muted mb-0"><i class="icon-user me-1"></i> PIC: <?php echo $row1['contact_person']; ?></p>
                                                     </div>
@@ -211,7 +212,7 @@ require 'includes/connection.php';
                                                         <i class="icon-envelope" style="font-size: 20px;"></i>
                                                     </div>
                                                     <div>
-                                                        <p class="text-muted mb-1 small text-uppercase fw-bold" style="letter-spacing: 0.5px;">Email Address</p>
+                                                        <p class="text-muted mb-1 small text-uppercase fw-bold" style="letter-spacing: 0.5px;">Alamat E-mel</p>
                                                         <h5 class="mb-0 fw-bold text-dark"><?php echo $row1['email'] ?: 'N/A'; ?></h5>
                                                     </div>
                                                 </div>
@@ -221,7 +222,7 @@ require 'includes/connection.php';
                                                         <i class="icon-calendar" style="font-size: 20px;"></i>
                                                     </div>
                                                     <div>
-                                                        <p class="text-muted mb-1 small text-uppercase fw-bold" style="letter-spacing: 0.5px;">Active Duration</p>
+                                                        <p class="text-muted mb-1 small text-uppercase fw-bold" style="letter-spacing: 0.5px;">Tempoh Aktif</p>
                                                         <h5 class="mb-0 fw-bold text-dark">-</h5>
                                                     </div>
                                                 </div>
@@ -233,7 +234,7 @@ require 'includes/connection.php';
                                             <div class="border-box h-100 position-relative d-flex flex-column">
                                                 <div class="text-center mb-4">
                                                     <span class="badge bg-soft-success text-success px-3 py-2 text-uppercase fw-bold rounded-pill" style="background-color: #dcfce7; color: #166534;">
-                                                        <i class="icon-lock me-1"></i> Login & Access
+                                                        <i class="icon-lock me-1"></i> Log Masuk & Akses
                                                     </span>
                                                 </div>
                                                 
@@ -247,18 +248,18 @@ require 'includes/connection.php';
                                                 if ($res->num_rows > 0) {
                                                     $stat = true;
                                                     switch ($user_row['status']) {
-                                                        case 'Y': $status = 'Active'; $status_color = 'success'; break;
-                                                        case 'N': $status = 'In-active'; $status_color = 'danger'; break;
-                                                        case 'C': $status = 'Cancelled'; $status_color = 'warning'; break;
-                                                        case 'T': $status = 'Terminated'; $status_color = 'danger'; break;
-                                                        default:  $status = 'Not Available'; $status_color = 'secondary'; break;
+                                                        case 'Y': $status = 'Aktif'; $status_color = 'success'; break;
+                                                        case 'N': $status = 'Tidak Aktif'; $status_color = 'danger'; break;
+                                                        case 'C': $status = 'Dibatalkan'; $status_color = 'warning'; break;
+                                                        case 'T': $status = 'Ditamatkan'; $status_color = 'danger'; break;
+                                                        default:  $status = 'Tidak Tersedia'; $status_color = 'secondary'; break;
                                                     }
                                                 }
                                                 ?>
                                                 
                                                 <div class="text-center mb-4">
-                                                    <p class="text-muted mb-1 small text-uppercase fw-bold" style="letter-spacing: 0.5px;">System Account</p>
-                                                    <h3 class="fw-bold text-dark mb-2"><?php echo $user_row['user_id'] ?? 'Not Registered'; ?></h3>
+                                                    <p class="text-muted mb-1 small text-uppercase fw-bold" style="letter-spacing: 0.5px;">Akaun Sistem</p>
+                                                    <h3 class="fw-bold text-dark mb-2"><?php echo $user_row['user_id'] ?? 'Belum Didaftar'; ?></h3>
                                                     <span class="badge bg-<?php echo $status_color; ?> px-3 py-1 rounded-pill"><i class="icon-energy me-1"></i> <?php echo $status; ?></span>
                                                 </div>
 
@@ -266,17 +267,17 @@ require 'includes/connection.php';
                                                     <div class="alert alert-warning border-0 bg-light text-warning d-flex align-items-center mb-4" role="alert">
                                                         <i class="icon-info me-2" style="font-size: 20px;"></i>
                                                         <div class="small fw-bold">
-                                                            No system login access yet. Please register an ID.
+                                                            Akses log masuk sistem belum tersedia. Sila daftarkan ID.
                                                         </div>
                                                     </div>
                                                 <?php } ?>
                                                 
                                                 <div class="d-grid gap-2 mt-auto pt-3">
                                                     <button class="btn btn-primary btn-sm rounded-pill fw-bold shadow-sm" <?php if ($stat) { echo 'disabled'; } ?> type="button" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                                                        <i class="icon-user-follow me-1"></i> Register ID
+                                                        <i class="icon-user-follow me-1"></i> Daftar ID
                                                     </button>
                                                     <a href="contractor_profile.php?id=<?php echo $cid; ?>" class="btn btn-outline-secondary btn-sm rounded-pill fw-bold">
-                                                        <i class="icon-people me-1"></i> View User List
+                                                        <i class="icon-people me-1"></i> Lihat Senarai Pengguna
                                                     </a>
                                                 </div>
                                             </div>
@@ -287,7 +288,7 @@ require 'includes/connection.php';
                                             <div class="border-box h-100 position-relative d-flex flex-column">
                                                 <div class="text-center mb-4">
                                                     <span class="badge bg-soft-primary text-primary px-3 py-2 text-uppercase fw-bold rounded-pill" style="background-color: #e0e7ff; color: #3730a3;">
-                                                        <i class="icon-wallet me-1"></i> Payment & Contracts
+                                                        <i class="icon-wallet me-1"></i> Bayaran & Kontrak
                                                     </span>
                                                 </div>
                                                 
@@ -295,16 +296,16 @@ require 'includes/connection.php';
                                                     <div class="d-inline-block bg-light p-4 rounded-circle mb-3">
                                                         <i class="icon-docs text-primary" style="font-size: 32px;"></i>
                                                     </div>
-                                                    <h5 class="fw-bold text-dark">Contract Documents</h5>
-                                                    <p class="text-muted small">Manage agreements and payment details for this contractor.</p>
+                                                    <h5 class="fw-bold text-dark">Dokumen Kontrak</h5>
+                                                    <p class="text-muted small">Urus perjanjian dan butiran bayaran kontraktor ini.</p>
                                                 </div>
                                                 
                                                 <div class="d-grid gap-2 mt-auto pt-3">
                                                     <button class="btn btn-info btn-sm rounded-pill fw-bold text-white shadow-sm">
-                                                        <i class="icon-doc me-1"></i> Add Contract
+                                                        <i class="icon-doc me-1"></i> Tambah Kontrak
                                                     </button>
                                                     <button class="btn btn-outline-info btn-sm rounded-pill fw-bold">
-                                                        <i class="icon-credit-card me-1"></i> Payment History
+                                                        <i class="icon-credit-card me-1"></i> Sejarah Bayaran
                                                     </button>
                                                 </div>
                                             </div>
@@ -320,25 +321,25 @@ require 'includes/connection.php';
                             <div class="card shadow">
                                 <div class="card-body">
                                     <div class="d-sm-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
-                                        <h4 class="card-title mb-sm-0">Contract List</h4>
+                                        <h4 class="card-title mb-sm-0">Senarai Kontrak</h4>
                                     </div>
                                     <div class="modern-table-wrapper mb-2">
                                         <table class="modern-table">
                                             <thead>
                                                 <th>
-                                                    <h5>Title</h5>
+                                                    <h5>Tajuk</h5>
                                                 </th>
                                                 <th>
-                                                    <h5>Contract Number</h5>
+                                                    <h5>Nombor Kontrak</h5>
                                                 </th>
                                                 <th>
-                                                    <h5>Supervisor</h5>
+                                                    <h5>Penyelia</h5>
                                                 </th>
                                                 <th>
-                                                    <h5>Mandour</h5>
+                                                    <h5>Mandur</h5>
                                                 </th>
                                                 <th>
-                                                    <h5>Duration</h5>
+                                                    <h5>Tempoh</h5>
                                                 </th>
                                                 <th width="10%"></th>
                                                 </tr>
@@ -377,7 +378,7 @@ require 'includes/connection.php';
 
                                                         <tr style="height:60px">
                                                             <td style="width: 500px;word-wrap: break-word;overflow-wrap: break-word; white-space: normal;">
-                                                                <h6 class="text-uppercase">GRASS CUTTING AND DRAIN CLEANING WORKS WITHIN DBKU AREA OF ZONE <?php echo $row2['zone_name'] ?></h6>
+                                                            <h6 class="text-uppercase">KERJA-KERJA MEMOTONG RUMPUT DAN MEMBERSIHKAN LONGKANG DALAM KAWASAN DBKU ZON <?php echo $row2['zone_name'] ?></h6>
                                                             </td>
                                                             <td style="width: 250px;word-wrap: break-word;overflow-wrap: break-word; white-space: normal;">
                                                                 <h6><?php echo $row['contract_number'] ?></h6>
@@ -393,8 +394,8 @@ require 'includes/connection.php';
                                                                 <h5><?php  ?></h5>
                                                             </td>
                                                             <td style="width:220px">
-                                                                <h6><?php echo date("d M Y", strtotime($row['start_date'])) ?> - <?php echo date("d M Y", strtotime($row['end_date'])) ?></h6>
-                                                                <small><?php echo $duration_months ?> months</small>
+                                                                <h6><?php echo gms_format_date($row['start_date'], 'd M Y') ?> - <?php echo gms_format_date($row['end_date'], 'd M Y') ?></h6>
+                                                                <small><?php echo $duration_months ?> bulan</small>
                                                             </td>
                                                             <td>
                                                                 <button type="button" class="btn btn-danger p-3" data-id="<?php ?>" onclick="deleteDb(this)"><i class=" fa fa-trash"></i></button>
@@ -407,7 +408,7 @@ require 'includes/connection.php';
                                                 } else { ?>
                                                     <tr>
                                                         <td colspan="6" class="text-center text-danger">
-                                                            <h5 class="font-weight-bold">No data available</h5>
+                                                            <h5 class="font-weight-bold">Tiada data tersedia</h5>
                                                         </td>
                                                     </tr>
                                                 <?php } ?>
@@ -424,30 +425,30 @@ require 'includes/connection.php';
                         <div class="modal-dialog">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="modal-title" id="exampleModalLabel">Register Contractor ID</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    <h5 class="modal-title" id="exampleModalLabel">Daftar ID Kontraktor</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                                 </div>
                                 <div class="modal-body">
                                     <form action="includes/reguser_contractor.php" method="POST" enctype="multipart/form-data">
                                         <input type="text" name="id" value="<?php echo $cid  ?>" hidden>
                                         <div class="row">
                                             <div class="col-md-12">
-                                                <label for="username" class="form-label"><small class="font-weight-bold">Name</small></label>
+                                                <label for="username" class="form-label"><small class="font-weight-bold">Nama</small></label>
                                                 <input type="text" class="form-control" name="fname" value="<?php echo $contractor ?>">
                                             </div>
                                             <div class="col-md-12 mt-4">
-                                                <label for="username" class="form-label"><small class="font-weight-bold">Email</small></label>
+                                                <label for="username" class="form-label"><small class="font-weight-bold">E-mel</small></label>
                                                 <input type="email" class="form-control" name="email" value="<?php echo $email ?>">
                                             </div>
                                             <hr class="mt-4">
                                             <div class="col-md-12 mt-2">
-                                                <label for="username" class="form-label"><small class="font-weight-bold">Username</small></label>
-                                                <input type="text" class="form-control" name="username" placeholder="Username">
+                                                <label for="username" class="form-label"><small class="font-weight-bold">Nama Pengguna</small></label>
+                                                <input type="text" class="form-control" name="username" placeholder="Nama pengguna">
                                             </div>
                                             <div class="col-md-12 mt-4">
-                                                <label for="password" class="form-label"><small class="font-weight-bold">Password</small></label>
+                                                <label for="password" class="form-label"><small class="font-weight-bold">Kata Laluan</small></label>
                                                 <div class="input-group">
-                                                    <input type="password" class="form-control" id="pwd" name="pwd" placeholder="Password">
+                                                    <input type="password" class="form-control" id="pwd" name="pwd" placeholder="Kata laluan">
                                                     <div class="input-group-append" style="cursor: pointer;">
                                                         <span class="input-group-text">
                                                             <i class='fa fa-eye text-dark' id="toggleIcon" onclick="togglePassword()"></i>
@@ -457,7 +458,7 @@ require 'includes/connection.php';
                                             </div>
                                         </div>
                                         <div class="text-center mt-4">
-                                            <button type="submit" class="btn btn-info">Register</button>
+                                            <button type="submit" class="btn btn-info">Daftar</button>
                                         </div>
                                     </form>
                                 </div>

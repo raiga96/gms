@@ -19,7 +19,7 @@ $dompdf = new Dompdf($options);
 $sql1 = "SELECT * FROM daily_records WHERE id = '$id'";
 $res1 = $conn->query($sql1);
 $row1 = $res1->fetch_assoc();
-if (!$row1) { die("Record not found"); }
+if (!$row1) { die("Rekod tidak ditemui"); }
 
 $sql2 = "SELECT * FROM contract WHERE contract_id = '" . $row1['cid'] . "'";
 $res2 = $conn->query($sql2);
@@ -80,7 +80,7 @@ if ($res_si_all && $res_si_all->num_rows > 0) {
     }
 }
 $si_display = !empty($si_numbers) ? implode(', ', array_unique($si_numbers)) : '..........';
-$comments_by_sor = !empty($instructions) ? implode('; ', array_unique($instructions)) : 'No comment from SOR';
+$comments_by_sor = !empty($instructions) ? implode('; ', array_unique($instructions)) : 'Tiada catatan daripada SOR';
 
 // 2. Siapkan Struktur HTML & CSS
 $html = '
@@ -88,7 +88,7 @@ $html = '
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <title>Site Daily Record</title>
+    <title>Rekod Harian Tapak</title>
     <style>
         @page {
             margin: 10mm 10mm 10mm 10mm;
@@ -205,18 +205,18 @@ $html = '
 <body style="border: 1px solid #000;">
 
     <div class="header">
-        <p>SITE DAILY RECORD</p>
-        <h4>LANDSCAPE DIVISION</h4>
-        <h4>QUALITY GRASSCUTTING & DRAIN CLEANING</h4>
+                <p>REKOD HARIAN TAPAK</p>
+        <h4>BAHAGIAN LANDSKAP</h4>
+        <h4>PEMOTONGAN RUMPUT & PEMBERSIHAN LONGKANG</h4>
     </div>
     <div style="margin-bottom:10px; padding:10px">
         <table style="border: none; margin: 0; padding: 0;">
             <tr style="border: none;">
                 <td style="border: none; padding: 0;" class="text-left font-bold">
-                    ZONE: <span style="font-weight: normal;">' . htmlspecialchars($zone_display) . '</span>
+                    ZON: <span style="font-weight: normal;">' . htmlspecialchars($zone_display) . '</span>
                 </td>
                 <td style="border: none; padding: 0;" class="text-right font-bold">
-                    DATE: <span style="font-weight: normal;">' . $date_display . '</span>
+                    TARIKH: <span style="font-weight: normal;">' . $date_display . '</span>
                 </td>
             </tr>
         </table>
@@ -225,14 +225,14 @@ $html = '
     <table class="table-atas">
         <thead>
             <tr class="font-bold" style="font-size: 10px;">
-                <th style="width: 10px;padding-bottom:8px">DAY</th>
-                <th style="text-align:left;padding-bottom:8px">GRASSCUTTING</th>
-                <th style="text-align:left;padding-bottom:8px">DRAIN CLEANING</th>
+                <th style="width: 10px;padding-bottom:8px">HARI</th>
+                <th style="text-align:left;padding-bottom:8px">PEMOTONGAN RUMPUT</th>
+                <th style="text-align:left;padding-bottom:8px">PEMBERSIHAN LONGKANG</th>
             </tr>
         </thead>
         <tbody>';
         
-        $hari = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+        $hari = ['Monday' => 'Isnin', 'Tuesday' => 'Selasa', 'Wednesday' => 'Rabu', 'Thursday' => 'Khamis', 'Friday' => 'Jumaat'];
         $recordDay = isset($row1['date']) ? date('l', strtotime($row1['date'])) : '';
         $gcChecked = isset($row1['gc_checked']) ? (int)$row1['gc_checked'] : 0;
         $gcSession = isset($row1['gc_session']) ? $row1['gc_session'] : '';
@@ -241,7 +241,7 @@ $html = '
         $dmSession = isset($row1['dm_session']) ? $row1['dm_session'] : '';
         $dmDayNo   = isset($row1['dm_day_no']) ? $row1['dm_day_no'] : '';
 
-        foreach ($hari as $h) {
+        foreach ($hari as $h => $hariBm) {
             $isMatch = (strtolower($h) === strtolower($recordDay));
             $gc_box = ($isMatch && $gcChecked === 1) ? 'X' : '';
             $gc_sess_val = $isMatch ? $gcSession : '......';
@@ -253,17 +253,17 @@ $html = '
 
             $html .= '
             <tr>
-                <td class="text-right font-bold" style="font-size:9px">' . $h . '</td>
+                <td class="text-right font-bold" style="font-size:9px">' . $hariBm . '</td>
                 <td>
                     <div class="sesi-container">
                         <div class="inline-box text-center" style="line-height:20px; font-weight:bold;font-size:9px">' . $gc_box . '</div>
-                        <span class="sesi-text" style="font-size:9px">(Session ' . htmlspecialchars($gc_sess_val) . ') Day No : ' . htmlspecialchars($gc_day_val) . '</span>
+                        <span class="sesi-text" style="font-size:9px">(Sesi ' . htmlspecialchars($gc_sess_val) . ') Hari Ke-: ' . htmlspecialchars($gc_day_val) . '</span>
                     </div>
                 </td>
                 <td>
                     <div class="sesi-container">
                         <div class="inline-box text-center" style="line-height:20px; font-weight:bold;font-size:9px">' . $dm_box . '</div>
-                        <span class="sesi-text" style="font-size:9px">(Session ' . htmlspecialchars($dm_sess_val) . ') Day No : ' . htmlspecialchars($dm_day_val) . '</span>
+                        <span class="sesi-text" style="font-size:9px">(Sesi ' . htmlspecialchars($dm_sess_val) . ') Hari Ke-: ' . htmlspecialchars($dm_day_val) . '</span>
                     </div>
                 </td>
             </tr>';
@@ -276,16 +276,16 @@ $html .= '
     <table>
         <thead>
             <tr class="font-bold" style="font-size: 8px;">
-                <th style="width: 8px; border-left:none">ACTIVITIES</th>
-                <th style="width: 10px;" class="text-center">NOS. WORKERS</th>
-                <th style="width: 10px;" class="text-center">MACHINES/TOOLS</th>
-                <th style="width: 30px;">TIME</th>
-                <th style="width: 150px; border-right:none">WEATHER</th>
+                <th style="width: 8px; border-left:none">AKTIVITI</th>
+                <th style="width: 10px;" class="text-center">BILANGAN PEKERJA</th>
+                <th style="width: 10px;" class="text-center">MESIN/PERALATAN</th>
+                <th style="width: 30px;">MASA</th>
+                <th style="width: 150px; border-right:none">CUACA</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td class="font-bold" style="border-left:none;font-size:9px">GRASSCUTTING</td>
+                <td class="font-bold" style="border-left:none;font-size:9px">MEMOTONG RUMPUT</td>
                 <td class="text-center" style="font-size:9px">' . htmlspecialchars($row1['gc_workers'] ?? '') . '</td>
                 <td class="text-center" style="font-size:9px">' . htmlspecialchars($row1['gc_tools'] ?? '') . '</td>
                 <td style="font-size:9px">Datang: --:--</td>
@@ -304,22 +304,22 @@ $html .= '
                 </div>';
                     
                     $weather = isset($row1['weather']) ? $row1['weather'] : '';
-                    $html .= 'Weather: <br>';
-                    $html .= ($weather == 'Cloudy' ? '[ X ] Cloudy &nbsp;&nbsp;&nbsp;' : '[  ] Cloudy &nbsp;&nbsp;&nbsp;');
-                    $html .= ($weather == 'Rainy' ? '[ X ] Rainy &nbsp;&nbsp;&nbsp;' : '[  ] Rainy &nbsp;&nbsp;&nbsp;');
-                    $html .= ($weather == 'Fine' ? '[ X ] Fine<br>' : '[  ] Fine<br>');
-                    $html .= '<br>(Time of inspection)<br>AM: --:--&nbsp;&nbsp;&nbsp;&nbsp;PM: --:--';
+                    $html .= 'Cuaca: <br>';
+                    $html .= ($weather == 'Cloudy' ? '[ X ] Mendung &nbsp;&nbsp;&nbsp;' : '[  ] Mendung &nbsp;&nbsp;&nbsp;');
+                    $html .= ($weather == 'Rainy' ? '[ X ] Hujan &nbsp;&nbsp;&nbsp;' : '[  ] Hujan &nbsp;&nbsp;&nbsp;');
+                    $html .= ($weather == 'Fine' ? '[ X ] Cerah<br>' : '[  ] Cerah<br>');
+                    $html .= '<br>(Masa pemeriksaan)<br>AM: --:--&nbsp;&nbsp;&nbsp;&nbsp;PM: --:--';
 
 $html .= '      </td>
             </tr>
             <tr>
-                <td class="font-bold" style="border-left:none;font-size:9px">DRAIN CLEANING</td>
+                <td class="font-bold" style="border-left:none;font-size:9px">MEMBERSIHKAN LONGKANG</td>
                 <td class="text-center" style="font-size:9px">' . htmlspecialchars($row1['dc_workers'] ?? '') . '</td>
                 <td class="text-center" style="font-size:9px">' . htmlspecialchars($row1['dc_tools'] ?? '') . '</td>
                 <td style="font-size:9px">Pulang: --:--</td>
             </tr>
             <tr class="font-bold">
-                <td style="border-left:none;font-size:9px">TOTAL</td>
+                <td style="border-left:none;font-size:9px">JUMLAH</td>
                 <td class="text-center" style="font-size:9px">' . ((int)($row1['gc_workers'] ?? 0) + (int)($row1['dc_workers'] ?? 0)) . '</td>
                 <td class="text-center" style="font-size:9px"></td>
                 <td style="font-size:9px"></td>
@@ -330,12 +330,12 @@ $html .= '      </td>
     <table>
         <thead>
             <tr class="font-bold text-center" style="font-size: 9px;">
-                <th style="width: 1%; border-left:none">AREA</th>
-                <th style="width: 10%;">LOCATION</th>
-                <th style="width: 2%;">ACTIVITY</th>
-                <th style="width: 2%;">PROGRESS</th>
-                <th style="width: 16%;">REFERENCE</th>
-                <th style="width: 5%; border-right:none">TOTAL DEMERIT</th>
+                <th style="width: 1%; border-left:none">KAWASAN</th>
+                <th style="width: 10%;">LOKASI</th>
+                <th style="width: 2%;">AKTIVITI</th>
+                <th style="width: 2%;">KEMAJUAN</th>
+                <th style="width: 16%;">RUJUKAN</th>
+                <th style="width: 5%; border-right:none">JUMLAH MATA PENALTI</th>
             </tr>
         </thead>
         <tbody>';
@@ -374,13 +374,13 @@ $html .= '      </td>
                 <tr>
                     <td class="text-center font-bold" rowspan="2" style="border-left:none">' . htmlspecialchars($area_no) . '</td>
                     <td rowspan="2" style="font-size: 9px; vertical-align: top;">' . htmlspecialchars($row_loc['location']) . '</td>
-                    <td style="font-size:9px">Grasscutting</td>
+                    <td style="font-size:9px">Pemotongan Rumput</td>
                     <td class="text-center font-bold">' . htmlspecialchars($gc_progress) . '</td>
                     <td class="text-center">' . htmlspecialchars($ref_gc) . '</td>
                     <td class="text-center" style="border-right:none">' . htmlspecialchars($demerit_val_gc) . '</td>
                 </tr>
                 <tr>
-                    <td class="text-center" style="font-size:9px">Drain Cleaning</td>
+                    <td class="text-center" style="font-size:9px">Pembersihan Longkang</td>
                     <td class="text-center font-bold">' . htmlspecialchars($dc_progress) . '</td>
                     <td class="text-center">' . htmlspecialchars($ref_dc) . '</td>
                     <td class="text-center" style="border-right:none">' . htmlspecialchars($demerit_val_dc) . '</td>
@@ -394,14 +394,14 @@ $html .= '
     <table>
         <tr>
             <td style="border-top: none;border-bottom: none; border-right: none; border-left: none; font-size:9px;padding-top:8px;padding-bottom:8px">
-                Instruction to contractor :
+                Arahan kepada kontraktor:
             </td>
             <td style="border-top: none;border-bottom: none; border-right: none; border-left: none; font-size:9px;padding-top:8px;padding-bottom:8px">
                 SI.No. ' . $si_display . ' / Lisan
             </td>
             <td style="border-top: none;border-bottom: none; border-left: none; border-right: none; font-size:9px;padding-top:8px;padding-bottom:8px">
                 <div class="sesi-container">
-                    <span class="sesi-text">No</span>
+                    <span class="sesi-text">Tidak</span>
                     <div class="inline-box text-center" style="line-height:20px; font-weight:bold;">' . (empty($si_numbers) ? 'X' : '') . '</div>
                 </div>
             </td>
@@ -418,8 +418,8 @@ $html .= '
         <tr>
             <td style="border-left:none">
                 <div>
-                    <div class="text-center" style="font-size: 8px; font-weight:bold;">Contractor\'s Representative</div>
-                    <div class="text-center" style="font-size: 8px;">Signature</div>
+                    <div class="text-center" style="font-size: 8px; font-weight:bold;">Wakil Kontraktor</div>
+                    <div class="text-center" style="font-size: 8px;">Tandatangan</div>
                     <div class="sig-space text-center">';
                     
                     if (isset($row1['contractor_dsign']) && $row1['contractor_dsign'] === 'Y') {
@@ -434,8 +434,8 @@ $html .= '          </div>
             </td>
             <td >
                 <div>
-                    <div class="text-center" style="font-size: 8px; font-weight:bold;">Superintending Officer</div>
-                    <div class="text-center" style="font-size: 8px;">Representative (Superior)</div>
+                    <div class="text-center" style="font-size: 8px; font-weight:bold;">Pegawai Penguasa</div>
+                    <div class="text-center" style="font-size: 8px;">Wakil (Penyelia)</div>
                     <div class="sig-space text-center">';
                     
                     if (isset($row1['supervisor_dsign']) && $row1['supervisor_dsign'] === 'Y') {
@@ -450,8 +450,8 @@ $html .= '          </div>
             </td>
             <td style="width:200px; border-right:none">
                 <div>
-                    <div class="text-center" style="font-size: 8px; font-weight:bold;">Superintending Officer</div>
-                    <div class="text-center" style="font-size: 8px;">Representative (Verifier)</div>
+                    <div class="text-center" style="font-size: 8px; font-weight:bold;">Pegawai Penguasa</div>
+                    <div class="text-center" style="font-size: 8px;">Wakil (Pengesah)</div>
                     <div class="sig-space text-center">';
                     
                     if (isset($row1['pengawas_dsign']) && $row1['pengawas_dsign'] === 'Y') {
@@ -468,7 +468,7 @@ $html .= '          </div>
         <tr>
             <td colspan="3" style="border-right:none; border-left:none; border-bottom:none; padding:5;">
                 <div style="display: inline-block; width: 45%; vertical-align: top; box-sizing: border-box;">
-                    <span style="font-weight:bold; font-size:8px; display: block; margin-bottom: 2px;">PROGRESS (of work):</span>
+                    <span style="font-weight:bold; font-size:8px; display: block; margin-bottom: 2px;">KEMAJUAN KERJA:</span>
                     <span style="padding-left:5px; font-size:8px; display: block;">X : Belum dijalankan</span>
                     <span style="padding-left:5px; font-size:8px; display: block;">- : Sedang dijalankan</span>
                     <span style="padding-left:5px; font-size:8px; display: block;">/ : Siap dijalankan</span>
@@ -477,7 +477,7 @@ $html .= '          </div>
 
                 <div style="display: inline-block; width: 50%; vertical-align: top; box-sizing: border-box; padding-left: 10px; padding-top:10px">
                     <span style="font-size:8px; font-weight:bold; display: block; margin-bottom: 4px;">
-                        Comments By ASO : ___________________________________________________
+                        Catatan Oleh ASO : ___________________________________________________
                     </span>
                     <span style="font-size:8px; font-weight:bold; display: block; margin-bottom: 4px;">
                         (JA/KU/KB)

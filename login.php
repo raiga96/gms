@@ -7,7 +7,7 @@ if(isset($_SESSION['user_id'])) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ms">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -185,16 +185,16 @@ if(isset($_SESSION['user_id'])) {
     <div class="login-card">
         <div class="login-left">
             <div class="login-left-content">
-                <h2>Welcome back!</h2>
-                <p>SmartCut DBKU is the integrated system for monitoring and managing grass cutting and drain cleaning services within the Dewan Bandaraya Kuching Utara jurisdiction.</p>
-                <p class="mt-4"><small>&copy; <?php echo date('Y'); ?> DBKU. All rights reserved.</small></p>
+                <h2>Selamat kembali!</h2>
+                <p>SmartCut DBKU ialah sistem bersepadu untuk memantau dan mengurus perkhidmatan pemotongan rumput serta pembersihan longkang dalam kawasan pentadbiran Dewan Bandaraya Kuching Utara.</p>
+                <p class="mt-4"><small>&copy; <?php echo date('Y'); ?> DBKU. Hak cipta terpelihara.</small></p>
             </div>
         </div>
         <div class="login-right">
             <div class="logo">
                 <img src="assets/images/gms.png" alt="DBKU Logo" style="height:130px; width:auto;">
             </div>
-            <h3>Sign In</h3>
+            <h3>Log Masuk</h3>
             
             <?php
             if(isset($_SESSION['login_error'])) {
@@ -209,20 +209,20 @@ if(isset($_SESSION['user_id'])) {
             
             <form action="includes/login_action.php" method="POST">
                 <div class="form-group">
-                    <input type="text" class="form-control" name="user_id" placeholder="Username or Email" required>
+                    <input type="text" class="form-control" name="user_id" placeholder="Nama pengguna atau e-mel" required>
                 </div>
                 <div class="form-group">
-                    <input type="password" class="form-control" name="password" placeholder="Password" required>
+                    <input type="password" class="form-control" name="password" placeholder="Kata laluan" required>
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div class="form-check m-0">
                         <label class="form-check-label text-muted" style="font-size: 13px;">
-                            <input type="checkbox" class="form-check-input"> Remember me
+                            <input type="checkbox" class="form-check-input"> Ingat saya
                         </label>
                     </div>
-                    <a href="#" class="text-muted" style="font-size: 13px; text-decoration: none;">Forgot password?</a>
+                    <a href="#" class="text-muted" style="font-size: 13px; text-decoration: none;">Lupa kata laluan?</a>
                 </div>
-                <button type="submit" class="btn btn-login">Sign In</button>
+                <button type="submit" class="btn btn-login">Log Masuk</button>
             </form>
         </div>
     </div>
