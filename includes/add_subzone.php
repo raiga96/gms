@@ -14,7 +14,7 @@ if (empty($subzone)) {
     $_SESSION['status'] = 'error';
     $_SESSION['message'] = 'Empty Subzone name';
 
-    header("Location: ../add_subzone?id=" . $zone_id);
+    header("Location: ../add_subzone.php?id=" . $zone_id);
     exit();
 }
 
@@ -38,5 +38,5 @@ try {
     $_SESSION['message'] = 'Ralat pangkalan data: ' . $e->getMessage();
 }
 
-header("Location: ../zone_details?id=" . $zone_id);
+header("Location: ../zone_details.php?id=" . $zone_id);
 exit();

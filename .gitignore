@@ -1,0 +1,7 @@
+
+# secrets & backups
+x.php
+*.bak
+*.bak2
+/apps/connect.php
+*.stackdump

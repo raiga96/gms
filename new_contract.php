@@ -45,7 +45,7 @@ unset($_SESSION['status'], $_SESSION['message']);
     <link rel="stylesheet" href="assets/vendors/mdi/css/materialdesignicons.min.css">
     <link rel="stylesheet" href="assets/vendors/font-awesome/css/font-awesome.min.css" />
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
-    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css?v=<?php echo filemtime(__DIR__ . '/assets/css/modern-dashboard.css'); ?>">
     <style>
         .gms-form-card .card-body { padding: 2rem !important; }
 

@@ -23,7 +23,7 @@ $page = $_GET['page'] ?? '';
     <link rel="stylesheet" href="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css">
     <link rel="stylesheet" href="assets/vendors/daterangepicker/daterangepicker.css">
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
-    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css?v=<?php echo filemtime(__DIR__ . '/assets/css/modern-dashboard.css'); ?>">
     <style>
         /* Donezo-inspired form page scoped styles (use theme CSS variables) */
         .gms-form-card .card-body { padding: 2rem !important; }

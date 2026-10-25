@@ -1,4 +1,4 @@
-<?php
+<?php require_once __DIR__ . '/_q.php';
 // Assume this PHP script fetches the data you need and returns it as JSON
 require 'conn.php';
 
@@ -8,8 +8,8 @@ $encryptionKey = "2e54d1151eaf55af8d889ec1425fdc85"; // Replace with your own ke
 $iv = "5fbc84cbabd58453"; // Replace with your own IV
 
 // $s = "SELECT * FROM contract_location WHERE sz_id = '$sz_id'";
-$s = "SELECT b.* FROM daily_records AS a LEFT JOIN site_instruction AS b ON b.ddId = a.id WHERE a.id = '$con_id' ";
-$r = $conn->query($s);
+$s = "SELECT b.* FROM daily_records AS a LEFT JOIN site_instruction AS b ON b.ddId = a.id WHERE a.id = ?";
+$r = gms_q($conn, $s, "s", [$con_id]);
 
 // Fetch data and store it in an array
 $data = array();

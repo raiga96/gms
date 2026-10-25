@@ -1,4 +1,4 @@
-<?php
+<?php require_once __DIR__ . '/_q.php';
 /**
  * getSIReferences.php
  * Mengambil senarai rujukan standard untuk Site Instruction.
@@ -14,9 +14,9 @@ require 'conn.php';
 // 2. Query untuk mengambil data rujukan
 // Saya andaikan nama table adalah 'si_references' dan column adalah 'reference_name'
 // Anda boleh tukar nama table mengikut pangkalan data anda.
-$sql = "SELECT * FROM dps WHERE dem_cate = '$cate'";
+$sql = "SELECT * FROM dps WHERE dem_cate = ?";
 
-$result = $conn->query($sql);
+$result = gms_q($conn, $sql, "s", [$cate]);
 
 $references = [];
 

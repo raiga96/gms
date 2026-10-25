@@ -1,26 +1,30 @@
 <?php
-session_start();
-$subzone_id = $_GET['szid'];
-
 require 'includes/connection.php';
 
-//Total sub-zone
-$sql1 = "SELECT COUNT(*) AS total_subzone FROM subzone WHERE sz_id = '$subzone_id'";
-$res1 = $conn->query($sql1);
-$row1 = $res1->fetch_assoc();
-$total_subzone = $row1['total_subzone'];
+$subzone_id = (int)($_GET['szid'] ?? 0);
 
-// Total Perimeter(m) by zone
-$sql2 = "SELECT SUM(perimeter) AS total_perimeter FROM subzone WHERE sz_id = '$subzone_id'";
-$res2 = $conn->query($sql2);
-$row2 = $res2->fetch_assoc();
-$total_perimeter = $row2['total_perimeter'] ?? 0;
+$stmt = $conn->prepare("
+    SELECT sz.sz_id, sz.sz_name, sz.perimeter, sz.area, z.zone_id, z.zone_name
+    FROM subzone sz
+    JOIN zone z ON z.zone_id = sz.zone_id
+    WHERE sz.sz_id = ?
+");
+$stmt->bind_param("i", $subzone_id);
+$stmt->execute();
+$sz_data = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
-// Total Area(ha) by zone
-$sql3 = "SELECT SUM(area) AS total_area FROM subzone WHERE sz_id = '$subzone_id'";
-$res3 = $conn->query($sql3);
-$row3 = $res3->fetch_assoc();
-$total_area = $row3['total_area'] ?? 0;
+if (!$sz_data) {
+    header("Location: zone.php");
+    exit;
+}
+
+$total_subzone = 1;
+$total_perimeter = (float)($sz_data['perimeter'] ?? 0);
+$total_area = (float)($sz_data['area'] ?? 0);
+$zone_name = $sz_data['zone_name'];
+$subzone_name = $sz_data['sz_name'];
+$zone_id = (int)$sz_data['zone_id'];
 ?>
 <!DOCTYPE html>
 <html lang="ms">
@@ -28,7 +32,7 @@ $total_area = $row3['total_area'] ?? 0;
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Lantik Kontraktor — Green Management System (DBKU)</title>
+    <title>Lantik Kontraktor &mdash; Green Management System (DBKU)</title>
     <link rel="shortcut icon" href="assets/images/favicon.png" />
     <link rel="stylesheet" href="assets/vendors/simple-line-icons/css/simple-line-icons.css">
     <link rel="stylesheet" href="assets/vendors/flag-icon-css/css/flag-icons.min.css">
@@ -39,7 +43,7 @@ $total_area = $row3['total_area'] ?? 0;
     <link rel="stylesheet" href="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css">
     <link rel="stylesheet" href="assets/vendors/daterangepicker/daterangepicker.css">
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
-    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css?v=<?php echo filemtime(__DIR__ . '/assets/css/modern-dashboard.css'); ?>">
     <style>
         /* Donezo-inspired form page scoped styles (use theme CSS variables) */
         .gms-form-card .card-body { padding: 2rem !important; }
@@ -252,14 +256,6 @@ $total_area = $row3['total_area'] ?? 0;
                     <!-- ============================================================== -->
                     <!-- PAGE HEADER BANNER (Donezo-inspired hero)                       -->
                     <!-- ============================================================== -->
-                    <?php
-                    $sql = "SELECT * FROM subzone AS a JOIN zone AS b ON b.zone_id = a.zone_id WHERE a.sz_id = '$subzone_id'";
-                    $res = $conn->query($sql);
-                    $row = $res->fetch_assoc();
-                    $zone_name = $row['zone_name'];
-                    $subzone_name = $row['sz_name'];
-                    $zone_id = $row['zone_id'];
-                    ?>
                     <div class="gms-hero-banner gms-fade-in" style="padding: 1.5rem 2rem;">
                         <div class="d-flex align-items-center justify-content-between flex-wrap g-3">
                             <div>
@@ -614,7 +610,7 @@ $total_area = $row3['total_area'] ?? 0;
     ?>
 
     <script>
-        // Contractor select → load profile details via fetch
+        // Contractor select â†’ load profile details via fetch
         document.getElementById("contractorSelect").addEventListener("change", function() {
             var cid = this.value;
             var details = document.getElementById("contractorDetails");

@@ -1,51 +1,57 @@
 <?php
-session_start();
 require 'connection.php';
+gms_require_role(['ADM', 'ROOT']);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Escape users table inputs
-    $user_id = mysqli_real_escape_string($conn, $_POST['user_id']);
-    $user_email = mysqli_real_escape_string($conn, $_POST['user_email']);
-    $user_type = mysqli_real_escape_string($conn, $_POST['user_type']);
-    $raw_password = $_POST['user_password'];
-    $hashed_password = password_hash($raw_password, PASSWORD_DEFAULT);
+    $user_id = trim($_POST['user_id'] ?? '');
+    $user_email = trim($_POST['user_email'] ?? '');
+    $user_type = $_POST['user_type'] ?? '';
+    $raw_password = $_POST['user_password'] ?? '';
 
-    // Escape userinfo table inputs
-    $fullname = mysqli_real_escape_string($conn, $_POST['fullname']);
-    $phone = mysqli_real_escape_string($conn, $_POST['phone'] ?? '');
-    $sex = mysqli_real_escape_string($conn, $_POST['sex'] ?? '');
-    $section = mysqli_real_escape_string($conn, $_POST['section'] ?? '');
-    $division = mysqli_real_escape_string($conn, $_POST['division'] ?? '');
+    $fullname = $_POST['fullname'] ?? '';
+    $phone = $_POST['phone'] ?? '';
+    $sex = $_POST['sex'] ?? '';
+    $section = $_POST['section'] ?? '';
+    $division = $_POST['division'] ?? '';
 
     // Check if username or email already exists
-    $check_sql = "SELECT * FROM users WHERE user_id = '$user_id' OR user_email = '$user_email'";
-    $check_res = $conn->query($check_sql);
+    $chk = $conn->prepare("SELECT uid FROM users WHERE user_id = ? OR user_email = ?");
+    $chk->bind_param("ss", $user_id, $user_email);
+    $chk->execute();
+    $check_res = $chk->get_result();
 
-    if ($check_res && $check_res->num_rows > 0) {
+    if (!in_array($user_type, ['SPV','PGS','ASO','SO','PGRH','ADM','ROOT','CON'], true) || !filter_var($user_email, FILTER_VALIDATE_EMAIL) || $user_id === '' || strlen($raw_password) < 8) {
         $_SESSION['status'] = 'error';
-                $_SESSION['message'] = 'Nama pengguna atau e-mel telah didaftarkan!';
+        $_SESSION['message'] = 'Data pengguna tidak sah.';
+    } elseif ($check_res && $check_res->num_rows > 0) {
+        $_SESSION['status'] = 'error';
+        $_SESSION['message'] = 'Nama pengguna atau e-mel telah didaftarkan!';
     } else {
-        // Insert into users
-        $insert_user_sql = "INSERT INTO users (user_type, user_id, user_email, user_password, access_level, status) 
-                            VALUES ('$user_type', '$user_id', '$user_email', '$hashed_password', 1, 'Y')";
-        
-        if ($conn->query($insert_user_sql)) {
+        try {
+            $conn->begin_transaction();
+            $hashed_password = password_hash($raw_password, PASSWORD_DEFAULT);
+            $ins = $conn->prepare("INSERT INTO users (user_type, user_id, user_email, user_password, access_level, status) VALUES (?, ?, ?, ?, 1, 'Y')");
+            $ins->bind_param("ssss", $user_type, $user_id, $user_email, $hashed_password);
+            if (!$ins->execute()) {
+                throw new RuntimeException($ins->error);
+            }
             $new_uid = $conn->insert_id;
 
-            // Insert into userinfo
-            $insert_info_sql = "INSERT INTO userinfo (uid, fullname, sex, section, division, phone) 
-                                VALUES ('$new_uid', '$fullname', '$sex', '$section', '$division', '$phone')";
-            
-            if ($conn->query($insert_info_sql)) {
-                $_SESSION['status'] = 'success';
-                $_SESSION['message'] = 'Pengguna berjaya dicipta!';
-            } else {
-                $_SESSION['status'] = 'error';
-                $_SESSION['message'] = 'Pengguna dicipta tetapi maklumat pengguna gagal disimpan: ' . $conn->error;
+            $inf = $conn->prepare("INSERT INTO userinfo (uid, fullname, sex, section, division, phone) VALUES (?, ?, ?, ?, ?, ?)");
+            $inf->bind_param("isssss", $new_uid, $fullname, $sex, $section, $division, $phone);
+            if (!$inf->execute()) {
+                throw new RuntimeException($inf->error);
             }
-        } else {
+            $conn->commit();
+            $_SESSION['status'] = 'success';
+            $_SESSION['message'] = 'Pengguna berjaya dicipta!';
+        } catch (Throwable $e) {
+            if ($conn->in_transaction) {
+                $conn->rollback();
+            }
+            error_log('GMS create user failed: ' . $e->getMessage());
             $_SESSION['status'] = 'error';
-            $_SESSION['message'] = 'Gagal mencipta pengguna: ' . $conn->error;
+            $_SESSION['message'] = 'Gagal mencipta pengguna. Sila semak maklumat dan cuba lagi.';
         }
     }
 } else {

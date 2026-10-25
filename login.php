@@ -56,7 +56,7 @@ if(isset($_SESSION['user_id'])) {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background-image: url('assets/images/login_bg.png?v=<?php echo time(); ?>');
+            background-image: url('assets/images/login_bg.png?v=2.0');
             background-size: cover;
             background-position: center;
             z-index: 0;
@@ -209,10 +209,10 @@ if(isset($_SESSION['user_id'])) {
             
             <form action="includes/login_action.php" method="POST">
                 <div class="form-group">
-                    <input type="text" class="form-control" name="user_id" placeholder="Nama pengguna atau e-mel" required>
+                    <input type="text" class="form-control" name="user_id" aria-label="Nama pengguna atau e-mel" placeholder="Nama pengguna atau e-mel" required>
                 </div>
                 <div class="form-group">
-                    <input type="password" class="form-control" name="password" placeholder="Kata laluan" required>
+                    <input type="password" class="form-control" name="password" aria-label="Kata laluan" placeholder="Kata laluan" required>
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div class="form-check m-0">

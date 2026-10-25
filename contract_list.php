@@ -8,30 +8,26 @@ if (($_GET['action'] ?? '') === 'new') {
 }
 
 // =============================================================================
-// KPI METRICS (single optimized query — no N+1)
+// KPI METRICS (Consolidated single query — no redundant roundtrips)
 // =============================================================================
-// Total Contract
-$sql_tc = "SELECT COUNT(*) AS total_contract FROM contract";
-$res_tc = $conn->query($sql_tc);
-$total_contract = ($res_tc && $row = $res_tc->fetch_assoc()) ? (int)$row['total_contract'] : 0;
+$sql_c_metrics = "SELECT
+    COUNT(*) AS total_contract,
+    COALESCE(SUM(CAST(fund AS DECIMAL(14,2))), 0) AS total_value,
+    COALESCE(SUM(CASE WHEN c_status = 'Y' THEN 1 ELSE 0 END), 0) AS active_contract
+FROM contract";
+$res_c_metrics = $conn->query($sql_c_metrics);
+$c_metrics = ($res_c_metrics && $row = $res_c_metrics->fetch_assoc()) ? $row : ['total_contract' => 0, 'total_value' => 0, 'active_contract' => 0];
+$total_contract = (int)$c_metrics['total_contract'];
+$total_contract_value = (float)$c_metrics['total_value'];
+$active_contract = (int)$c_metrics['active_contract'];
 
 // Total Contractor
 $sql_tcon = "SELECT COUNT(*) AS total_contractor FROM contractor";
 $res_tcon = $conn->query($sql_tcon);
 $total_contractor = ($res_tcon && $row = $res_tcon->fetch_assoc()) ? (int)$row['total_contractor'] : 0;
 
-// Total Contract Value (sum of all contract funds)
-$sql_value = "SELECT COALESCE(SUM(CAST(fund AS DECIMAL(14,2))), 0) AS total_value FROM contract";
-$res_value = $conn->query($sql_value);
-$total_contract_value = ($res_value && $row = $res_value->fetch_assoc()) ? (float)$row['total_value'] : 0;
-
-// Total Active Contract (c_status = 'Y')
-$sql_active = "SELECT COUNT(*) AS active_contract FROM contract WHERE c_status = 'Y'";
-$res_active = $conn->query($sql_active);
-$active_contract = ($res_active && $row = $res_active->fetch_assoc()) ? (int)$row['active_contract'] : 0;
-
 // =============================================================================
-// CONTRACT LISTING (single JOIN query — eliminates legacy N+1 per-row queries)
+// CONTRACT LISTING (single JOIN query â€” eliminates legacy N+1 per-row queries)
 // =============================================================================
 $contracts_list = [];
 $sql_contracts = "
@@ -58,7 +54,7 @@ if ($res_contracts && $res_contracts->num_rows > 0) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Senarai Kontrak — Green Management System (DBKU)</title>
+    <title>Senarai Kontrak &mdash; Green Management System (DBKU)</title>
     <link rel="shortcut icon" href="assets/images/favicon.png" />
     <link rel="stylesheet" href="assets/vendors/simple-line-icons/css/simple-line-icons.css">
     <link rel="stylesheet" href="assets/vendors/flag-icon-css/css/flag-icons.min.css">
@@ -69,7 +65,7 @@ if ($res_contracts && $res_contracts->num_rows > 0) {
     <link rel="stylesheet" href="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css">
     <link rel="stylesheet" href="assets/vendors/daterangepicker/daterangepicker.css">
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
-    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css?v=<?php echo filemtime(__DIR__ . '/assets/css/modern-dashboard.css'); ?>">
 </head>
 
 <body>
@@ -104,7 +100,7 @@ if ($res_contracts && $res_contracts->num_rows > 0) {
                     </div>
 
                     <!-- ============================================================== -->
-                    <!-- KPI METRIC CARDS (Donezo-inspired — first card gradient green) -->
+                    <!-- KPI METRIC CARDS (Donezo-inspired â€” first card gradient green) -->
                     <!-- ============================================================== -->
                     <div class="row g-3 mb-4 gms-fade-in gms-fade-in-delay-1">
                         <!-- KPI 1: Total Contract (featured gradient) -->
@@ -159,7 +155,7 @@ if ($res_contracts && $res_contracts->num_rows > 0) {
                                             <i class="icon-wallet"></i>
                                         </div>
                                     </div>
-                                    <div class="gms-kpi-value">RM <?php echo number_format($total_contract_value / 1000, 2); ?><small style="font-size: 0.9rem; font-weight: 600;"></small></div>
+                                    <div class="gms-kpi-value">RM <?php echo number_format($total_contract_value / 1000, 2); ?><small style="font-size: 0.9rem; font-weight: 600;">K</small></div>
                                 </div>
                                 <div class="gms-kpi-footer">
                                     <span class="gms-kpi-badge badge-indigo-soft">

@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require 'includes/connection.php';
 
 // =============================================================================
@@ -50,28 +52,21 @@ $contractors_sql = "
 $contractors_res = $conn->query($contractors_sql);
 
 // =============================================================================
-// TODAY'S OPERATIONS METRICS
+// TODAY'S OPERATIONS METRICS (single pass over daily_records)
 // =============================================================================
-$sql_verified_today = "SELECT COUNT(*) AS verified_today FROM daily_records WHERE verified = 'Y' AND DATE(verified_on) = CURDATE()";
-$res_verified_today = $conn->query($sql_verified_today);
-$verified_today = ($res_verified_today && $row = $res_verified_today->fetch_assoc()) ? (int)$row['verified_today'] : 0;
-
-$sql_pending = "SELECT COUNT(*) AS pending_verification FROM daily_records WHERE verified = 'N' AND date <= CURDATE()";
-$res_pending = $conn->query($sql_pending);
-$pending_verification = ($res_pending && $row = $res_pending->fetch_assoc()) ? (int)$row['pending_verification'] : 0;
-
-$sql_active = "SELECT COUNT(*) AS active_today FROM daily_records WHERE date = CURDATE()";
-$res_active = $conn->query($sql_active);
-$active_today = ($res_active && $row = $res_active->fetch_assoc()) ? (int)$row['active_today'] : 0;
-
-// Total daily records for gauge
-$sql_total_dr = "SELECT COUNT(*) AS total_dr FROM daily_records";
-$res_total_dr = $conn->query($sql_total_dr);
-$total_dr = ($res_total_dr && $row = $res_total_dr->fetch_assoc()) ? (int)$row['total_dr'] : 0;
-
-$sql_verified_total = "SELECT COUNT(*) AS verified_total FROM daily_records WHERE verified = 'Y'";
-$res_verified_total = $conn->query($sql_verified_total);
-$verified_total = ($res_verified_total && $row = $res_verified_total->fetch_assoc()) ? (int)$row['verified_total'] : 0;
+$sql_daily_metrics = "SELECT COUNT(*) AS total_dr,
+    COALESCE(SUM(verified = 'Y'), 0) AS verified_total,
+    COALESCE(SUM(verified = 'Y' AND verified_on >= CURDATE() AND verified_on < CURDATE() + INTERVAL 1 DAY), 0) AS verified_today,
+    COALESCE(SUM(verified = 'N' AND date <= CURDATE()), 0) AS pending_verification,
+    COALESCE(SUM(date = CURDATE()), 0) AS active_today
+FROM daily_records";
+$daily_metrics_result = $conn->query($sql_daily_metrics);
+$daily_metrics = ($daily_metrics_result && $row = $daily_metrics_result->fetch_assoc()) ? $row : [];
+$verified_today = (int)($daily_metrics['verified_today'] ?? 0);
+$pending_verification = (int)($daily_metrics['pending_verification'] ?? 0);
+$active_today = (int)($daily_metrics['active_today'] ?? 0);
+$total_dr = (int)($daily_metrics['total_dr'] ?? 0);
+$verified_total = (int)($daily_metrics['verified_total'] ?? 0);
 $verify_pct = ($total_dr > 0) ? round(($verified_total / $total_dr) * 100) : 0;
 
 // =============================================================================
@@ -81,7 +76,7 @@ $zones_data = [];
 $sql_zones = "
     SELECT z.zone_id, z.zone_name,
         COUNT(DISTINCT sz.sz_id) AS total_subzone,
-        COALESCE(SUM(CASE WHEN dr.verified = 'Y' AND DATE(dr.verified_on) = CURDATE() THEN 1 ELSE 0 END), 0) AS verified_today,
+        COALESCE(SUM(CASE WHEN dr.verified = 'Y' AND dr.verified_on >= CURDATE() AND dr.verified_on < CURDATE() + INTERVAL 1 DAY THEN 1 ELSE 0 END), 0) AS verified_today,
         COALESCE(SUM(CASE WHEN dr.verified = 'N' AND dr.date <= CURDATE() THEN 1 ELSE 0 END), 0) AS pending
     FROM zone z
     LEFT JOIN subzone sz ON sz.zone_id = z.zone_id
@@ -128,7 +123,7 @@ if ($res_fund && $res_fund->num_rows > 0) {
         $total_fund_all += (float)$row['total_fund'];
     }
 }
-$fund_labels_json = json_encode(array_column($fund_distribution, 'zone_name'));
+$fund_labels_json = json_encode(array_column($fund_distribution, 'zone_name'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
 $fund_data_json = json_encode(array_column($fund_distribution, 'total_fund'));
 
 // =============================================================================
@@ -180,42 +175,6 @@ if ($res_si && $row = $res_si->fetch_assoc()) {
     $si_pending = (int)$row['si_pending'];
 }
 
-// =============================================================================
-// SPARKLINE HELPERS
-// =============================================================================
-function gms_sparkline_points($seed_key, $count = 7, $min = 30, $max = 80) {
-    $seed = crc32($seed_key . date('z'));
-    mt_srand($seed);
-    $points = [];
-    for ($i = 0; $i < $count; $i++) {
-        $points[] = mt_rand($min, $max);
-    }
-    mt_srand();
-    return $points;
-}
-
-function gms_sparkline_svg($points, $width = 110, $height = 28) {
-    $count = count($points);
-    $maxVal = max($points);
-    $minVal = min($points);
-    $range = max($maxVal - $minVal, 1);
-    $stepX = $width / max($count - 1, 1);
-    $coords = [];
-    foreach ($points as $i => $v) {
-        $x = $i * $stepX;
-        $y = $height - (($v - $minVal) / $range) * ($height - 4) - 2;
-        $coords[] = round($x, 2) . ',' . round($y, 2);
-    }
-    $line = implode(' ', $coords);
-    $areaLine = '0,' . $height . ' ' . $line . ' ' . $width . ',' . $height;
-    return '<svg class="gms-sparkline" viewBox="0 0 ' . $width . ' ' . $height . '" preserveAspectRatio="none" aria-hidden="true"><polygon class="spark-area" points="' . $areaLine . '" /><polyline points="' . $line . '" /></svg>';
-}
-
-$spark_zones = gms_sparkline_points('zones', 7, 18, 24);
-$spark_contractors = gms_sparkline_points('contractors', 7, 8, 16);
-$spark_contracts = gms_sparkline_points('contracts', 7, 30, 60);
-$spark_verified = gms_sparkline_points('verified', 7, 2, 12);
-
 // Malay day name
 $malay_days = ['Ahad' => 'Sunday', 'Isnin' => 'Monday', 'Selasa' => 'Tuesday', 'Rabu' => 'Wednesday', 'Khamis' => 'Thursday', 'Jumaat' => 'Friday', 'Sabtu' => 'Saturday'];
 $today_eng = date('l');
@@ -241,19 +200,18 @@ $notif_icons = [
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Green Management System (DBKU)</title>
     <link rel="shortcut icon" href="assets/images/favicon.png" />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="stylesheet" href="assets/vendors/simple-line-icons/css/simple-line-icons.css">
-    <link rel="stylesheet" href="assets/vendors/flag-icon-css/css/flag-icons.min.css">
     <link rel="stylesheet" href="assets/vendors/css/vendor.bundle.base.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css">
     <link rel="stylesheet" href="assets/vendors/mdi/css/materialdesignicons.min.css">
-    <link rel="stylesheet" href="assets/vendors/font-awesome/css/font-awesome.min.css" />
     <link rel="stylesheet" href="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css">
     <link rel="stylesheet" href="assets/vendors/daterangepicker/daterangepicker.css">
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
-    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css?v=<?php echo filemtime(__DIR__ . '/assets/css/modern-dashboard.css'); ?>">
 </head>
 
-<body>
+<body class="gms-dashboard">
     <div class="container-scroller">
         <?php include 'partials/navbar.php'; ?>
 
@@ -270,12 +228,10 @@ $notif_icons = [
                         <div class="row align-items-center g-3">
                             <div class="col-lg-4">
                                 <div class="d-flex align-items-center gap-2 mb-1">
-                                    <span class="gms-pulse-dot" style="background:#34d399;"></span>
-                                    <span class="gms-hero-subtitle" style="color: rgba(255,255,255,0.75);">System Online</span>
-                                    <span class="badge rounded-pill px-2 py-1" style="background: rgba(16, 185, 129, 0.20); color: #34d399; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.05em;">v2.3.0</span>
+                                    <span class="gms-hero-subtitle" style="color: rgba(255,255,255,0.75);">Ringkasan Operasi</span>
                                 </div>
                                 <h1 class="gms-hero-title mb-1">Pusat Kawalan Operasi</h1>
-                                <p class="gms-hero-subtitle">Pemantauan masa nyata Bahagian Landskap DBKU</p>
+                                <p class="gms-hero-subtitle">Bahagian Landskap DBKU</p>
                             </div>
                             <div class="col-lg-3 text-lg-center">
                                 <div class="gms-hero-clock" id="gmsLiveClock"><?php echo date('H:i:s'); ?></div>
@@ -336,7 +292,7 @@ $notif_icons = [
                                     <span style="background: rgba(255,255,255,0.12); color: #6ee7b7; padding: 3px 9px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">
                                         <i class="fa-solid fa-layer-group"></i> <?php echo $total_subzone; ?> Sub-Zon
                                     </span>
-                                    <span>Peta KMZ Lengkap</span>
+                                    <span>Sub-zon berdaftar</span>
                                 </div>
                             </div>
                         </div>
@@ -355,9 +311,9 @@ $notif_icons = [
                                 </div>
                                 <div class="gms-kpi-footer">
                                     <span class="gms-kpi-badge badge-cyan-soft">
-                                        <i class="fa-solid fa-circle-check"></i> Aktif Beroperasi
+                                        <i class="fa-solid fa-circle-check"></i> Berdaftar
                                     </span>
-                                    <span><?php echo $total_contract; ?> Kontrak Aktif</span>
+                                    <span><?php echo $total_contract; ?> Kontrak berdaftar</span>
                                 </div>
                             </div>
                         </div>
@@ -524,7 +480,7 @@ $notif_icons = [
                                     <h4 class="gms-section-title">Kemajuan Pengesahan</h4>
                                     <p class="gms-section-subtitle">Kadar rekod harian disahkan</p>
                                     <div class="gms-gauge-wrap flex-grow-1 d-flex align-items-center justify-content-center">
-                                        <canvas id="verifyGauge"></canvas>
+                                        <canvas id="verifyGauge" role="img" aria-label="Kadar pengesahan rekod harian: <?php echo $verify_pct; ?> peratus."></canvas>
                                         <div class="gms-gauge-center">
                                             <div class="gms-gauge-value"><?php echo $verify_pct; ?>%</div>
                                             <div class="gms-gauge-label">Disahkan</div>
@@ -556,12 +512,17 @@ $notif_icons = [
                                     <p class="gms-section-subtitle">Peruntukan RM mengikut zon (Aktif)</p>
                                     <?php if (!empty($fund_distribution)): ?>
                                     <div class="gms-donut-wrap" style="height: 240px;">
-                                        <canvas id="fundDonutChart"></canvas>
+                                        <canvas id="fundDonutChart" role="img" aria-label="Agihan peruntukan kontrak aktif mengikut zon." aria-describedby="fundDonutSummary"></canvas>
                                         <div class="gms-donut-center">
                                             <div class="gms-donut-center-label">JUMLAH</div>
                                             <div class="gms-donut-center-value">RM <?php echo number_format($total_fund_all / 1000, 1); ?>K</div>
                                         </div>
                                     </div>
+                                    <ul id="fundDonutSummary" class="visually-hidden">
+                                        <?php foreach ($fund_distribution as $fund_item): ?>
+                                            <li><?php echo htmlspecialchars($fund_item['zone_name'], ENT_QUOTES, 'UTF-8'); ?>: RM <?php echo number_format($fund_item['total_fund'], 2); ?></li>
+                                        <?php endforeach; ?>
+                                    </ul>
                                     <?php else: ?>
                                     <div class="text-center text-muted py-5 flex-grow-1 d-flex align-items-center justify-content-center">
                                         <div>
@@ -841,9 +802,9 @@ $notif_icons = [
                 <i class="fa-solid fa-user-plus"></i>
                 <span>Kontraktor Baharu</span>
             </a>
-            <a href="daily_diary.php" class="gms-fab-action" title="Cipta Daily Record">
+            <a href="contractor_list.php" class="gms-fab-action" title="Pilih kontraktor untuk rekod harian">
                 <i class="fa-solid fa-clipboard-list"></i>
-                <span>Daily Record</span>
+                <span>Rekod Harian</span>
             </a>
         </div>
         <button class="gms-fab-main" id="gmsFabMain" type="button" aria-label="Tindakan Pantas" aria-expanded="false">
@@ -1036,7 +997,7 @@ $notif_icons = [
         var table = document.getElementById('contractorDashboardTable');
         var countLabel = document.getElementById('tableRecordCount');
         if (searchInput && table) {
-            searchInput.addEventListener('keyup', function() {
+            searchInput.addEventListener('input', function() {
                 var filter = searchInput.value.toLowerCase().trim();
                 var rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
                 var visibleCount = 0;

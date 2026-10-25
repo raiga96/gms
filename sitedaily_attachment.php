@@ -57,7 +57,7 @@ if (count($attachments) > 0) {
     <!-- endinject -->
     <!-- Layout styles -->
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
-    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css?v=<?php echo filemtime(__DIR__ . '/assets/css/modern-dashboard.css'); ?>">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="assets/images/favicon.png" />
     <style>

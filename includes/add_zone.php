@@ -11,7 +11,7 @@ if (empty($zone)) {
     $_SESSION['status'] = 'error';
     $_SESSION['message'] = 'Zone Name empty';
 
-    header("Location: ../zone");
+    header("Location: ../zone.php");
     exit();
 }
 
@@ -34,5 +34,5 @@ try {
     $_SESSION['message'] = 'Ralat pangkalan data: ' . $e->getMessage();
 }
 
-header("Location: ../zone");
+header("Location: ../zone.php");
 exit();

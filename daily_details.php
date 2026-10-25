@@ -1,10 +1,36 @@
 <?php
-session_start();
-$cid = $_GET['id'];
-
 require 'includes/connection.php';
 
+$cid = (int)($_GET['id'] ?? 0);
+if ($cid <= 0) {
+    header('Location: contract_list.php');
+    exit;
+}
 
+$stmt = $conn->prepare("
+    SELECT ct.*, c.name as contractor_name, c.address as contractor_address, c.email as contractor_email
+    FROM contract ct
+    LEFT JOIN contractor c ON ct.cid = c.cid
+    WHERE ct.contract_id = ?
+");
+$stmt->bind_param("i", $cid);
+$stmt->execute();
+$row = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+if (!$row) {
+    header('Location: contract_list.php');
+    exit;
+}
+
+$contract_id = (int)$row['contract_id'];
+$contractor = $row['contractor_name'] ?? 'Kontraktor';
+$row1 = [
+    'name' => $contractor,
+    'address' => $row['contractor_address'] ?? '',
+    'email' => $row['contractor_email'] ?? '',
+    'cid' => $row['cid']
+];
 ?>
 <!DOCTYPE html>
 <html lang="ms">
@@ -35,7 +61,7 @@ require 'includes/connection.php';
     <!-- endinject -->
     <!-- Layout styles -->
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
-    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css?v=<?php echo filemtime(__DIR__ . '/assets/css/modern-dashboard.css'); ?>">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="assets/images/favicon.png" />
     <style>
@@ -67,20 +93,6 @@ require 'includes/connection.php';
             <div class="main-panel" style="height: 100%;">
                 <div class="content-wrapper">
 
-                    <!-- Performance Indicator Start -->
-                    <?php
-                    $sql = "SELECT * FROM contract WHERE contract_id = '$cid'";
-                    $res = $conn->query($sql);
-                    $row = $res->fetch_assoc();
-                    $contract_id = $row['contract_id'];
-
-                    $sql1 = "SELECT * FROM contractor WHERE cid = '".$row['cid']."'";
-                    $res1 = $conn -> query($sql1);
-                    $row1 = $res1 ? $res1->fetch_assoc() : [];
-                    $contractor = $row1['name'] ?? 'Kontraktor';
-                    $email = $row1['email'] ?? '';
-                    ?>
-
                     <div class="row mt-4 mb-0">
                         <div class="col-12">
                             <div class="card gms-console shadow">
@@ -90,7 +102,7 @@ require 'includes/connection.php';
                                         <h5 class="mb-1 text-white fw-bold"><?php echo htmlspecialchars($row1['address'] ?? ''); ?></h5>
                                     </div>
                                     <div class="btn-group gap-2">
-                                        <a class="btn btn-light shadow-sm text-primary" href="update_contractor.php?id=<?php echo $cid ?>">Kemaskini</a>
+                                        <a class="btn btn-light shadow-sm text-primary" href="update_contractor.php?id=<?php echo (int)($row1['cid'] ?? 0); ?>">Kemaskini</a>
                                     </div>
                                 </div>
                             </div>
@@ -98,36 +110,49 @@ require 'includes/connection.php';
                     </div>
 
                     <?php
-                    // Anda boleh gunakan data kontrak ini untuk dipaparkan di UI
-                    // --- Session Filter Logic ---
-                    $current_year = date("Y");
-                    $current_month = date("n");
-                    $current_day = date("j");
+                    // --- Session Filter Logic (Hardened & Parameterized) ---
+                    $current_year = (int)date("Y");
+                    $current_month = (int)date("n");
+                    $current_day = (int)date("j");
                     $current_session_default = ($current_month - 1) * 2 + ($current_day <= 15 ? 1 : 2);
 
-                    $filter_year = isset($_GET['filter_year']) ? $_GET['filter_year'] : '';
-                    $filter_session = isset($_GET['filter_session']) ? $_GET['filter_session'] : '';
+                    $filter_year = !empty($_GET['filter_year']) ? (int)$_GET['filter_year'] : 0;
+                    $filter_session = !empty($_GET['filter_session']) ? (int)$_GET['filter_session'] : 0;
 
-                    $avail_sql = "SELECT DISTINCT YEAR(date) as yr FROM daily_records WHERE cid = '$contract_id' ORDER BY yr DESC";
-                    $avail_res = $conn->query($avail_sql);
+                    $stmt_avail = $conn->prepare("SELECT DISTINCT YEAR(date) as yr FROM daily_records WHERE cid = ? ORDER BY yr DESC");
                     $available_years = [];
-                    if ($avail_res && $avail_res->num_rows > 0) {
-                        while($ar = $avail_res->fetch_assoc()) {
-                            $available_years[] = $ar['yr'];
+                    if ($stmt_avail) {
+                        $stmt_avail->bind_param("s", $contract_id);
+                        $stmt_avail->execute();
+                        $avail_res = $stmt_avail->get_result();
+                        if ($avail_res && $avail_res->num_rows > 0) {
+                            while ($ar = $avail_res->fetch_assoc()) {
+                                $available_years[] = (int)$ar['yr'];
+                            }
                         }
-                    } else {
+                        $stmt_avail->close();
+                    }
+                    if (empty($available_years)) {
                         $available_years = [$current_year];
                     }
 
-                    if ($filter_year == '') {
+                    if (!in_array($filter_year, $available_years, true)) {
                         $filter_year = $available_years[0];
                     }
-                    if ($filter_session == '') {
-                        $max_sess_sql = "SELECT MAX(gc_session) as max_s FROM daily_records WHERE cid = '$contract_id' AND YEAR(date) = '$filter_year'";
-                        $max_sess_res = $conn->query($max_sess_sql);
-                        $max_s_row = $max_sess_res->fetch_assoc();
-                        if ($max_s_row && $max_s_row['max_s']) {
-                            $filter_session = $max_s_row['max_s'];
+                    if ($filter_session <= 0) {
+                        $year_start = sprintf('%04d-01-01', $filter_year);
+                        $year_end = sprintf('%04d-01-01', $filter_year + 1);
+                        $stmt_max = $conn->prepare("SELECT MAX(gc_session) as max_s FROM daily_records WHERE cid = ? AND date >= ? AND date < ?");
+                        if ($stmt_max) {
+                            $stmt_max->bind_param("sss", $contract_id, $year_start, $year_end);
+                            $stmt_max->execute();
+                            $max_s_row = $stmt_max->get_result()->fetch_assoc();
+                            if ($max_s_row && !empty($max_s_row['max_s'])) {
+                                $filter_session = (int)$max_s_row['max_s'];
+                            } else {
+                                $filter_session = $current_session_default;
+                            }
+                            $stmt_max->close();
                         } else {
                             $filter_session = $current_session_default;
                         }
@@ -144,13 +169,20 @@ require 'includes/connection.php';
                     }
 
                     // Fetch existing records for the date range
-                    $sql_records = "SELECT * FROM daily_records WHERE cid = '$contract_id' AND date >= '$start_date' AND date <= '$end_date' ORDER BY date ASC";
-                    $res_records = $conn->query($sql_records);
+                    $stmt_dr = $conn->prepare("SELECT * FROM daily_records WHERE cid = ? AND date >= ? AND date <= ? ORDER BY date ASC");
                     $daily_data = [];
-                    if($res_records && $res_records->num_rows > 0) {
-                        while($dr = $res_records->fetch_assoc()) {
-                            $daily_data[$dr['date']] = $dr;
+                    $total_records = 0;
+                    if ($stmt_dr) {
+                        $stmt_dr->bind_param("sss", $contract_id, $start_date, $end_date);
+                        $stmt_dr->execute();
+                        $res_records = $stmt_dr->get_result();
+                        if ($res_records && $res_records->num_rows > 0) {
+                            $total_records = $res_records->num_rows;
+                            while ($dr = $res_records->fetch_assoc()) {
+                                $daily_data[$dr['date']] = $dr;
+                            }
                         }
+                        $stmt_dr->close();
                     }
                     ?>
 
@@ -175,7 +207,7 @@ require 'includes/connection.php';
                                     <div>
                                         <h2 class="gms-hero-title mb-1">Rekod Harian - <?php echo htmlspecialchars($contractor); ?></h2>
                                         <p class="gms-hero-subtitle mb-0">
-                                            <i class="fas fa-calendar-alt me-1"></i> Sesi <?php echo htmlspecialchars($filter_session) ?> · <?php echo htmlspecialchars($filter_year) ?>
+                                            <i class="fas fa-calendar-alt me-1"></i> Sesi <?php echo htmlspecialchars($filter_session) ?> Â· <?php echo htmlspecialchars($filter_year) ?>
                                             &nbsp;|&nbsp;
                                             <i class="fas fa-map-marker-alt me-1"></i> Kontrak: <?php echo htmlspecialchars($row['contract_number'] ?? $contract_id) ?>
                                         </p>

@@ -7,22 +7,19 @@ $sql = "SELECT COUNT(*) AS total_zone FROM zone";
 $res = $conn->query($sql);
 $total_zone = ($res && $row = $res->fetch_assoc()) ? (int)$row['total_zone'] : 0;
 
-// Total Sub-zone
-$sql1 = "SELECT COUNT(*) AS total_subzone FROM subzone";
-$res1 = $conn->query($sql1);
-$total_subzone = ($res1 && $row1 = $res1->fetch_assoc()) ? (int)$row1['total_subzone'] : 0;
+// Total Sub-zone, Perimeter & Area (Consolidated single query)
+$sql_sz_metrics = "SELECT 
+    COUNT(*) AS total_subzone,
+    COALESCE(SUM(CAST(perimeter AS DECIMAL(12,2))), 0) AS total_perimeter,
+    COALESCE(SUM(CAST(area AS DECIMAL(12,2))), 0) AS total_area 
+FROM subzone";
+$res_sz = $conn->query($sql_sz_metrics);
+$sz_metrics = ($res_sz && $row = $res_sz->fetch_assoc()) ? $row : ['total_subzone' => 0, 'total_perimeter' => 0, 'total_area' => 0];
+$total_subzone = (int)$sz_metrics['total_subzone'];
+$total_perimeter = (float)$sz_metrics['total_perimeter'];
+$total_area = (float)$sz_metrics['total_area'];
 
-// Total Perimeter(m)
-$sql2 = "SELECT COALESCE(SUM(CAST(perimeter AS DECIMAL(12,2))), 0) AS total_perimeter FROM subzone";
-$res2 = $conn->query($sql2);
-$total_perimeter = ($res2 && $row2 = $res2->fetch_assoc()) ? (float)$row2['total_perimeter'] : 0;
-
-// Total Area(ha)
-$sql3 = "SELECT COALESCE(SUM(CAST(area AS DECIMAL(12,2))), 0) AS total_area FROM subzone";
-$res3 = $conn->query($sql3);
-$total_area = ($res3 && $row3 = $res3->fetch_assoc()) ? (float)$row3['total_area'] : 0;
-
-// Zone list with subzone counts (single optimized query — no N+1)
+// Zone list with subzone counts (single optimized query â€” no N+1)
 $zones_list = [];
 $sql_zones = "
     SELECT z.zone_id, z.zone_name,
@@ -47,7 +44,7 @@ if ($res_zones && $res_zones->num_rows > 0) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Pengurusan Zon — Green Management System (DBKU)</title>
+    <title>Pengurusan Zon &mdash; Green Management System (DBKU)</title>
     <link rel="shortcut icon" href="assets/images/favicon.png" />
     <link rel="stylesheet" href="assets/vendors/simple-line-icons/css/simple-line-icons.css">
     <link rel="stylesheet" href="assets/vendors/flag-icon-css/css/flag-icons.min.css">
@@ -58,7 +55,7 @@ if ($res_zones && $res_zones->num_rows > 0) {
     <link rel="stylesheet" href="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css">
     <link rel="stylesheet" href="assets/vendors/daterangepicker/daterangepicker.css">
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
-    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css?v=<?php echo filemtime(__DIR__ . '/assets/css/modern-dashboard.css'); ?>">
 </head>
 
 <body>
@@ -93,7 +90,7 @@ if ($res_zones && $res_zones->num_rows > 0) {
                     </div>
 
                     <!-- ============================================================== -->
-                    <!-- KPI METRIC CARDS (Donezo-inspired — first card gradient green) -->
+                    <!-- KPI METRIC CARDS (Donezo-inspired â€” first card gradient green) -->
                     <!-- ============================================================== -->
                     <div class="row g-3 mb-4 gms-fade-in gms-fade-in-delay-1">
                         <!-- KPI 1: Total Zone (featured gradient) -->

@@ -15,8 +15,7 @@
     <div class="navbar-menu-wrapper d-flex align-items-center justify-content-between">
         <div class="d-none d-lg-flex align-items-center gap-3">
             <div class="gms-nav-badge">
-                <span class="gms-pulse-dot"></span>
-                <span>Telemetri Sistem Aktif</span>
+                <span>Portal Operasi GMS</span>
             </div>
             <span class="text-muted small d-none d-xl-inline">|</span>
             <span class="text-secondary small font-weight-medium d-none d-xl-inline">
@@ -69,7 +68,7 @@
                 </div>
             </li>
         </ul>
-        <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-toggle="offcanvas">
+        <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-toggle="offcanvas" aria-label="Buka atau tutup menu navigasi" aria-controls="sidebar" aria-expanded="false">
             <span class="icon-menu"></span>
         </button>
     </div>

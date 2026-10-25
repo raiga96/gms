@@ -30,7 +30,7 @@ if ($dd_id) {
     // Jika carian harian biasa (guna cid), kekalkan filter CURDATE()
     $query = "SELECT a.*, b.* FROM daily_records AS a 
               LEFT JOIN site_instruction AS b ON b.ddId = a.id
-              WHERE a.cid = ? AND DATE(a.date) = CURDATE()";
+              WHERE a.cid = ? AND a.date = CURDATE()";
     $param_type = "s";
     $param_value = $cid;
 }

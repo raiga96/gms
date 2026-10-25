@@ -8,8 +8,10 @@ $name = $_POST['zone_name'];
 
 mysqli_begin_transaction($conn);
 
-$sql = "SELECT * FROM zone WHERE zone_id = '$zone_id'";
-$res = $conn->query($sql);
+$sel = $conn->prepare("SELECT * FROM zone WHERE zone_id = ?");
+$sel->bind_param("i", $zone_id);
+$sel->execute();
+$res = $sel->get_result();
 $row = $res->fetch_assoc();
 $zone_name = $row['zone_name'];
 
@@ -17,7 +19,7 @@ if ($name == $zone_name) {
     $_SESSION['status'] = 'warning';
     $_SESSION['message'] = 'Tiada perubahan dibuat pada nama zon.';
 
-    header("Location: ../update_zone?id=" . $zone_id);
+    header("Location: ../update_zone.php?id=" . $zone_id);
     exit();
 }
 
@@ -41,5 +43,5 @@ try {
     $_SESSION['message'] = 'Ralat pangkalan data: ' . $e->getMessage();
 }
 
-header("Location: ../update_zone?id=" . $zone_id);
+header("Location: ../update_zone.php?id=" . $zone_id);
 exit();

@@ -1,652 +1,446 @@
 <?php
 session_start();
-$subzone_id = $_GET['szid'];
-
 require 'includes/connection.php';
 
+$subzone_id = (int)($_GET['szid'] ?? 0);
+
+if ($subzone_id <= 0) {
+    header("Location: zone.php");
+    exit();
+}
+
+// 1. Fetch subzone & zone information safely via prepared query
+$stmt = $conn->prepare("
+    SELECT sz.*, z.zone_name 
+    FROM subzone sz 
+    LEFT JOIN zone z ON sz.zone_id = z.zone_id 
+    WHERE sz.sz_id = ? 
+    LIMIT 1
+");
+$stmt->bind_param("i", $subzone_id);
+$stmt->execute();
+$res = $stmt->get_result();
+$row = $res->fetch_assoc();
+$stmt->close();
+
+if (!$row) {
+    $_SESSION['status'] = 'error';
+    $_SESSION['message'] = 'Sub-zon tidak dijumpai.';
+    header("Location: zone.php");
+    exit();
+}
+
+$zone_id = (int)$row['zone_id'];
+
+// 2. Fetch all zones for dropdown
+$zones_list = [];
+$res_zones = $conn->query("SELECT zone_id, zone_name FROM zone ORDER BY zone_name ASC");
+if ($res_zones) {
+    while ($z = $res_zones->fetch_assoc()) {
+        $zones_list[] = $z;
+    }
+}
+
+// 3. Fetch active KMZ record safely
+$stmt_kmz = $conn->prepare("SELECT * FROM kmz_file WHERE sz_id = ? AND kmz_status = 'Y' ORDER BY kmz_id DESC LIMIT 1");
+$stmt_kmz->bind_param("i", $subzone_id);
+$stmt_kmz->execute();
+$kmz_active = $stmt_kmz->get_result()->fetch_assoc();
+$stmt_kmz->close();
+
+$has_kmz = !empty($kmz_active);
+$kmz_url = $has_kmz ? ($kmz_active['url'] ?? '') : '';
+
+// 4. Fetch KMZ history for modal
+$stmt_hist = $conn->prepare("SELECT * FROM kmz_file WHERE sz_id = ? ORDER BY add_date DESC");
+$stmt_hist->bind_param("i", $subzone_id);
+$stmt_hist->execute();
+$history_res = $stmt_hist->get_result();
 ?>
 <!DOCTYPE html>
 <html lang="ms">
 
 <head>
-    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>SmartCut</title>
-    <!-- plugins:css -->
+    <title>Kemaskini Sub-Zon — Green Management System (DBKU)</title>
+    <link rel="shortcut icon" href="assets/images/favicon.png" />
     <link rel="stylesheet" href="assets/vendors/simple-line-icons/css/simple-line-icons.css">
     <link rel="stylesheet" href="assets/vendors/flag-icon-css/css/flag-icons.min.css">
     <link rel="stylesheet" href="assets/vendors/css/vendor.bundle.base.css">
-    <!-- endinject -->
-    <!-- Plugin css for this page -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css">
+    <link rel="stylesheet" href="assets/vendors/mdi/css/materialdesignicons.min.css">
     <link rel="stylesheet" href="assets/vendors/font-awesome/css/font-awesome.min.css" />
     <link rel="stylesheet" href="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css">
-    <link rel="stylesheet" href="assets/vendors/jvectormap/jquery-jvectormap.css">
     <link rel="stylesheet" href="assets/vendors/daterangepicker/daterangepicker.css">
-    <link rel="stylesheet" href="assets/vendors/chartist/chartist.min.css">
-    <!-- End plugin css for this page -->
-    <!-- inject:css -->
-    <!-- endinject -->
-    <!-- Layout styles -->
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
-    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
-    <link rel="shortcut icon" href="assets/images/favicon.png" />
-    <!-- End layout styles -->
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css?v=<?php echo filemtime(__DIR__ . '/assets/css/modern-dashboard.css'); ?>">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
-
-        .modern-form-container {
-            font-family: 'Outfit', sans-serif;
-            color: #334155;
-        }
-
-        /* Modern Banner / Header */
-        .modern-banner {
-            background: linear-gradient(90deg, #1d384d 0%, #00311c 100%);
+        .map-preview-container {
             border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
-            margin-bottom: 24px;
-            border: none;
-        }
-
-        .modern-banner-title {
-            font-size: 22px;
-            font-weight: 700;
-            color: #ffffff;
-            margin: 0;
-            letter-spacing: -0.02em;
-        }
-
-        .modern-banner-subtitle {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.7);
-            margin: 4px 0 0 0;
-        }
-
-        .modern-btn-white {
-            background-color: #ffffff;
-            color: #1e3a5f !important;
-            font-weight: 600;
-            font-size: 13px;
-            padding: 8px 18px;
-            border-radius: 30px;
-            border: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-        }
-
-        .modern-btn-white:hover {
-            background-color: #f8fafc;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-            text-decoration: none;
-        }
-
-        /* Modern Form Card */
-        .modern-form-container .card {
-            border: none;
-            border-radius: 16px !important;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 5px 15px -8px rgba(0, 0, 0, 0.05) !important;
-            background: #ffffff;
             overflow: hidden;
-            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--gms-border);
+            position: relative;
         }
 
-        .modern-form-container .card-body {
-            padding: 28px !important;
-        }
-
-        .forms-sample {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .form-section-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: #475569;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 8px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        /* Custom Form Controls */
-        .modern-form-container .form-group {
-            margin-bottom: 0px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .modern-form-container label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #475569;
-            margin-bottom: 0px;
-        }
-
-        .modern-form-container .form-control {
-            border: 1px solid #cbd5e1;
-            border-radius: 10px !important;
-            padding: 10px 14px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #1e293b;
-            background-color: #ffffff;
-            transition: all 0.2s ease;
-            height: auto;
-        }
-
-        .modern-form-container select.form-control {
-            padding: 10px 14px !important;
-            cursor: pointer;
-        }
-
-        .modern-form-container .form-control:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-            outline: none;
-            background-color: #ffffff;
-            color: #1e293b;
-        }
-
-        /* Map Container */
-        .map-preview-wrapper {
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid #cbd5e1;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-            margin-top: 5px;
-        }
-
-        /* Custom Alert Banner */
         .kmz-alert-banner {
-            background-color: #fff1f2;
-            border: 1px solid #fecdd3;
-            border-radius: 10px;
-            padding: 12px 16px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.04) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 14px 18px;
+            color: #b45309;
+            font-size: 0.9rem;
             display: flex;
             align-items: center;
             gap: 10px;
-            color: #be123c;
-            font-size: 13px;
-            font-weight: 500;
-            margin-top: 10px;
         }
 
-        .kmz-alert-banner i {
-            font-size: 16px;
-        }
-
-        /* Action Buttons styling */
         .action-button-group {
             display: flex;
-            gap: 12px;
+            align-items: center;
             justify-content: flex-end;
-            margin-top: 15px;
-            border-top: 1px solid #e2e8f0;
+            gap: 12px;
             padding-top: 20px;
-        }
-
-        .btn-modern-primary {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            color: #ffffff !important;
-            font-weight: 600;
-            font-size: 13px;
-            padding: 10px 24px;
-            border-radius: 30px;
-            border: none;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .btn-modern-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
-            text-decoration: none;
-        }
-
-        .btn-modern-success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: #ffffff !important;
-            font-weight: 600;
-            font-size: 13px;
-            padding: 10px 24px;
-            border-radius: 30px;
-            border: none;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .btn-modern-success:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
-            text-decoration: none;
-        }
-
-        .btn-modern-danger {
-            background: #f1f5f9;
-            color: #475569 !important;
-            font-weight: 600;
-            font-size: 13px;
-            padding: 10px 24px;
-            border-radius: 30px;
-            border: 1px solid #cbd5e1;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .btn-modern-danger:hover {
-            background-color: #e2e8f0;
-            color: #334155 !important;
-            transform: translateY(-1px);
-            text-decoration: none;
-        }
-
-        /* Modal styling */
-        .modal-content {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
-        }
-
-        .modal-header {
-            border-bottom: 1px solid #e2e8f0;
-            background-color: #f8fafc;
-            border-top-left-radius: 16px;
-            border-top-right-radius: 16px;
-            padding: 18px 24px;
-        }
-
-        .modal-title {
-            font-weight: 700;
-            color: #0f172a;
-            font-size: 16px;
-        }
-
-        .modal-body {
-            padding: 24px;
-        }
-
-        .modal-footer {
-            border-top: 1px solid #e2e8f0;
-            padding: 16px 24px;
+            border-top: 1px solid var(--gms-border);
         }
     </style>
 </head>
 
 <body>
     <div class="container-scroller">
-        <!-- partial:partials/_navbar.html -->
-        <?php include 'partials/navbar.php' ?>
-        <!-- partial -->
+        <?php include 'partials/navbar.php'; ?>
+
         <div class="container-fluid page-body-wrapper">
-            <!-- partial:partials/_sidebar.html -->
-            <?php include 'partials/sidebar.php' ?>
-            <!-- partial -->
+            <?php include 'partials/sidebar.php'; ?>
+
             <div class="main-panel" style="height: 100%;">
                 <div class="content-wrapper">
 
-                    <!-- Performance Indicator Start -->
-
-                    <div class="modern-form-container">
-                        <!-- Action Banner / Header -->
-                        <div class="card modern-banner bg-dark">
-                            <div class="card-body p-0 d-sm-flex align-items-center justify-content-between">
-                                <div>
-                                    <h3 class="modern-banner-title"><i class="icon-note mr-2"></i> Kemaskini Butiran Sub-Zon</h3>
-                                    <p class="modern-banner-subtitle">Kemaskini sempadan, perimeter, keluasan dan fail KMZ sub-zon</p>
+                    <!-- ============================================================== -->
+                    <!-- PAGE HEADER BANNER                                              -->
+                    <!-- ============================================================== -->
+                    <div class="gms-hero-banner gms-fade-in" style="padding: 1.5rem 2rem;">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap g-3">
+                            <div>
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="gms-pulse-dot" style="background:#34d399;"></span>
+                                    <span class="gms-hero-subtitle" style="color: rgba(255,255,255,0.75);">Modul Geospatial & Sub-Zon</span>
                                 </div>
-                                <button type="button" class="modern-btn-white mt-3 mt-sm-0" data-bs-toggle="modal" data-bs-target="#historyModal"><i class="icon-clock"></i> Lihat Sejarah</button>
+                                <h1 class="gms-hero-title mb-1">Kemaskini Butiran Sub-Zon</h1>
+                                <p class="gms-hero-subtitle">Sub-Zon: <strong style="color:#34d399;"><?php echo htmlspecialchars($row['sz_name'] ?? ''); ?></strong> &bull; Zon: <?php echo htmlspecialchars($row['zone_name'] ?? '-'); ?></p>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-outline-light btn-sm rounded-pill px-3 py-2 font-weight-bold" data-bs-toggle="modal" data-bs-target="#historyModal">
+                                    <i class="fa-solid fa-clock-rotate-left me-1"></i> Sejarah KMZ
+                                </button>
+                                <a href="subzone_details.php?zid=<?php echo $zone_id; ?>&szid=<?php echo $subzone_id; ?>" class="btn btn-light btn-sm rounded-pill px-3 py-2 font-weight-bold" style="color: #007442;">
+                                    <i class="fa-solid fa-arrow-left me-1"></i> Kembali ke Butiran
+                                </a>
                             </div>
                         </div>
+                    </div>
 
-                        <?php
-                        $sql = "SELECT * FROM subzone WHERE sz_id = '$subzone_id'";
-                        $res = $conn->query($sql);
-                        $row = $res->fetch_assoc();
-                        ?>
+                    <!-- ============================================================== -->
+                    <!-- MAIN FORM CARD                                                 -->
+                    <!-- ============================================================== -->
+                    <div class="card shadow gms-table-card mb-4 gms-fade-in gms-fade-in-delay-1">
+                        <div class="card-body p-4">
+                            <form class="forms-sample" action="includes/update_subzone.php" method="POST">
+                                <input type="hidden" name="subzone_id" value="<?php echo $subzone_id; ?>">
 
-                        <!-- Main Form Card -->
-                        <div class="card">
-                            <div class="card-body">
-                                <form class="forms-sample" action="includes/update_subzone.php" method="POST">
-                                    <input type="text" name="subzone_id" value="<?php echo $subzone_id ?>" hidden>
+                                <div class="mb-4">
+                                    <h4 class="gms-section-title">
+                                        <i class="fa-solid fa-circle-info me-2 text-success"></i>Maklumat Am Sub-Zon
+                                    </h4>
+                                    <p class="gms-section-subtitle">Kemaskini nama, zon induk, perimeter dan keluasan sub-zon.</p>
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-12">
+                                        <div class="form-group mb-3">
+                                            <label for="subzone_name" class="font-weight-bold text-dark mb-2">Nama Sub-Zon</label>
+                                            <input type="text" class="form-control" name="subzone" id="subzone_name" value="<?php echo htmlspecialchars($row['sz_name'] ?? ''); ?>" required style="border-radius:10px; height:46px;">
+                                        </div>
+                                    </div>
+
+                                    <!-- Zone selection dropdown -->
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-3">
+                                            <label for="zone_id" class="font-weight-bold text-dark mb-2">Zon Pentadbiran</label>
+                                            <select name="zone_id" id="zone_id" class="form-control" style="border-radius:10px; height:46px;">
+                                                <?php foreach ($zones_list as $z_opt) { 
+                                                    $selected = ($z_opt['zone_id'] == $row['zone_id']) ? 'selected' : '';
+                                                ?>
+                                                    <option value="<?php echo (int)$z_opt['zone_id']; ?>" <?php echo $selected; ?>>
+                                                        <?php echo htmlspecialchars($z_opt['zone_name']); ?>
+                                                    </option>
+                                                <?php } ?>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Perimeter -->
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-3">
+                                            <label for="perimeter" class="font-weight-bold text-dark mb-2">Perimeter (m)</label>
+                                            <input type="number" step="any" class="form-control" name="perimeter" id="perimeter" value="<?php echo htmlspecialchars($row['perimeter'] ?? ''); ?>" style="border-radius:10px; height:46px;">
+                                        </div>
+                                    </div>
+
+                                    <!-- Area -->
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-3">
+                                            <label for="area" class="font-weight-bold text-dark mb-2">Keluasan (ha)</label>
+                                            <input type="number" step="any" class="form-control" name="area" id="area" value="<?php echo htmlspecialchars($row['area'] ?? ''); ?>" style="border-radius:10px; height:46px;">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 mb-3">
+                                    <h4 class="gms-section-title">
+                                        <i class="fa-solid fa-map-location-dot me-2 text-success"></i>Pratonton Peta Sempadan Geospatial
+                                    </h4>
+                                    <p class="gms-section-subtitle">Visualisasi sempadan KMZ sub-zon pada peta Google Hybrid.</p>
+                                </div>
+
+                                <div class="map-preview-container mb-4">
+                                    <div id="map" style="width: 100%; height: 420px;"></div>
+                                </div>
+
+                                <!-- KMZ file status alert -->
+                                <?php if (!$has_kmz) { ?>
+                                    <div class="kmz-alert-banner mb-4">
+                                        <i class="fa-solid fa-triangle-exclamation text-warning" style="font-size:1.2rem;"></i>
+                                        <span>Tiada fail sempadan KMZ aktif untuk sub-zon ini. Sila muat naik fail sempadan di bawah untuk pengesanan visual.</span>
+                                    </div>
+                                <?php } else { ?>
+                                    <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-4 border">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="badge bg-success rounded-pill px-3 py-2">
+                                                <i class="fa-solid fa-circle-check me-1"></i> KMZ Aktif
+                                            </div>
+                                            <span class="text-dark fw-semibold small"><?php echo htmlspecialchars($kmz_active['kmz_file'] ?? ''); ?></span>
+                                            <small class="text-muted">(Dimuat naik: <?php echo htmlspecialchars($kmz_active['add_date'] ?? '-'); ?>)</small>
+                                        </div>
+                                        <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 font-weight-bold" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                                            <i class="fa-solid fa-cloud-arrow-up me-1"></i> Ganti Fail KMZ
+                                        </button>
+                                    </div>
+                                <?php } ?>
+
+                                <!-- Action Button Group -->
+                                <div class="action-button-group">
+                                    <a href="subzone_details.php?zid=<?php echo $zone_id; ?>&szid=<?php echo $subzone_id; ?>" class="btn btn-outline-secondary rounded-pill px-4 py-2 font-weight-semibold">
+                                        <i class="fa-solid fa-xmark me-1"></i> Batal
+                                    </a>
+                                    <button type="submit" class="btn btn-success rounded-pill px-4 py-2 font-weight-semibold">
+                                        <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Perubahan
+                                    </button>
+                                </div>
+                            </form>
+
+                            <!-- In case no KMZ file, provide upload form directly on page -->
+                            <?php if (!$has_kmz) { ?>
+                                <form action="includes/upload_kmz.php" class="pt-4 border-top mt-4" method="POST" enctype="multipart/form-data">
+                                    <div class="mb-3">
+                                        <h4 class="gms-section-title">
+                                            <i class="fa-solid fa-cloud-arrow-up me-2 text-success"></i>Muat Naik Fail Sempadan KMZ
+                                        </h4>
+                                        <p class="gms-section-subtitle">Pilih fail KMZ/KML sempadan rasmi dari pelayar komputer anda.</p>
+                                    </div>
+                                    <input type="hidden" name="zone_id" value="<?php echo $zone_id; ?>">
+                                    <input type="hidden" name="subzone_id" value="<?php echo $subzone_id; ?>">
                                     
-                                    <div class="form-section-title">
-                                        <i class="icon-info text-primary animate-pulse"></i> Maklumat Am
-                                    </div>
-
-                                    <div class="row">
+                                    <div class="row g-3">
                                         <div class="col-md-12">
-                                            <div class="form-group">
-                                                <label for="subzone_name">Nama Sub-Zon</label>
-                                                <input type="text" class="form-control" name="subzone" id="subzone_name" value="<?php echo htmlspecialchars($row['sz_name'] ?? '') ?>" required>
+                                            <div class="form-group mb-3">
+                                                <label for="new_kmz_file" class="font-weight-bold text-dark mb-2">Pilih Fail (.kmz / .kml)</label>
+                                                <input type="file" class="form-control" name="files[]" id="new_kmz_file" accept=".kmz,.kml" required style="border-radius:10px; padding:10px;">
                                             </div>
                                         </div>
                                     </div>
-
-                                    <div class="row mt-3">
-                                        <!-- Zone selection dropdown -->
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <label for="zone_id">Zon</label>
-                                                <select name="zone_id" id="zone_id" class="form-control">
-                                                    <?php
-                                                    $sql_zones = "SELECT * FROM zone";
-                                                    $res_zones = $conn->query($sql_zones);
-                                                    if ($res_zones && $res_zones->num_rows > 0) {
-                                                        while ($row_zone = $res_zones->fetch_assoc()) {
-                                                            $selected = ($row_zone['zone_id'] == $row['zone_id']) ? 'selected' : '';
-                                                            echo "<option value='{$row_zone['zone_id']}' {$selected}>{$row_zone['zone_name']}</option>";
-                                                        }
-                                                    }
-                                                    ?>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <!-- Perimeter -->
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <label for="perimeter">Perimeter (m)</label>
-                                                <input type="number" step="any" class="form-control" name="perimeter" id="perimeter" value="<?php echo htmlspecialchars($row['perimeter'] ?? '') ?>">
-                                            </div>
-                                        </div>
-
-                                        <!-- Area -->
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <label for="area">Keluasan (ha)</label>
-                                                <input type="number" step="any" class="form-control" name="area" id="area" value="<?php echo htmlspecialchars($row['area'] ?? '') ?>">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="form-section-title mt-4">
-                                        <i class="icon-map text-primary"></i> Pratonton Peta Lokasi
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="map-preview-wrapper">
-                                                <div id="map" style="width: 100%; height: 45vh;"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- KMZ file status alert -->
-                                    <?php
-                                    $sql_kmz = "SELECT * FROM kmz_file WHERE sz_id = '$subzone_id' AND kmz_status = 'Y'";
-                                    $res_kmz = $conn->query($sql_kmz);
-                                    $has_kmz = ($res_kmz && $res_kmz->num_rows > 0);
-                                    if (!$has_kmz) {
-                                    ?>
-                                        <div class="kmz-alert-banner">
-                                            <i class="icon-exclamation"></i>
-                                            <span>Tiada fail sempadan KMZ ditemui untuk sub-zon ini. Anda boleh memuat naik fail di bawah.</span>
-                                        </div>
-                                    <?php } ?>
-
-                                    <!-- Action Button Group -->
-                                    <div class="action-button-group">
-                                        <button class="btn-modern-danger" type="button" onclick="history.back()"><i class="icon-close"></i> Batal</button>
-                                        <?php if ($has_kmz) { ?>
-                                            <button type="button" class="btn-modern-success" data-bs-toggle="modal" data-bs-target="#exampleModal"><i class="icon-cloud-upload"></i> Kemaskini KMZ</button>
-                                        <?php } ?>
-                                        <button type="submit" class="btn-modern-primary"><i class="icon-check"></i> Simpan Perubahan</button>
+                                    <div class="d-flex justify-content-end">
+                                        <button type="submit" class="btn btn-primary rounded-pill px-4 py-2 font-weight-semibold">
+                                            <i class="fa-solid fa-upload me-1"></i> Muat Naik Fail KMZ
+                                        </button>
                                     </div>
                                 </form>
-
-                                <!-- In case no KMZ file, provide upload form directly on page -->
-                                <?php if (!$has_kmz) { ?>
-                                    <form action="includes/upload_kmz.php" class="pt-4 border-top mt-4" method="POST" enctype="multipart/form-data">
-                                        <div class="form-section-title">
-                                        <i class="icon-cloud-upload text-primary"></i> Muat Naik Fail Sempadan KMZ
-                                        </div>
-                                        <input type="text" name="zone_id" value="<?php echo $row['zone_id'] ?>" hidden>
-                                        <input type="text" name="subzone_id" value="<?php echo $subzone_id ?>" hidden>
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label for="new_kmz_file">Pilih Fail KMZ</label>
-                                                    <input type="file" class="form-control" name="files[]" id="new_kmz_file" required>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex justify-content-end mt-3">
-                                            <button type="submit" class="btn-modern-primary"><i class="icon-cloud-upload"></i> Muat Naik Fail KMZ</button>
-                                        </div>
-                                    </form>
-                                <?php } ?>
-                            </div>
+                            <?php } ?>
                         </div>
+                    </div>
 
-                        <!-- Update KMZ Modal -->
-                        <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                            <div class="modal-dialog" role="document">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="exampleModalLabel"><i class="icon-cloud-upload mr-2 text-primary"></i> Kemaskini Fail Sempadan KMZ</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-                                    </div>
-                                    <form action="includes/update_kmz.php" method="POST" enctype="multipart/form-data">
-                                        <div class="modal-body">
-                                            <input type="text" name="zone_id" value="<?php echo $row['zone_id'] ?>" hidden>
-                                            <input type="text" name="subzone_id" value="<?php echo $subzone_id ?>" hidden>
-                                            <div class="form-group">
-                                                <label for="update_kmz_file" class="form-label">Pilih Fail KMZ Baharu</label>
-                                                <input type="file" class="form-control" name="files[]" id="update_kmz_file" required>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn-modern-danger py-2" data-bs-dismiss="modal">Tutup</button>
-                                            <button type="submit" class="btn-modern-primary py-2"><i class="icon-cloud-upload"></i> Muat Naik & Kemaskini</button>
-                                        </div>
-                                    </form>
+                    <!-- ============================================================== -->
+                    <!-- MODAL: UPDATE KMZ                                              -->
+                    <!-- ============================================================== -->
+                    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                            <div class="modal-content" style="border-radius: 16px; border:none; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
+                                <div class="modal-header border-0 pb-0 pt-4 px-4">
+                                    <h5 class="modal-title font-weight-bold" id="exampleModalLabel">
+                                        <i class="fa-solid fa-cloud-arrow-up me-2 text-success"></i>Kemaskini Fail Sempadan KMZ
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                                 </div>
+                                <form action="includes/update_kmz.php" method="POST" enctype="multipart/form-data">
+                                    <div class="modal-body p-4">
+                                        <input type="hidden" name="zone_id" value="<?php echo $zone_id; ?>">
+                                        <input type="hidden" name="subzone_id" value="<?php echo $subzone_id; ?>">
+                                        
+                                        <p class="text-secondary small mb-3">Memuat naik fail KMZ baharu akan menyahaktifkan fail sempadan semasa secara automatik.</p>
+
+                                        <div class="form-group mb-3">
+                                            <label for="update_kmz_file" class="form-label font-weight-bold text-dark">Pilih Fail KMZ Baharu</label>
+                                            <input type="file" class="form-control" name="files[]" id="update_kmz_file" accept=".kmz,.kml" required style="border-radius:10px; padding:10px;">
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer border-0 pt-0 pb-4 px-4 gap-2">
+                                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
+                                        <button type="submit" class="btn btn-success rounded-pill px-4 font-weight-bold">
+                                            <i class="fa-solid fa-check me-1"></i> Muat Naik & Kemaskini
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- History KMZ Modal -->
-                        <div class="modal fade" id="historyModal" tabindex="-1" role="dialog" aria-labelledby="historyModalLabel" aria-hidden="true">
-                            <div class="modal-dialog modal-lg" role="document">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="historyModalLabel"><i class="icon-clock mr-2 text-primary"></i> Sejarah Muat Naik KMZ</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="table-responsive">
-                                            <table class="table table-hover align-middle">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th>Nama Fail</th>
-                                                        <th style="width: 150px;">Tarikh Muat Naik</th>
-                                                        <th style="width: 100px; text-align: center;">Status</th>
-                                                        <th style="width: 100px; text-align: center;">Tindakan</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <?php
-                                                    $history_sql = "SELECT * FROM kmz_file WHERE sz_id = '$subzone_id' ORDER BY add_date DESC";
-                                                    $history_res = $conn->query($history_sql);
-                                                    if ($history_res && $history_res->num_rows > 0) {
-                                                        while ($h_row = $history_res->fetch_assoc()) {
-                                                            $status_badge = ($h_row['kmz_status'] == 'Y') 
-                                                                ? '<span class="badge bg-success text-white">Aktif</span>'
-                                                                : '<span class="badge bg-secondary text-white">Tidak Aktif</span>';
-                                                    ?>
-                                                            <tr>
-                                                                <td class="text-wrap" style="max-width: 250px; font-weight: 500;">
-                                                                    <i class="icon-doc text-secondary mr-2"></i><?php echo htmlspecialchars($h_row['kmz_file']) ?>
-                                                                </td>
-                                                                <td>
-                                                                    <small class="text-muted"><?php echo htmlspecialchars($h_row['add_date']) ?></small>
-                                                                </td>
-                                                                <td style="text-align: center;">
-                                                                    <?php echo $status_badge ?>
-                                                                </td>
-                                                                <td style="text-align: center;">
-                                                                    <a href="<?php echo htmlspecialchars($h_row['url']) ?>" class="btn btn-sm btn-outline-primary py-1 px-2" target="_blank" download>
-                                                                        <i class="icon-cloud-download"></i> Muat Turun
-                                                                    </a>
-                                                                </td>
-                                                            </tr>
-                                                    <?php
-                                                        }
-                                                    } else {
-                                                    ?>
+                    <!-- ============================================================== -->
+                    <!-- MODAL: HISTORY KMZ                                             -->
+                    <!-- ============================================================== -->
+                    <div class="modal fade" id="historyModal" tabindex="-1" role="dialog" aria-labelledby="historyModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+                            <div class="modal-content" style="border-radius: 16px; border:none; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
+                                <div class="modal-header border-0 pb-0 pt-4 px-4">
+                                    <h5 class="modal-title font-weight-bold" id="historyModalLabel">
+                                        <i class="fa-solid fa-clock-rotate-left me-2 text-success"></i>Sejarah Muat Naik KMZ
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                                </div>
+                                <div class="modal-body p-4">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Nama Fail</th>
+                                                    <th style="width: 170px;">Tarikh Muat Naik</th>
+                                                    <th style="width: 110px; text-align: center;">Status</th>
+                                                    <th style="width: 130px; text-align: center;">Tindakan</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php
+                                                if ($history_res && $history_res->num_rows > 0) {
+                                                    while ($h_row = $history_res->fetch_assoc()) {
+                                                        $is_active = ($h_row['kmz_status'] == 'Y');
+                                                        $status_badge = $is_active 
+                                                            ? '<span class="badge bg-success rounded-pill px-3 py-1 text-white">Aktif</span>'
+                                                            : '<span class="badge bg-secondary rounded-pill px-3 py-1 text-white">Arkib</span>';
+                                                ?>
                                                         <tr>
-                                                            <td colspan="4" class="text-center text-muted py-4">
-                                                                <i class="icon-info mr-2"></i> Tiada rekod sejarah tersedia.
+                                                            <td class="text-wrap" style="max-width: 250px; font-weight: 500;">
+                                                                <i class="fa-regular fa-file-lines text-secondary me-2"></i><?php echo htmlspecialchars($h_row['kmz_file'] ?? ''); ?>
+                                                            </td>
+                                                            <td>
+                                                                <small class="text-muted"><?php echo htmlspecialchars($h_row['add_date'] ?? '-'); ?></small>
+                                                            </td>
+                                                            <td style="text-align: center;">
+                                                                <?php echo $status_badge; ?>
+                                                            </td>
+                                                            <td style="text-align: center;">
+                                                                <a href="<?php echo htmlspecialchars($h_row['url'] ?? '#'); ?>" class="btn btn-sm btn-outline-primary rounded-pill py-1 px-3" target="_blank" download>
+                                                                    <i class="fa-solid fa-download me-1"></i> Unduh
+                                                                </a>
                                                             </td>
                                                         </tr>
-                                                    <?php } ?>
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                <?php
+                                                    }
+                                                } else {
+                                                ?>
+                                                    <tr>
+                                                        <td colspan="4" class="text-center text-muted py-4">
+                                                            <i class="fa-solid fa-circle-info me-2"></i> Tiada rekod sejarah KMZ tersedia.
+                                                        </td>
+                                                    </tr>
+                                                <?php } 
+                                                $stmt_hist->close();
+                                                ?>
+                                            </tbody>
+                                        </table>
                                     </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn-modern-danger py-2" data-bs-dismiss="modal">Tutup</button>
-                                    </div>
+                                </div>
+                                <div class="modal-footer border-0 pt-0 pb-4 px-4">
+                                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <!-- content-wrapper ends -->
-                    <!-- partial:partials/_footer.html -->
-                    <footer class="footer">
-                        <div class="d-sm-flex justify-content-center justify-content-sm-between">
-                            <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Hak Cipta © 2024 Stellar. Hak cipta terpelihara. <a href="#"> Terma penggunaan</a><a href="#">Dasar Privasi</a></span>
-                            <span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center">Dihasilkan dengan <i class="icon-heart text-danger"></i></span>
-                        </div>
-                    </footer>
-                    <!-- partial -->
+
                 </div>
-                <!-- main-panel ends -->
+                <!-- content-wrapper ends -->
+
+                <?php include 'partials/footer.php'; ?>
             </div>
-            <!-- page-body-wrapper ends -->
+            <!-- main-panel ends -->
         </div>
-        <!-- container-scroller -->
-        <!-- plugins:js -->
-        <script src="assets/vendors/js/vendor.bundle.base.js"></script>
-        <!-- endinject -->
-        <!-- Plugin js for this page -->
-        <script src="assets/vendors/chart.js/chart.umd.js"></script>
-        <script src="assets/vendors/jvectormap/jquery-jvectormap.min.js"></script>
-        <script src="assets/vendors/jvectormap/jquery-jvectormap-world-mill-en.js"></script>
-        <script src="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.js"></script>
-        <script src="assets/vendors/moment/moment.min.js"></script>
-        <script src="assets/vendors/daterangepicker/daterangepicker.js"></script>
-        <script src="assets/vendors/chartist/chartist.min.js"></script>
-        <script src="assets/vendors/progressbar.js/progressbar.min.js"></script>
-        <script src="assets/js/jquery.cookie.js"></script>
-        <!-- End plugin js for this page -->
-        <!-- inject:js -->
-        <script src="assets/js/off-canvas.js"></script>
-        <script src="assets/js/hoverable-collapse.js"></script>
-        <script src="assets/js/misc.js"></script>
-        <script src="assets/js/settings.js"></script>
-        <script src="assets/js/todolist.js"></script>
-        <!-- endinject -->
+        <!-- page-body-wrapper ends -->
+    </div>
+    <!-- container-scroller -->
 
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <!-- End custom js for this page -->
+    <!-- JS -->
+    <script src="assets/vendors/js/vendor.bundle.base.js"></script>
+    <script src="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.js"></script>
+    <script src="assets/vendors/moment/moment.min.js"></script>
+    <script src="assets/vendors/daterangepicker/daterangepicker.js"></script>
+    <script src="assets/js/jquery.cookie.js"></script>
+    <script src="assets/js/off-canvas.js"></script>
+    <script src="assets/js/hoverable-collapse.js"></script>
+    <script src="assets/js/misc.js"></script>
+    <script src="assets/js/settings.js"></script>
+    <script src="assets/js/todolist.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <script>
+        function initMap() {
+            var mapElement = document.getElementById('map');
+            if (!mapElement) return;
 
-        <?php
-        // Check if there is a status message in the session
-        if (isset($_SESSION['status'])) {
-            $status = $_SESSION['status'];   // 'success' or 'error'
-            $message = $_SESSION['message']; // Error or success message
+            var map = new google.maps.Map(mapElement, {
+                center: {
+                    lat: 1.585367,
+                    lng: 110.334509
+                },
+                zoom: 16,
+                mapTypeId: google.maps.MapTypeId.HYBRID
+            });
 
-            // Clear session message after use
-            unset($_SESSION['status']);
-            unset($_SESSION['message']);
-
-            if ($status == 'success') {
-                echo '<script>
-                            document.addEventListener("DOMContentLoaded", function() {
-                                Swal.fire({
-                                    title: "' . $message . '",
-                                    text: "",
-                                    icon: "success",
-                                });
-                            });
-                        </script>';
-            } else {
-                echo '<script>
-                            document.addEventListener("DOMContentLoaded", function() {
-                                Swal.fire({
-                                    title: "' . $message . '",
-                                    icon: "error",
-                                });
-                            });
-                        </script>';
+            var kmzUrl = <?php echo json_encode($kmz_url); ?>;
+            if (kmzUrl && kmzUrl.trim() !== '') {
+                var kmzLayer = new google.maps.KmlLayer({
+                    url: kmzUrl,
+                    map: map,
+                    zoom: 15,
+                    preserveViewport: false
+                });
             }
         }
-        ?>
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAM9KnXl4SMmy68M2syalpDyMfZeNItPjk&callback=initMap"></script>
 
-        <script>
-            function initMap() {
-
-                var map = new google.maps.Map(document.getElementById('map'), {
-                    center: {
-                        lat: 1.585367,
-                        lng: 110.334509
-                    },
-                    zoom: 17,
-                    mapTypeId: google.maps.MapTypeId.HYBRID
-                });
-
-                <?php
-                $sql = "SELECT * FROM kmz_file WHERE sz_id = '$subzone_id' AND kmz_status = 'Y'";
-                $res = $conn->query($sql);
-                if ($res->num_rows > 0) {
-                    $row = $res->fetch_assoc();
-                    $url = $row['url'];
-                } else {
-                    $url = '';
-                }
-                ?>
-
-                var kmzLayer = new google.maps.KmlLayer({
-                    url: '<?php echo $url ?>',
-                    map: map,
-                    zoom: 8,
-                    preserveViewport: false,
-                });
-            }
-        </script>
-
-        <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAM9KnXl4SMmy68M2syalpDyMfZeNItPjk&callback=initMap"></script>
-
+    <?php
+    if (isset($_SESSION['status'])) {
+        $status = $_SESSION['status'];
+        $message = $_SESSION['message'];
+        unset($_SESSION['status']);
+        unset($_SESSION['message']);
+        $icon = ($status == 'success') ? 'success' : (($status == 'warning') ? 'warning' : 'error');
+        echo '<script>
+            document.addEventListener("DOMContentLoaded", function() {
+                Swal.fire({ title: "' . addslashes($message) . '", icon: "' . $icon . '" });
+            });
+        </script>';
+    }
+    ?>
 </body>
 
 </html>

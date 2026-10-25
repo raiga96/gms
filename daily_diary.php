@@ -1,8 +1,42 @@
 <?php
 session_start();
-$cid = $_GET['id'];
-
 require 'includes/connection.php';
+$cid = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+if ($cid === false || $cid === null) {
+    header('Location: contractor_list.php');
+    exit;
+}
+$contractor_stmt = $conn->prepare('SELECT name, address, email FROM contractor WHERE cid = ? LIMIT 1');
+if (!$contractor_stmt) {
+    http_response_code(500);
+    exit('Ralat memuatkan rekod kontraktor.');
+}
+$contractor_stmt->bind_param('i', $cid);
+if (!$contractor_stmt->execute()) {
+    http_response_code(500);
+    exit('Ralat memuatkan rekod kontraktor.');
+}
+$contractor_result = $contractor_stmt->get_result();
+$row = $contractor_result ? $contractor_result->fetch_assoc() : null;
+$contractor_stmt->close();
+if (!$row) {
+    http_response_code(404);
+    exit('Kontraktor tidak ditemui.');
+}
+$contractor = $row['name'];
+$email = $row['email'];
+$contracts_stmt = $conn->prepare('SELECT ct.*, z.zone_name FROM contract ct LEFT JOIN subzone sz ON sz.sz_id = ct.sz_id LEFT JOIN zone z ON z.zone_id = sz.zone_id WHERE ct.cid = ? ORDER BY ct.contract_number ASC');
+if (!$contracts_stmt) {
+    http_response_code(500);
+    exit('Ralat memuatkan senarai kontrak.');
+}
+$contracts_stmt->bind_param('i', $cid);
+if (!$contracts_stmt->execute()) {
+    http_response_code(500);
+    exit('Ralat memuatkan senarai kontrak.');
+}
+$contracts_result = $contracts_stmt->get_result();
+$contracts_stmt->close();
 
 
 ?>
@@ -30,7 +64,7 @@ require 'includes/connection.php';
     <!-- endinject -->
     <!-- Layout styles -->
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
-    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css?v=<?php echo filemtime(__DIR__ . '/assets/css/modern-dashboard.css'); ?>">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="assets/images/favicon.png" />
     <style>
@@ -57,11 +91,6 @@ require 'includes/connection.php';
 
                     <!-- Performance Indicator Start -->
                     <?php
-                    $sql = "SELECT * FROM contractor WHERE cid = '$cid'";
-                    $res = $conn->query($sql);
-                    $row = $res->fetch_assoc();
-                    $contractor = $row['name'];
-                    $email = $row['email'];
                     ?>
 
                     <div class="row mt-4 mb-0">
@@ -69,24 +98,16 @@ require 'includes/connection.php';
                             <div class="card shadow border-0" style="background: linear-gradient(90deg, #1d384d 0%, #00311c 100%);">
                                 <div class="card-body d-sm-flex align-items-center justify-content-between text-white">
                                     <div class="mb-3 mb-sm-0">
-                                        <h2 class="mb-1 text-white fw-bold"><?php echo $row['name'] ?></h2>
-                                        <h4 class="mb-1 text-white fw-bold"><?php echo $row['address'] ?></h4>
+                                        <h2 class="mb-1 text-white fw-bold"><?php echo htmlspecialchars($contractor, ENT_QUOTES, 'UTF-8') ?></h2>
+                                        <h4 class="mb-1 text-white fw-bold"><?php echo htmlspecialchars($row['address'] ?? '', ENT_QUOTES, 'UTF-8') ?></h4>
                                     </div>
                                     <div class="btn-group gap-2">
-                                        <a class="btn btn-light shadow-sm text-primary" href="update_contractor.php?id=<?php echo $cid ?>">Kemaskini</a>
+                                        <a class="btn btn-light shadow-sm text-primary" href="update_contractor.php?id=<?php echo (int)$cid ?>">Kemaskini</a>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <?php
-                    // Anda boleh gunakan data kontrak ini untuk dipaparkan di UI
-                    $sql1 = "SELECT * FROM contractor WHERE cid = '" . $row['cid'] . "'";
-                    $res1 = $conn->query($sql1);
-                    $row1 = $res1->fetch_assoc();
-                    ?>
-
 
                     <div class="row">
                         <div class="col-md-12 grid-margin stretch-card">
@@ -98,6 +119,7 @@ require 'includes/connection.php';
                                     <div class="table-responsive border rounded p-1">
                                         <table class="table table-hover table-striped">
                                             <thead class="thead-dark">
+                                                <tr>
                                                 <th>
                                                     <h5>Tajuk</h5>
                                                 </th>
@@ -117,19 +139,8 @@ require 'includes/connection.php';
                                             </thead>
                                             <tbody>
                                                 <?php
-                                                $sql = "SELECT * FROM contract WHERE cid = '$cid' ORDER BY contract_number ASC";
-                                                $res = $conn->query($sql);
-                                                if ($res->num_rows > 0) {
-                                                    while ($row = $res->fetch_assoc()) {
-                                                        // Total subzone by zone
-                                                        $sql1 = "SELECT * FROM subzone WHERE sz_id = '" . $row['sz_id'] . "'";
-                                                        $res1 = $conn->query($sql1);
-                                                        $row1 = $res1->fetch_assoc();
-
-                                                        // Total Perimeter(m) by zone
-                                                        $sql2 = "SELECT * FROM zone WHERE zone_id = '" . $row1['zone_id'] . "'";
-                                                        $res2 = $conn->query($sql2);
-                                                        $row2 = $res2->fetch_assoc();
+                                                if ($contracts_result && $contracts_result->num_rows > 0) {
+                                                    while ($row = $contracts_result->fetch_assoc()) {
 
                                                         $start = new DateTime($row['start_date']);
                                                         $end = new DateTime($row['end_date']);
@@ -149,32 +160,32 @@ require 'includes/connection.php';
 
                                                         <tr style="height:60px">
                                                             <td style="width: 500px;word-wrap: break-word;overflow-wrap: break-word; white-space: normal;">
-                                                                <a href="daily_details.php?id=<?php echo $row['contract_id']; ?>">
-                                                            <h6 class="text-uppercase">KERJA-KERJA MEMOTONG RUMPUT DAN MEMBERSIHKAN LONGKANG DALAM KAWASAN DBKU ZON <?php echo $row2['zone_name'] ?></h6>
+                                                                <a href="daily_details.php?id=<?php echo (int)$row['contract_id']; ?>">
+                                                            <h6 class="text-uppercase">KERJA-KERJA MEMOTONG RUMPUT DAN MEMBERSIHKAN LONGKANG DALAM KAWASAN DBKU ZON <?php echo htmlspecialchars($row['zone_name'] ?? '', ENT_QUOTES, 'UTF-8') ?></h6>
                                                                 </a>
                                                             </td>
                                                             <td style="width: 250px;word-wrap: break-word;overflow-wrap: break-word; white-space: normal;">
-                                                                <h6><?php echo $row['contract_number'] ?></h6>
+                                                                <h6><?php echo htmlspecialchars($row['contract_number'] ?? '', ENT_QUOTES, 'UTF-8') ?></h6>
                                                             </td>
                                                             <td>
-                                                                <h6><?php echo $row['supervisor_1'] ?></h6>
-                                                                <small class="mb-2"><?php echo $row['supervisor1_contact'] ?></small>
+                                                                <h6><?php echo htmlspecialchars($row['supervisor_1'] ?? '', ENT_QUOTES, 'UTF-8') ?></h6>
+                                                                <small class="mb-2"><?php echo htmlspecialchars($row['supervisor1_contact'] ?? '', ENT_QUOTES, 'UTF-8') ?></small>
                                                                 <div class="mt-3"></div>
-                                                                <h6><?php echo $row['supervisor_2'] ?></h6>
-                                                                <small><?php echo $row['supervisor2_contact'] ?></small>
+                                                                <h6><?php echo htmlspecialchars($row['supervisor_2'] ?? '', ENT_QUOTES, 'UTF-8') ?></h6>
+                                                                <small><?php echo htmlspecialchars($row['supervisor2_contact'] ?? '', ENT_QUOTES, 'UTF-8') ?></small>
                                                             </td>
                                                             <td>
                                                                 <h5><?php  ?></h5>
                                                             </td>
                                                             <td style="width:220px">
-                                                                <h6><?php echo gms_format_date($row['start_date'], 'd M Y') ?> - <?php echo gms_format_date($row['end_date'], 'd M Y') ?></h6>
-                                                                <small><?php echo $duration_months ?> bulan</small>
+                                                                <h6><?php echo htmlspecialchars(gms_format_date($row['start_date'], 'd M Y'), ENT_QUOTES, 'UTF-8') ?> - <?php echo htmlspecialchars(gms_format_date($row['end_date'], 'd M Y'), ENT_QUOTES, 'UTF-8') ?></h6>
+                                                                <small><?php echo (int)$duration_months ?> bulan</small>
                                                             </td>
                                                         </tr>
                                                     <?php }
                                                 } else { ?>
                                                     <tr>
-                                                        <td colspan="6" class="text-center text-danger">
+                                                        <td colspan="5" class="text-center text-danger">
                                                             <h5 class="font-weight-bold">Tiada data tersedia</h5>
                                                         </td>
                                                     </tr>
@@ -197,15 +208,15 @@ require 'includes/connection.php';
                                 </div>
                                 <div class="modal-body">
                                     <form action="includes/reguser_contractor.php" method="POST" enctype="multipart/form-data">
-                                        <input type="text" name="id" value="<?php echo $cid  ?>" hidden>
+                                        <input type="hidden" name="id" value="<?php echo (int)$cid ?>">
                                         <div class="row">
                                             <div class="col-md-12">
                                                 <label for="username" class="form-label"><small class="font-weight-bold">Nama</small></label>
-                                                <input type="text" class="form-control" name="fname" value="<?php echo $contractor ?>">
+                                                <input type="text" class="form-control" name="fname" value="<?php echo htmlspecialchars($contractor, ENT_QUOTES, 'UTF-8') ?>">
                                             </div>
                                             <div class="col-md-12 mt-4">
                                                 <label for="username" class="form-label"><small class="font-weight-bold">E-mel</small></label>
-                                                <input type="email" class="form-control" name="email" value="<?php echo $email ?>">
+                                                <input type="email" class="form-control" name="email" value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8') ?>">
                                             </div>
                                             <hr class="mt-4">
                                             <div class="col-md-12 mt-2">
@@ -288,71 +299,18 @@ require 'includes/connection.php';
         <?php
         // Check if there is a status message in the session
         if (isset($_SESSION['status'])) {
-            $status = $_SESSION['status'];   // 'success' or 'error'
-            $message = $_SESSION['message']; // Error or success message
+            $status = $_SESSION['status'];
+            $message = (string)($_SESSION['message'] ?? '');
 
             // Clear session message after use
             unset($_SESSION['status']);
             unset($_SESSION['message']);
 
-            if ($status == 'success') {
-                echo '<script>
-                            document.addEventListener("DOMContentLoaded", function() {
-                                Swal.fire({
-                                    title: "' . $message . '",
-                                    text: "",
-                                    icon: "success",
-                                });
-                            });
-                        </script>';
-            } else {
-                echo '<script>
-                            document.addEventListener("DOMContentLoaded", function() {
-                                Swal.fire({
-                                    title: "' . $message . '",
-                                    icon: "error",
-                                });
-                            });
-                        </script>';
-            }
+            $message_json = json_encode($message, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE);
+            $icon = $status === 'success' ? 'success' : 'error';
+            echo '<script>document.addEventListener("DOMContentLoaded", function() { Swal.fire({title: ' . $message_json . ', icon: "' . $icon . '"}); });</script>';
         }
         ?>
-        <script>
-            function initMap() {
-
-                var map = new google.maps.Map(document.getElementById('map'), {
-                    center: {
-                        lat: 1.585367,
-                        lng: 110.334509
-                    },
-                    zoom: 17,
-                    mapTypeId: google.maps.MapTypeId.HYBRID
-                });
-
-                <?php
-                $sql = "SELECT * FROM kmz_file WHERE sz_id = '$subzone_id'";
-                $res = $conn->query($sql);
-                if ($res->num_rows > 0) {
-                    $row = $res->fetch_assoc();
-                    $url = $row['url'];
-                } else {
-                    $url = '';
-                }
-
-
-                ?>
-
-                var kmzLayer = new google.maps.KmlLayer({
-                    url: '<?php echo $url ?>',
-                    map: map,
-                    zoom: 8,
-                    preserveViewport: false,
-                });
-            }
-        </script>
-
-        <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAM9KnXl4SMmy68M2syalpDyMfZeNItPjk&callback=initMap"></script>
-
 </body>
 
 </html>

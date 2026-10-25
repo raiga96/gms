@@ -2,29 +2,29 @@
 
 require 'conn.php';
 
-$uname = $_POST['uname'];
-$pwd = $_POST['pwd'];
+$uname = (string)($_POST['uname'] ?? '');
+$pwd = (string)($_POST['pwd'] ?? '');
 $logdate = date("Y-m-d");
 $logtime = date("H:i:s");
 
-
-
-$sql = "SELECT * FROM users WHERE user_email='" . $uname . "' OR SUBSTRING_INDEX(user_email, '@', 1) = '" . $uname . "' -- LOGIN APPS";
-$result = $conn->query($sql);
-$row = $result->fetch_assoc();
+$stmt = $conn->prepare("SELECT * FROM users WHERE user_email = ? OR SUBSTRING_INDEX(user_email, '@', 1) = ? -- LOGIN APPS");
+$stmt->bind_param('ss', $uname, $uname);
+$stmt->execute();
+$row = $stmt->get_result()->fetch_assoc();
 
 if ($row) {
     $pwdC = password_verify($pwd, $row['user_password']);
 
     if ($row['status'] == 'Y') {
         if ($pwdC) {
-            $newuid = $row['uid'];
+            $newuid = (int)$row['uid'];
 
-            $sqLog = "INSERT INTO user_log SET uid = '$newuid', log_type = 'MOBILE_LOGIN', log_date = '$logdate', log_time = '$logtime'";
-            if (mysqli_query($conn, $sqLog)) {
+            $stmtLog = $conn->prepare("INSERT INTO user_log (uid, log_type, log_date, log_time) VALUES (?, 'MOBILE_LOGIN', ?, ?)");
+            $stmtLog->bind_param("iss", $newuid, $logdate, $logtime);
+            if ($stmtLog->execute()) {
 
-                // Generate a secure session token
-                $token = md5(uniqid());
+                // Generate a cryptographically secure session token
+                $token = bin2hex(random_bytes(16));
                 $uid = $row['uid'];
                 $email = $row['user_email'];
                 $role = $row['access_level'];

@@ -1,6 +1,6 @@
 <?php
-session_start();
 require 'connection.php';
+gms_require_role(['ADM', 'ROOT']);
 
 // Only accept POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

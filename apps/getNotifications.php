@@ -31,7 +31,7 @@ if ($user_res->num_rows === 0) {
 }
 
 $user_row = $user_res->fetch_assoc();
-$uid = $user_row['uid']; // Hasilnya: "khairula"
+$uid = (int)$user_row['uid'];
 $user_stmt->close();
 
 
@@ -67,14 +67,15 @@ function time_ago($timestamp) {
     return "Just now";
 }
 
-// 4. Query data Notifikasi (Mencari teks ID di dalam string CSV berkoma)
+// 4. Query notifikasi melalui senarai penerima yang diindeks
 $sql = "SELECT title, description as `desc`, type, is_read, created_at 
-        FROM notifications 
-        WHERE FIND_IN_SET(?, uid) > 0 
+        FROM notifications n
+        INNER JOIN notification_recipients nr ON nr.notification_id = n.id
+        WHERE nr.uid = ?
         ORDER BY created_at DESC";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("s", $uid); // Bind "khairula" ke dalam query
+$stmt->bind_param("i", $uid);
 $stmt->execute();
 $result = $stmt->get_result();
 

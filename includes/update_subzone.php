@@ -11,8 +11,10 @@ $area = $_POST['area'];
 
 mysqli_begin_transaction($conn);
 
-$sql = "SELECT * FROM subzone WHERE sz_id = '$subzone_id'";
-$res = $conn->query($sql);
+$sel = $conn->prepare("SELECT * FROM subzone WHERE sz_id = ?");
+$sel->bind_param("i", $subzone_id);
+$sel->execute();
+$res = $sel->get_result();
 $row = $res->fetch_assoc();
 $subzone_name = $row['sz_name'];
 
@@ -20,7 +22,7 @@ if ($name == $subzone_name && $perimeter == $row['perimeter'] && $area == $row['
     $_SESSION['status'] = 'warning';
     $_SESSION['message'] = 'Tiada perubahan dibuat.';
 
-    header("Location: ../update_sz?szid=" . $subzone_id);
+    header("Location: ../update_sz.php?szid=" . $subzone_id);
     exit();
 }
 
@@ -44,5 +46,5 @@ try {
     $_SESSION['message'] = 'Ralat pangkalan data: ' . $e->getMessage();
 }
 
-header("Location: ../update_sz?szid=" . $subzone_id);
+header("Location: ../update_sz.php?szid=" . $subzone_id);
 exit();

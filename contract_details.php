@@ -1,42 +1,62 @@
 <?php
-session_start();
 require 'includes/connection.php';
 
-// Upload KMZ Logic
+// Upload KMZ Logic (Hardened & Parameterized)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] == 'upload_kmz') {
     $uploadDir = 'kmz/';
-    if(!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
-    
-    $sz_id_post = $_POST['sz_id'];
-    $zone_id_post = $_POST['zone_id'];
-    $cid_post = $_POST['contract_id_param'];
-    $publicUrlBase = 'https://smartcut.com.my/kmz/'; 
-    
+    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
+    $sz_id_post = (int)($_POST['sz_id'] ?? 0);
+    $zone_id_post = (int)($_POST['zone_id'] ?? 0);
+    $cid_post = (int)($_POST['contract_id_param'] ?? 0);
+    $publicUrlBase = 'https://smartcut.com.my/kmz/';
+
     if (!empty($_FILES['kmz_file']['name'])) {
         $originalName = basename($_FILES['kmz_file']['name']);
-        $cleanName = preg_replace('/[^A-Za-z0-9\.\\-_]/', '_', $originalName);
-        $cleanName = strtolower(time() . '_' . $cleanName);
-        $targetPath = $uploadDir . $cleanName;
-        $publicUrl = $publicUrlBase . $cleanName;
-        
-        if (move_uploaded_file($_FILES['kmz_file']['tmp_name'], $targetPath)) {
-            $sql_i = "INSERT INTO kmz_file (zone_id, sz_id, kmz_file, file_path, url, add_by) VALUES ('$zone_id_post', '$sz_id_post', '$cleanName', '$targetPath', '$publicUrl', 1)";
-            $conn->query($sql_i);
-            
-            $conn->query("UPDATE subzone SET kmz_file='$cleanName' WHERE sz_id='$sz_id_post'");
-            
-            $_SESSION['status'] = 'success';
-        $_SESSION['message'] = 'Fail KMZ berjaya dimuat naik.';
-        } else {
+        $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+
+        if (!in_array($ext, ['kmz', 'kml'])) {
             $_SESSION['status'] = 'error';
-        $_SESSION['message'] = 'Gagal memuat naik fail KMZ.';
+            $_SESSION['message'] = 'Hanya fail berformat .kmz atau .kml sahaja yang dibenarkan.';
+        } else {
+            $cleanName = preg_replace('/[^A-Za-z0-9\._-]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
+            $cleanName = strtolower(time() . '_' . $cleanName . '.' . $ext);
+            $targetPath = $uploadDir . $cleanName;
+            $publicUrl = $publicUrlBase . $cleanName;
+
+            if (move_uploaded_file($_FILES['kmz_file']['tmp_name'], $targetPath)) {
+                $user_uid = (int)($_SESSION['uid'] ?? 0);
+                $stmt_i = $conn->prepare("INSERT INTO kmz_file (zone_id, sz_id, kmz_file, file_path, url, add_by) VALUES (?, ?, ?, ?, ?, ?)");
+                if ($stmt_i) {
+                    $stmt_i->bind_param("iisssi", $zone_id_post, $sz_id_post, $cleanName, $targetPath, $publicUrl, $user_uid);
+                    $stmt_i->execute();
+                    $stmt_i->close();
+                }
+
+                $stmt_u = $conn->prepare("UPDATE subzone SET kmz_file = ? WHERE sz_id = ?");
+                if ($stmt_u) {
+                    $stmt_u->bind_param("si", $cleanName, $sz_id_post);
+                    $stmt_u->execute();
+                    $stmt_u->close();
+                }
+
+                $_SESSION['status'] = 'success';
+                $_SESSION['message'] = 'Fail KMZ berjaya dimuat naik.';
+            } else {
+                $_SESSION['status'] = 'error';
+                $_SESSION['message'] = 'Gagal memuat naik fail KMZ.';
+            }
         }
     }
-    header("Location: contract_details.php?id=$cid_post");
+    header("Location: contract_details.php?id=" . $cid_post);
     exit();
 }
 
-$cid = $_GET['id'];
+$cid = (int)($_GET['id'] ?? 0);
+if ($cid <= 0) {
+    header("Location: contract_list.php");
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="ms">
@@ -44,7 +64,7 @@ $cid = $_GET['id'];
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Butiran Kontrak — Green Management System (DBKU)</title>
+    <title>Butiran Kontrak &mdash; Green Management System (DBKU)</title>
     <link rel="shortcut icon" href="assets/images/favicon.png" />
     <link rel="stylesheet" href="assets/vendors/simple-line-icons/css/simple-line-icons.css">
     <link rel="stylesheet" href="assets/vendors/flag-icon-css/css/flag-icons.min.css">
@@ -55,7 +75,7 @@ $cid = $_GET['id'];
     <link rel="stylesheet" href="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css">
     <link rel="stylesheet" href="assets/vendors/daterangepicker/daterangepicker.css">
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
-    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css?v=<?php echo filemtime(__DIR__ . '/assets/css/modern-dashboard.css'); ?>">
 </head>
 
 <body>
@@ -70,112 +90,127 @@ $cid = $_GET['id'];
             <div class="main-panel" style="height: 100%;">
                 <div class="content-wrapper">
                     <?php
-                    // Anda boleh gunakan data kontrak ini untuk dipaparkan di UI
-                    $sql1 = "SELECT * FROM contract WHERE contract_id = '" . $cid . "'";
-                    $res1 = $conn->query($sql1);
-                    $row1 = $res1->fetch_assoc();
-
-                    $sql2 = "SELECT * FROM subzone WHERE sz_id = '" . $row1['sz_id'] . "'";
-                    $res2 = $conn->query($sql2);
-                    $row2 = $res2->fetch_assoc();
-
-                    // Total Perimeter(m) by zone
-                    $sql3 = "SELECT * FROM zone WHERE zone_id = '" . $row2['zone_id'] . "'";
-                    $res3 = $conn->query($sql3);
-                    $row3 = $res3->fetch_assoc();
-
-                    $sql4 = "SELECT * FROM contractor WHERE cid = '" . $row1['cid'] . "'";
-                    $res4 = $conn->query($sql4);
-                    $row4 = $res4->fetch_assoc();
-
-                    // Fetch DBKU Supervisor & Pengawas info
-                    $spv_id = $row1['spv_id'];
-                    $pgs_id = $row1['pgs_id'];
-                    
-                    $dbku_spv_name = '-';
-                    $dbku_spv_email = '-';
-                    if ($spv_id) {
-                        $sql_spv = "SELECT * FROM users WHERE uid = '$spv_id'";
-                        $res_spv = $conn->query($sql_spv);
-                        if ($res_spv && $res_spv->num_rows > 0) {
-                            $row_spv = $res_spv->fetch_assoc();
-                            $dbku_spv_name = $row_spv['user_id'];
-                            $dbku_spv_email = $row_spv['user_email'];
-                        }
+                    // Fetch all contract, subzone, zone, contractor, and DBKU personnel details in ONE single JOIN query
+                    $stmt = $conn->prepare("
+                        SELECT ct.*,
+                               sz.sz_name, sz.perimeter, sz.area,
+                               z.zone_id, z.zone_name,
+                               c.name as contractor_name, c.email as contractor_email, c.address as contractor_address,
+                               u_spv.user_id as spv_username, u_spv.user_email as spv_email,
+                               u_pgs.user_id as pgs_username, u_pgs.user_email as pgs_email
+                        FROM contract ct
+                        LEFT JOIN subzone sz ON ct.sz_id = sz.sz_id
+                        LEFT JOIN zone z ON sz.zone_id = z.zone_id
+                        LEFT JOIN contractor c ON ct.cid = c.cid
+                        LEFT JOIN users u_spv ON ct.spv_id = u_spv.uid
+                        LEFT JOIN users u_pgs ON ct.pgs_id = u_pgs.uid
+                        WHERE ct.contract_id = ?
+                    ");
+                    $row1 = null;
+                    if ($stmt) {
+                        $stmt->bind_param("i", $cid);
+                        $stmt->execute();
+                        $row1 = $stmt->get_result()->fetch_assoc();
+                        $stmt->close();
                     }
 
-                    $dbku_pgs_name = '-';
-                    $dbku_pgs_email = '-';
-                    if ($pgs_id) {
-                        $sql_pgs = "SELECT * FROM users WHERE uid = '$pgs_id'";
-                        $res_pgs = $conn->query($sql_pgs);
-                        if ($res_pgs && $res_pgs->num_rows > 0) {
-                            $row_pgs = $res_pgs->fetch_assoc();
-                            $dbku_pgs_name = $row_pgs['user_id'];
-                            $dbku_pgs_email = $row_pgs['user_email'];
-                        }
+                    if (!$row1) {
+                        header("Location: contract_list.php");
+                        exit;
                     }
 
-                    // Check kmz_file table
-                    $sz_id_kmz = $row1['sz_id'];
-                    $sql_kmz = "SELECT * FROM kmz_file WHERE sz_id = '$sz_id_kmz' ORDER BY id DESC LIMIT 1";
-                    $res_kmz = $conn->query($sql_kmz);
+                    $row2 = [
+                        'zone_id' => $row1['zone_id'],
+                        'sz_name' => $row1['sz_name'],
+                        'kmz_file' => $row1['sz_kmz'] ?? ''
+                    ];
+                    $row3 = [
+                        'zone_name' => $row1['zone_name'],
+                        'zone_id' => $row1['zone_id']
+                    ];
+                    $row4 = [
+                        'name' => $row1['contractor_name'],
+                        'email' => $row1['contractor_email'],
+                        'address' => $row1['contractor_address']
+                    ];
+                    $dbku_spv_name = $row1['spv_username'] ?: '-';
+                    $dbku_spv_email = $row1['spv_email'] ?: '-';
+                    $dbku_pgs_name = $row1['pgs_username'] ?: '-';
+                    $dbku_pgs_email = $row1['pgs_email'] ?: '-';
+
+                    // Check kmz_file
+                    $sz_id_kmz = (int)$row1['sz_id'];
                     $has_kmz = false;
                     $kmz_url = '';
-                    if ($res_kmz && $res_kmz->num_rows > 0) {
-                        $kmz_record = $res_kmz->fetch_assoc();
-                        if(!empty($kmz_record['url'])) {
+                    $stmt_kmz = $conn->prepare("SELECT url FROM kmz_file WHERE sz_id = ? ORDER BY id DESC LIMIT 1");
+                    if ($stmt_kmz) {
+                        $stmt_kmz->bind_param("i", $sz_id_kmz);
+                        $stmt_kmz->execute();
+                        $res_kmz = $stmt_kmz->get_result();
+                        if ($res_kmz && $kmz_record = $res_kmz->fetch_assoc()) {
+                            if (!empty($kmz_record['url'])) {
+                                $has_kmz = true;
+                                $kmz_url = $kmz_record['url'];
+                            }
+                        } elseif (!empty($row1['sz_kmz'])) {
                             $has_kmz = true;
-                            $kmz_url = $kmz_record['url'];
+                            $kmz_url = 'https://smartcut.com.my/kmz/' . $row1['sz_kmz'];
                         }
-                    } elseif (!empty($row2['kmz_file'])) {
-                        $has_kmz = true;
-                        $kmz_url = 'https://smartcut.com.my/kmz/' . $row2['kmz_file'];
+                        $stmt_kmz->close();
                     }
 
                     $start = new DateTime($row1['start_date']);
                     $end = new DateTime($row1['end_date']);
-
                     $interval = $start->diff($end);
-
-                    // kira jumlah bulan
                     $duration_months = ($interval->y * 12) + $interval->m;
-
-                    // jika ada baki hari lebih dari 0, tambah 1 bulan
                     if ($interval->d > 0) {
                         $duration_months++;
                     }
 
-                    // --- Session Filter Logic for Daily Diary ---
-                    $contract_id = $row1['contract_id'];
-                    $current_year = date("Y");
-                    $current_month = date("n");
-                    $current_day = date("j");
+                    // --- Session Filter Logic for Daily Diary (Hardened) ---
+                    $contract_id = (int)$row1['contract_id'];
+                    $current_year = (int)date("Y");
+                    $current_month = (int)date("n");
+                    $current_day = (int)date("j");
                     $current_session_default = ($current_month - 1) * 2 + ($current_day <= 15 ? 1 : 2);
 
-                    $filter_year = isset($_GET['filter_year']) ? $_GET['filter_year'] : '';
-                    $filter_session = isset($_GET['filter_session']) ? $_GET['filter_session'] : '';
+                    $filter_year = !empty($_GET['filter_year']) ? (int)$_GET['filter_year'] : 0;
+                    $filter_session = !empty($_GET['filter_session']) ? (int)$_GET['filter_session'] : 0;
 
-                    $avail_sql = "SELECT DISTINCT YEAR(date) as yr FROM daily_records WHERE cid = '$contract_id' ORDER BY yr DESC";
-                    $avail_res = $conn->query($avail_sql);
+                    $stmt_avail = $conn->prepare("SELECT DISTINCT YEAR(date) as yr FROM daily_records WHERE cid = ? ORDER BY yr DESC");
                     $available_years = [];
-                    if ($avail_res && $avail_res->num_rows > 0) {
-                        while($ar = $avail_res->fetch_assoc()) {
-                            $available_years[] = $ar['yr'];
+                    if ($stmt_avail) {
+                        $stmt_avail->bind_param("s", $contract_id);
+                        $stmt_avail->execute();
+                        $avail_res = $stmt_avail->get_result();
+                        if ($avail_res && $avail_res->num_rows > 0) {
+                            while ($ar = $avail_res->fetch_assoc()) {
+                                $available_years[] = (int)$ar['yr'];
+                            }
                         }
-                    } else {
+                        $stmt_avail->close();
+                    }
+                    if (empty($available_years)) {
                         $available_years = [$current_year];
                     }
 
-                    if ($filter_year == '') {
+                    if (!in_array($filter_year, $available_years, true)) {
                         $filter_year = $available_years[0];
                     }
-                    if ($filter_session == '') {
-                        $max_sess_sql = "SELECT MAX(gc_session) as max_s FROM daily_records WHERE cid = '$contract_id' AND YEAR(date) = '$filter_year'";
-                        $max_sess_res = $conn->query($max_sess_sql);
-                        $max_s_row = $max_sess_res->fetch_assoc();
-                        if ($max_s_row && $max_s_row['max_s']) {
-                            $filter_session = $max_s_row['max_s'];
+                    if ($filter_session <= 0) {
+                        $year_start = sprintf('%04d-01-01', $filter_year);
+                        $year_end = sprintf('%04d-01-01', $filter_year + 1);
+                        $stmt_max = $conn->prepare("SELECT MAX(gc_session) as max_s FROM daily_records WHERE cid = ? AND date >= ? AND date < ?");
+                        if ($stmt_max) {
+                            $stmt_max->bind_param("sss", $contract_id, $year_start, $year_end);
+                            $stmt_max->execute();
+                            $max_s_row = $stmt_max->get_result()->fetch_assoc();
+                            if ($max_s_row && !empty($max_s_row['max_s'])) {
+                                $filter_session = (int)$max_s_row['max_s'];
+                            } else {
+                                $filter_session = $current_session_default;
+                            }
+                            $stmt_max->close();
                         } else {
                             $filter_session = $current_session_default;
                         }
@@ -192,13 +227,18 @@ $cid = $_GET['id'];
                     }
 
                     // Fetch existing records for the date range
-                    $sql_records = "SELECT * FROM daily_records WHERE cid = '$contract_id' AND date >= '$start_date' AND date <= '$end_date' ORDER BY date ASC";
-                    $res_records = $conn->query($sql_records);
+                    $stmt_dr = $conn->prepare("SELECT * FROM daily_records WHERE cid = ? AND date >= ? AND date <= ? ORDER BY date ASC");
                     $daily_data = [];
-                    if($res_records && $res_records->num_rows > 0) {
-                        while($dr = $res_records->fetch_assoc()) {
-                            $daily_data[$dr['date']] = $dr;
+                    if ($stmt_dr) {
+                        $stmt_dr->bind_param("sss", $contract_id, $start_date, $end_date);
+                        $stmt_dr->execute();
+                        $res_records = $stmt_dr->get_result();
+                        if ($res_records && $res_records->num_rows > 0) {
+                            while ($dr = $res_records->fetch_assoc()) {
+                                $daily_data[$dr['date']] = $dr;
+                            }
                         }
+                        $stmt_dr->close();
                     }
                     ?>
                     <!-- ============================================================== -->
@@ -211,7 +251,7 @@ $cid = $_GET['id'];
                                     <span class="gms-pulse-dot" style="background:#34d399;"></span>
                                     <span class="gms-hero-subtitle" style="color: rgba(255,255,255,0.75);">Butiran Kontrak</span>
                                 </div>
-                                <h1 class="gms-hero-title mb-1">Butiran Kontrak — <?php echo htmlspecialchars($row4['name']); ?></h1>
+                                <h1 class="gms-hero-title mb-1">Butiran Kontrak &mdash; <?php echo htmlspecialchars($row4['name']); ?></h1>
                                 <p class="gms-hero-subtitle">Kontrak di bawah Zon <?php echo htmlspecialchars($row3['zone_name']); ?></p>
                             </div>
                             <div class="col-lg-4">
@@ -493,7 +533,7 @@ $cid = $_GET['id'];
                                                 <?php
                                                 $current = strtotime($start_date);
                                                 $last = strtotime($end_date);
-                                                
+
                                                 while($current <= $last) {
                                                     $d_str = date("Y-m-d", $current);
                                                     if(isset($daily_data[$d_str])) {
@@ -519,8 +559,8 @@ $cid = $_GET['id'];
                                                                 <?php echo ($row_daily['verified'] === 'Y') ? '<i class="fa fa-check-square text-success" style="font-size: 18px;" title="Disahkan"></i>' : '<i class="fa fa-minus-circle text-danger" style="font-size: 18px;" title="Tak Disahkan"></i>'; ?>
                                                             </td>
                                                         </tr>
-                                                <?php 
-                                                    } else { 
+                                                <?php
+                                                    } else {
                                                 ?>
                                                         <tr>
                                                             <td><?php echo gms_format_date($current, 'd M Y') ?></td>
@@ -529,10 +569,10 @@ $cid = $_GET['id'];
                                                                 <span class="gms-tag-pill" style="background:rgba(239,68,68,0.08); color:#dc2626; border:1px dashed rgba(239,68,68,0.3);"><i class="fa-solid fa-circle-xmark me-1"></i> Tiada Data</span>
                                                             </td>
                                                         </tr>
-                                                <?php 
+                                                <?php
                                                     }
                                                     $current = strtotime("+1 day", $current);
-                                                } 
+                                                }
                                                 ?>
                                             </tbody>
                                         </table>
@@ -662,7 +702,7 @@ $cid = $_GET['id'];
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <!-- End custom js for this page -->
 
-        <script async defer src="https://maps.googleapis.com/maps/api/js?key=&#65306;redacted:AIza…&callback=initMap"></script>
+        <script async defer src="https://maps.googleapis.com/maps/api/js?key=&#65306;redacted:AIzaâ€¦&callback=initMap"></script>
         <script>
         function initMap() {
             var map = new google.maps.Map(document.getElementById('map'), {
@@ -684,7 +724,7 @@ $cid = $_GET['id'];
             // --- ADD LOCATION --
             $('#btnAddLocation').on('click', function(e) {
                 e.preventDefault();
-                
+
                 var sz_id = $('#sz_id_input').val();
                 var area = $('#area_input').val();
                 var location = $('#location_input').val();
@@ -747,7 +787,7 @@ $cid = $_GET['id'];
                 // Remove readonly attributes
                 $('#area_' + id).removeAttr('readonly').focus();
                 $('#location_' + id).removeAttr('readonly');
-                
+
                 // Hide edit button, show save button
                 $(this).addClass('d-none');
                 $(this).siblings('.btn-save').removeClass('d-none');
@@ -788,7 +828,7 @@ $cid = $_GET['id'];
                                 // Set back to readonly
                                 $('#area_' + id).attr('readonly', true);
                                 $('#location_' + id).attr('readonly', true);
-                                
+
                                 // Hide save, show edit
                                 btn.addClass('d-none').prop('disabled', false).html('<i class="fa fa-save"></i>');
                                 btn.siblings('.btn-edit').removeClass('d-none');
@@ -808,7 +848,7 @@ $cid = $_GET['id'];
             // --- DELETE BUTTON --
             $('.btn-delete').on('click', function() {
                 var id = $(this).data('id');
-                
+
                 Swal.fire({
                     title: 'Adakah anda pasti?',
                     text: "Data yang dipadam tidak boleh dikembalikan!",
@@ -894,7 +934,7 @@ $cid = $_GET['id'];
                             <input type="hidden" name="contract_id_param" value="<?php echo $cid; ?>">
                             <input type="hidden" name="sz_id" value="<?php echo $row1['sz_id']; ?>">
                             <input type="hidden" name="zone_id" value="<?php echo $row2['zone_id']; ?>">
-                            
+
                             <div class="mb-3">
                                 <label class="form-label fw-bold text-muted small text-uppercase">Pilih Fail KMZ</label>
                                 <input class="form-control" type="file" name="kmz_file" accept=".kmz" required style="border-radius: 12px; border: 1px solid #e2e8f0; padding: 10px 14px;">

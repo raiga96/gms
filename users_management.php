@@ -8,34 +8,19 @@ if ($page < 1) $page = 1;
 $per_page = 20;
 $offset = ($page - 1) * $per_page;
 
-// Stats with prepared statements
-$total_users = 0;
-$stmt = $conn->prepare("SELECT COUNT(*) AS cnt FROM users");
-$stmt->execute();
-$res = $stmt->get_result();
-if ($row = $res->fetch_assoc()) $total_users = (int)$row['cnt'];
-$stmt->close();
-
-$total_spv = 0;
-$stmt = $conn->prepare("SELECT COUNT(*) AS cnt FROM users WHERE user_type = 'SPV'");
-$stmt->execute();
-$res = $stmt->get_result();
-if ($row = $res->fetch_assoc()) $total_spv = (int)$row['cnt'];
-$stmt->close();
-
-$total_pgs = 0;
-$stmt = $conn->prepare("SELECT COUNT(*) AS cnt FROM users WHERE user_type = 'PGS'");
-$stmt->execute();
-$res = $stmt->get_result();
-if ($row = $res->fetch_assoc()) $total_pgs = (int)$row['cnt'];
-$stmt->close();
-
-$total_con = 0;
-$stmt = $conn->prepare("SELECT COUNT(*) AS cnt FROM users WHERE user_type = 'CON'");
-$stmt->execute();
-$res = $stmt->get_result();
-if ($row = $res->fetch_assoc()) $total_con = (int)$row['cnt'];
-$stmt->close();
+// Consolidated user stats (1 single query instead of 4)
+$sql_stats = "SELECT
+    COUNT(*) AS total_users,
+    COALESCE(SUM(CASE WHEN user_type = 'SPV' THEN 1 ELSE 0 END), 0) AS total_spv,
+    COALESCE(SUM(CASE WHEN user_type = 'PGS' THEN 1 ELSE 0 END), 0) AS total_pgs,
+    COALESCE(SUM(CASE WHEN user_type = 'CON' THEN 1 ELSE 0 END), 0) AS total_con
+FROM users";
+$res_stats = $conn->query($sql_stats);
+$st = ($res_stats && $row = $res_stats->fetch_assoc()) ? $row : ['total_users' => 0, 'total_spv' => 0, 'total_pgs' => 0, 'total_con' => 0];
+$total_users = (int)$st['total_users'];
+$total_spv = (int)$st['total_spv'];
+$total_pgs = (int)$st['total_pgs'];
+$total_con = (int)$st['total_con'];
 
 $user_roles = [
     'SPV'  => 'Penyelia',
@@ -112,7 +97,7 @@ $total_pages_con = $total_con_users > 0 ? ceil($total_con_users / $per_page) : 1
     <link rel="stylesheet" href="assets/vendors/css/vendor.bundle.base.css">
     <!-- Layout styles -->
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
-    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css?v=<?php echo filemtime(__DIR__ . '/assets/css/modern-dashboard.css'); ?>">
     <link rel="shortcut icon" href="assets/images/favicon.png">
 </head>
 <body>
@@ -281,7 +266,7 @@ $total_pages_con = $total_con_users > 0 ? ceil($total_con_users / $per_page) : 1
                                         </div>
                                         <?php if ($total_pages_int > 1): ?>
                                         <div class="d-flex justify-content-between align-items-center px-4 py-3 border-top">
-                                            <span class="text-muted small">Muka surat <?php echo $page; ?> daripada <?php echo $total_pages_int; ?> — <?php echo $total_int; ?> rekod</span>
+                                            <span class="text-muted small">Muka surat <?php echo $page; ?> daripada <?php echo $total_pages_int; ?> &mdash; <?php echo $total_int; ?> rekod</span>
                                             <div class="d-flex gap-1">
                                                 <?php if ($page > 1): ?>
                                                     <a href="?page=<?php echo $page - 1; ?>" class="btn btn-sm btn-outline-secondary rounded-pill"><i class="fa-solid fa-chevron-left"></i></a>
@@ -365,7 +350,7 @@ $total_pages_con = $total_con_users > 0 ? ceil($total_con_users / $per_page) : 1
                                         </div>
                                         <?php if ($total_pages_con > 1): ?>
                                         <div class="d-flex justify-content-between align-items-center px-4 py-3 border-top">
-                                            <span class="text-muted small">Muka surat 1 daripada <?php echo $total_pages_con; ?> — <?php echo $total_con_users; ?> rekod</span>
+                                            <span class="text-muted small">Muka surat 1 daripada <?php echo $total_pages_con; ?> &mdash; <?php echo $total_con_users; ?> rekod</span>
                                             <div class="d-flex gap-1">
                                                 <?php if ($page > 1): ?>
                                                     <a href="?page=<?php echo $page - 1; ?>#contractorPane" class="btn btn-sm btn-outline-secondary rounded-pill"><i class="fa-solid fa-chevron-left"></i></a>
@@ -401,7 +386,7 @@ $total_pages_con = $total_con_users > 0 ? ceil($total_con_users / $per_page) : 1
                         </div>
                         <div>
                             <h5 class="modal-title fw-bold mb-0" id="addUserModalLabel" style="color:#fff;">Daftar Pengguna Baharu</h5>
-                            <p class="mb-0 small" style="color:rgba(255,255,255,0.65);">Green Management System — DBKU Landscape Division</p>
+                            <p class="mb-0 small" style="color:rgba(255,255,255,0.65);">Green Management System &mdash; DBKU Landscape Division</p>
                         </div>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>

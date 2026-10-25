@@ -58,7 +58,7 @@ if ($res_contractors && $res_contractors->num_rows > 0) {
     <link rel="stylesheet" href="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css">
     <link rel="stylesheet" href="assets/vendors/daterangepicker/daterangepicker.css">
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
-    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css?v=<?php echo filemtime(__DIR__ . '/assets/css/modern-dashboard.css'); ?>">
 </head>
 
 <body>
@@ -85,7 +85,7 @@ if ($res_contractors && $res_contractors->num_rows > 0) {
                                 <p class="gms-hero-subtitle">Senarai firma kontraktor pemotongan rumput DBKU</p>
                             </div>
                             <div>
-                                <a href="new_contractor?page=con" class="btn btn-light btn-sm rounded-pill px-3 py-2 font-weight-bold" style="color: #007442;">
+                                <a href="new_contractor.php?page=con" class="btn btn-light btn-sm rounded-pill px-3 py-2 font-weight-bold" style="color: #007442;">
                                     <i class="fa-solid fa-plus me-1"></i> Daftar Kontraktor Baharu
                                 </a>
                             </div>
@@ -199,7 +199,7 @@ if ($res_contractors && $res_contractors->num_rows > 0) {
                                                 <i class="icon-magnifier"></i>
                                                 <input type="text" id="contractorTableSearch" placeholder="Cari nama atau alamat kontraktor..." autocomplete="off">
                                             </div>
-                                            <a href="new_contractor?page=con" class="btn btn-success btn-sm rounded-pill px-3 py-2 font-weight-semibold">
+                                            <a href="new_contractor.php?page=con" class="btn btn-success btn-sm rounded-pill px-3 py-2 font-weight-semibold">
                                                 <i class="fa-solid fa-plus me-1"></i> Kontraktor Baharu
                                             </a>
                                         </div>

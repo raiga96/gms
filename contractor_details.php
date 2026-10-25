@@ -1,10 +1,25 @@
 <?php
-session_start();
-$cid = $_GET['id'];
-
 require 'includes/connection.php';
 
+$cid = (int)($_GET['id'] ?? 0);
+if ($cid <= 0) {
+    header("Location: contractor_list.php");
+    exit;
+}
 
+$stmt = $conn->prepare("SELECT * FROM contractor WHERE cid = ?");
+$stmt->bind_param("i", $cid);
+$stmt->execute();
+$row = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+if (!$row) {
+    header("Location: contractor_list.php");
+    exit;
+}
+$row1 = $row;
+$contractor = $row['name'];
+$email = $row['email'];
 ?>
 <!DOCTYPE html>
 <html lang="ms">
@@ -30,7 +45,7 @@ require 'includes/connection.php';
     <!-- endinject -->
     <!-- Layout styles -->
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
-    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css?v=<?php echo filemtime(__DIR__ . '/assets/css/modern-dashboard.css'); ?>">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="assets/images/favicon.png" />
     <style>
@@ -146,37 +161,22 @@ require 'includes/connection.php';
             <div class="main-panel" style="height: 100%;">
                 <div class="content-wrapper">
 
-                    <!-- Performance Indicator Start -->
-                    <?php
-                    $sql = "SELECT * FROM contractor WHERE cid = '$cid'";
-                    $res = $conn->query($sql);
-                    $row = $res->fetch_assoc();
-                    $contractor = $row['name'];
-                    $email = $row['email'];
-                    ?>
-
                     <div class="row modern-record-container mt-4 mb-0">
                         <div class="col-12">
                             <div class="card shadow border-0 modern-banner">
                                 <div class="card-body p-4 d-sm-flex align-items-center justify-content-between text-white">
                                     <div class="mb-3 mb-sm-0">
-                                        <h2 class="mb-1 text-white fw-bold"><?php echo $row['name'] ?></h2>
-                                        <h4 class="mb-1 text-white fw-bold"><?php echo $row['address'] ?></h4>
+                                        <h2 class="mb-1 text-white fw-bold"><?php echo htmlspecialchars($row['name']); ?></h2>
+                                        <h4 class="mb-1 text-white fw-bold"><?php echo htmlspecialchars($row['address']); ?></h4>
                                     </div>
                                     <div class="btn-group gap-2">
-                                        <a class="btn btn-light shadow-sm text-primary" href="update_contractor.php?id=<?php echo $cid ?>">Kemaskini</a>
+                                        <a class="btn btn-light shadow-sm text-primary" href="update_contractor.php?id=<?php echo $cid; ?>">Kemaskini</a>
+                                        <a class="btn btn-light shadow-sm text-primary" href="daily_diary.php?id=<?php echo $cid; ?>">Rekod Harian</a>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <?php
-                    // Anda boleh gunakan data kontrak ini untuk dipaparkan di UI
-                    $sql1 = "SELECT * FROM contractor WHERE cid = '" . $row['cid'] . "'";
-                    $res1 = $conn->query($sql1);
-                    $row1 = $res1->fetch_assoc();
-                    ?>
                     <div class="row modern-record-container mb-2">
                         <div class="col-md-12 grid-margin stretch-card">
                             <div class="card shadow border-0">
@@ -240,19 +240,28 @@ require 'includes/connection.php';
                                                 
                                                 <?php
                                                 $stat = false;
-                                                $sql = "SELECT * FROM users WHERE uid = '" . $row['uid'] . "'";
-                                                $res = $conn->query($sql);
-                                                $user_row = $res->fetch_assoc();
+                                                $user_row = null;
                                                 $status = 'N/A';
                                                 $status_color = 'secondary';
-                                                if ($res->num_rows > 0) {
-                                                    $stat = true;
-                                                    switch ($user_row['status']) {
-                                                        case 'Y': $status = 'Aktif'; $status_color = 'success'; break;
-                                                        case 'N': $status = 'Tidak Aktif'; $status_color = 'danger'; break;
-                                                        case 'C': $status = 'Dibatalkan'; $status_color = 'warning'; break;
-                                                        case 'T': $status = 'Ditamatkan'; $status_color = 'danger'; break;
-                                                        default:  $status = 'Tidak Tersedia'; $status_color = 'secondary'; break;
+                                                $contractor_uid = (int)($row['uid'] ?? 0);
+                                                if ($contractor_uid > 0) {
+                                                    $stmt_u = $conn->prepare("SELECT * FROM users WHERE uid = ?");
+                                                    if ($stmt_u) {
+                                                        $stmt_u->bind_param("i", $contractor_uid);
+                                                        $stmt_u->execute();
+                                                        $res_u = $stmt_u->get_result();
+                                                        if ($res_u && $res_u->num_rows > 0) {
+                                                            $stat = true;
+                                                            $user_row = $res_u->fetch_assoc();
+                                                            switch ($user_row['status']) {
+                                                                case 'Y': $status = 'Aktif'; $status_color = 'success'; break;
+                                                                case 'N': $status = 'Tidak Aktif'; $status_color = 'danger'; break;
+                                                                case 'C': $status = 'Dibatalkan'; $status_color = 'warning'; break;
+                                                                case 'T': $status = 'Ditamatkan'; $status_color = 'danger'; break;
+                                                                default:  $status = 'Tidak Tersedia'; $status_color = 'secondary'; break;
+                                                            }
+                                                        }
+                                                        $stmt_u->close();
                                                     }
                                                 }
                                                 ?>
@@ -346,19 +355,20 @@ require 'includes/connection.php';
                                             </thead>
                                             <tbody>
                                                 <?php
-                                                $sql = "SELECT * FROM contract WHERE cid = '$cid' ORDER BY contract_number ASC";
-                                                $res = $conn->query($sql);
-                                                if ($res->num_rows > 0) {
-                                                    while ($row = $res->fetch_assoc()) {
-                                                        // Total subzone by zone
-                                                        $sql1 = "SELECT * FROM subzone WHERE sz_id = '" . $row['sz_id'] . "'";
-                                                        $res1 = $conn->query($sql1);
-                                                        $row1 = $res1->fetch_assoc();
-
-                                                        // Total Perimeter(m) by zone
-                                                        $sql2 = "SELECT * FROM zone WHERE zone_id = '" . $row1['zone_id'] . "'";
-                                                        $res2 = $conn->query($sql2);
-                                                        $row2 = $res2->fetch_assoc();
+                                                $stmt_ct = $conn->prepare("
+                                                    SELECT ct.*, sz.sz_name, z.zone_name
+                                                    FROM contract ct
+                                                    LEFT JOIN subzone sz ON ct.sz_id = sz.sz_id
+                                                    LEFT JOIN zone z ON sz.zone_id = z.zone_id
+                                                    WHERE ct.cid = ?
+                                                    ORDER BY ct.contract_number ASC
+                                                ");
+                                                $stmt_ct->bind_param("i", $cid);
+                                                $stmt_ct->execute();
+                                                $res_ct = $stmt_ct->get_result();
+                                                if ($res_ct && $res_ct->num_rows > 0) {
+                                                    while ($row = $res_ct->fetch_assoc()) {
+                                                        $row2 = $row;
 
                                                         $start = new DateTime($row['start_date']);
                                                         $end = new DateTime($row['end_date']);
@@ -400,7 +410,7 @@ require 'includes/connection.php';
                                                             <td>
                                                                 <button type="button" class="btn btn-danger p-3" data-id="<?php ?>" onclick="deleteDb(this)"><i class=" fa fa-trash"></i></button>
 
-                                                                <a href="update_zone.php?id=<?php ?>" class="btn btn-primary p-3"><i class="fa fa-pencil"></i></a>
+                                                                <a href="contract_details.php?id=<?php echo (int)$row['contract_id']; ?>" class="btn btn-primary p-3" title="Butiran Kontrak"><i class="fa fa-pencil"></i></a>
 
                                                             </td>
                                                         </tr>
@@ -563,24 +573,34 @@ require 'includes/connection.php';
                 });
 
                 <?php
-                $sql = "SELECT * FROM kmz_file WHERE sz_id = '$subzone_id'";
-                $res = $conn->query($sql);
-                if ($res->num_rows > 0) {
-                    $row = $res->fetch_assoc();
-                    $url = $row['url'];
-                } else {
-                    $url = '';
+                $kmz_url = '';
+                $stmt_map_kmz = $conn->prepare("
+                    SELECT k.url 
+                    FROM contract ct 
+                    JOIN kmz_file k ON k.sz_id = ct.sz_id 
+                    WHERE ct.cid = ? AND (k.kmz_status = 'Y' OR k.kmz_status IS NULL) 
+                    ORDER BY k.id DESC LIMIT 1
+                ");
+                if ($stmt_map_kmz) {
+                    $stmt_map_kmz->bind_param("i", $cid);
+                    $stmt_map_kmz->execute();
+                    $res_map_kmz = $stmt_map_kmz->get_result();
+                    if ($res_map_kmz && $row_mk = $res_map_kmz->fetch_assoc()) {
+                        $kmz_url = $row_mk['url'];
+                    }
+                    $stmt_map_kmz->close();
                 }
-
-
                 ?>
 
-                var kmzLayer = new google.maps.KmlLayer({
-                    url: '<?php echo $url ?>',
-                    map: map,
-                    zoom: 8,
-                    preserveViewport: false,
-                });
+                var kmzUrl = <?php echo json_encode($kmz_url); ?>;
+                if (kmzUrl && kmzUrl.trim() !== '') {
+                    var kmzLayer = new google.maps.KmlLayer({
+                        url: kmzUrl,
+                        map: map,
+                        zoom: 8,
+                        preserveViewport: false,
+                    });
+                }
             }
         </script>
 

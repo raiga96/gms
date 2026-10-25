@@ -69,7 +69,7 @@ $today_date_bm = date('d F Y');
     <link rel="stylesheet" href="assets/vendors/css/vendor.bundle.base.css">
     <!-- Layout styles -->
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
-    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css?v=<?php echo filemtime(__DIR__ . '/assets/css/modern-dashboard.css'); ?>">
     <link rel="shortcut icon" href="assets/images/favicon.png">
     <style>
         .avatar-lg {

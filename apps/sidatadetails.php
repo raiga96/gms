@@ -1,4 +1,4 @@
-<?php
+<?php require_once __DIR__ . '/_q.php';
 // Assume this PHP script fetches the data you need and returns it as JSON
 require 'conn.php';
 
@@ -10,14 +10,14 @@ $iv = "5fbc84cbabd58453"; // Replace with your own IV
 
 // $s = "SELECT * FROM contract_location WHERE sz_id = '$sz_id'";
 if($page == 'DailyRecord'){
-    $s = "SELECT b.* FROM daily_records AS a JOIN site_instruction AS b ON b.ddId = a.id AND a.date = CURDATE() WHERE b.num_si = '$num_si' ";
+    $s = "SELECT b.* FROM daily_records AS a JOIN site_instruction AS b ON b.ddId = a.id AND a.date = CURDATE() WHERE b.num_si = ?";
 } else if ($page == 'DetailHistory'){
-    $s = "SELECT b.* FROM daily_records AS a JOIN site_instruction AS b ON b.ddId = a.id WHERE b.num_si = '$num_si' ";
+    $s = "SELECT b.* FROM daily_records AS a JOIN site_instruction AS b ON b.ddId = a.id WHERE b.num_si = ?";
 } else if ($page == 'Overall'){
-    $s = "SELECT b.* FROM daily_records AS a JOIN site_instruction AS b ON b.ddId = a.id WHERE b.num_si = '$num_si' ";
+    $s = "SELECT b.* FROM daily_records AS a JOIN site_instruction AS b ON b.ddId = a.id WHERE b.num_si = ?";
 }
 
-$r = $conn->query($s);
+$r = gms_q($conn, $s, "s", [$num_si]);
 
 // Fetch data and store it in an array
 $data = array();

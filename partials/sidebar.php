@@ -43,6 +43,18 @@ function is_active($page, $current) {
                 <span class="menu-title">Kontraktor</span>
             </a>
         </li>
+        <li class="nav-item <?php echo (strpos($current_page, 'daily') !== false || strpos($current_page, 'sitedaily') !== false) ? 'active' : ''; ?>">
+            <a class="nav-link" href="sitedaily_records.php">
+                <i class="icon-notebook menu-icon"></i>
+                <span class="menu-title">Rekod Harian Tapak</span>
+            </a>
+        </li>
+        <li class="nav-item <?php echo is_active('maps', $current_page); ?>">
+            <a class="nav-link" href="maps.php">
+                <i class="icon-map menu-icon"></i>
+                <span class="menu-title">Peta GIS &amp; Sempadan</span>
+            </a>
+        </li>
 
         <!-- General Section (Donezo Style) -->
         <li class="nav-item nav-category">
@@ -65,9 +77,8 @@ function is_active($page, $current) {
     <!-- Bottom Telemetry Card (Donezo / Executive High-Tech Dark Style) -->
     <div class="sidebar-system-status d-none d-xl-block">
         <div class="d-flex align-items-center mb-1">
-            <span class="gms-pulse-dot me-2"></span>
             <span style="font-size: 11px; font-weight: 700; color: #10b981; letter-spacing: 0.04em;">Green Management System</span>
         </div>
-        <p class="mb-0" style="font-size: 11px; color: #7e9e92; line-height: 1.3;">Enjin Pemantauan Dalam Talian</p>
+        <p class="mb-0" style="font-size: 11px; color: #7e9e92; line-height: 1.3;">Pengurusan landskap DBKU</p>
     </div>
 </nav>

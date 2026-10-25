@@ -1,27 +1,39 @@
 <?php
-session_start();
+require 'includes/connection.php';
+
 $cid = (int)($_GET['id'] ?? 0);
 
 if ($cid <= 0) {
-    http_response_code(400);
-    exit('ID rekod tidak sah.');
+    // Cari rekod tertunda atau rekod harian terkini jika tiada parameter ID
+    $fallback_res = $conn->query("SELECT id FROM daily_records WHERE verified = 'N' ORDER BY date DESC, id DESC LIMIT 1");
+    if (!$fallback_res || $fallback_res->num_rows === 0) {
+        $fallback_res = $conn->query("SELECT id FROM daily_records ORDER BY id DESC LIMIT 1");
+    }
+    if ($fallback_res && $row_fb = $fallback_res->fetch_assoc()) {
+        header("Location: sitedaily_records.php?id=" . (int)$row_fb['id']);
+        exit;
+    }
+    http_response_code(404);
+    exit('Tiada rekod harian tersedia dalam pangkalan data.');
 }
 
-require 'includes/connection.php';
-
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
-    $ver_comment = $conn->real_escape_string(trim($_POST['ver_comment'] ?? ''));
-    $verify_by = isset($_SESSION['id']) ? $_SESSION['id'] : 1; 
-    
-    $updateSql = "UPDATE daily_records SET verified = 'Y', verify_by = '$verify_by', verified_on = NOW(), ver_comment = '$ver_comment' WHERE id = '$cid'";
-    if ($conn->query($updateSql) === TRUE) {
-        $_SESSION['status'] = "success";
-        $_SESSION['message'] = "Rekod berjaya disahkan.";
-    } else {
-        $_SESSION['status'] = "error";
-        $_SESSION['message'] = "Ralat semasa mengesahkan rekod: " . $conn->error;
+    $ver_comment = trim($_POST['ver_comment'] ?? '');
+    $verify_by = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : (isset($_SESSION['id']) ? (int)$_SESSION['id'] : 1);
+
+    $stmt = $conn->prepare("UPDATE daily_records SET verified = 'Y', verify_by = ?, verified_on = NOW(), ver_comment = ? WHERE id = ?");
+    if ($stmt) {
+        $stmt->bind_param("isi", $verify_by, $ver_comment, $cid);
+        if ($stmt->execute()) {
+            $_SESSION['status'] = "success";
+            $_SESSION['message'] = "Rekod berjaya disahkan.";
+        } else {
+            $_SESSION['status'] = "error";
+            $_SESSION['message'] = "Ralat semasa mengesahkan rekod: " . $stmt->error;
+        }
+        $stmt->close();
     }
-    
+
     header("Location: sitedaily_records.php?id=" . $cid);
     exit();
 }
@@ -55,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
     <!-- endinject -->
     <!-- Layout styles -->
     <link rel="stylesheet" href="assets/css/vertical-light-layout/style.css">
-    <link rel="stylesheet" href="assets/css/modern-dashboard.css">
+    <link rel="stylesheet" href="assets/css/modern-dashboard.css?v=<?php echo filemtime(__DIR__ . '/assets/css/modern-dashboard.css'); ?>">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="assets/images/favicon.png" />
     <style>
@@ -212,28 +224,44 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
 
                     <!-- Performance Indicator Start -->
                     <?php
-                    $sqlC = "SELECT * FROM daily_records WHERE id = '$cid'";
-                    $resC = $conn -> query($sqlC);
-                    $rowC = $resC ? $resC->fetch_assoc() : null;
+                    $stmtC = $conn->prepare("
+                        SELECT dr.*,
+                               ct.contract_id, ct.contract_number, ct.start_date as contract_start, ct.end_date as contract_end,
+                               ct.sz_id as contract_sz_id, ct.cid as contract_cid, ct.fund,
+                               c.cid as contractor_id, c.name as contractor_name, c.email as contractor_email, c.address as contractor_address,
+                               sz.sz_id, sz.sz_name, sz.perimeter, sz.area,
+                               z.zone_id, z.zone_name
+                        FROM daily_records dr
+                        LEFT JOIN contract ct ON dr.cid = ct.contract_id
+                        LEFT JOIN contractor c ON ct.cid = c.cid
+                        LEFT JOIN subzone sz ON ct.sz_id = sz.sz_id
+                        LEFT JOIN zone z ON sz.zone_id = z.zone_id
+                        WHERE dr.id = ?
+                    ");
+                    $resC = false;
+                    $rowC = null;
+                    if ($stmtC) {
+                        $stmtC->bind_param("i", $cid);
+                        $stmtC->execute();
+                        $resC = $stmtC->get_result();
+                        $rowC = $resC ? $resC->fetch_assoc() : null;
+                        $stmtC->close();
+                    }
+
                     if (!$rowC) {
                         http_response_code(404);
                         exit('Rekod harian tidak ditemui.');
                     }
                     $row3 = $rowC;
-                    $contract_id = $rowC['cid'];
-                    
-                    $sql = "SELECT * FROM contract WHERE contract_id = '$contract_id'";
-                    $res = $conn->query($sql);
-                    $row = $res->fetch_assoc();
-                    $contractor_id = $row['cid'];
-                    $sz_id = $row['sz_id'];
-
-                    $sqlCon = "SELECT * FROM contractor WHERE cid = '".$row['cid']."'";
-                    $resCon = $conn -> query($sqlCon);
-                    $rowCon = $resCon -> fetch_assoc();
-                    $contractor = $rowCon['name'];
-                    $email = $rowCon['email'];
-
+                    $row = $rowC;
+                    $row1 = $rowC;
+                    $row2 = $rowC;
+                    $rowCon = $rowC;
+                    $contract_id = $rowC['contract_id'];
+                    $contractor_id = $rowC['contractor_id'];
+                    $sz_id = (int)($rowC['sz_id'] ?? 0);
+                    $contractor = $rowC['contractor_name'] ?: 'Kontraktor';
+                    $email = $rowC['contractor_email'] ?: '';
                     ?>
 
                     <!-- Hero Banner -->
@@ -244,10 +272,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                     <div>
                                         <h2 class="gms-hero-title mb-1"><?php echo htmlspecialchars($contractor) ?></h2>
                                         <p class="gms-hero-subtitle mb-0">
-                                            <i class="fas fa-calendar-alt me-1"></i> <?php echo gms_format_date($row3['date'], 'd F Y') ?>
-                                            &nbsp;|&nbsp;
-                                            <i class="fas fa-map-marker-alt me-1"></i> Zon: <?php echo htmlspecialchars($row2['sz_name'] ?? 'N/A') ?>
-                                        </p>
+                                             <i class="fas fa-calendar-alt me-1"></i> <?php echo gms_format_date($row3['date'], 'd F Y') ?>
+                                             &nbsp;|&nbsp;
+                                             <i class="fas fa-map-marker-alt me-1"></i> Zon: <?php echo htmlspecialchars(($rowC['zone_name'] ?? '') . ' - ' . ($rowC['sz_name'] ?? 'N/A')) ?>
+                                         </p>
                                     </div>
                                     <div class="d-flex gap-4 flex-wrap">
                                         <div class="gms-hero-stat">
@@ -278,45 +306,43 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                     </div>
 
                     <?php
-                    $sql1 = "SELECT * FROM contract WHERE cid = '" . $row['cid'] . "'";
-                    $res1 = $conn->query($sql1);
-                    $row1 = $res1->fetch_assoc();
-
-                    $sql2 = "SELECT * FROM subzone WHERE sz_id = '" . $row1['sz_id'] . "'";
-                    $res2 = $conn->query($sql2);
-                    $row2 = $res2->fetch_assoc();
-
                     // --- Fetch Site Instructions & Demerits grouped by area_id ---
                     $demerits_by_area = [];
                     $reference_by_area = [];
                     $si_numbers = [];
                     $reference = [];
-                    
-                    $sql_si = "SELECT 
+
+                    $sql_si = "SELECT
                         b.num_si,
                         b.area_id,
                         b.si_category,
                         b.reference,
                         COALESCE(sub_dps.total_demerit, 0) AS demerit_point_sebenar
-                    FROM daily_records AS a 
-                    JOIN site_instruction AS b ON b.ddId = a.id 
+                    FROM daily_records AS a
+                    JOIN site_instruction AS b ON b.ddId = a.id
                     LEFT JOIN (
-                        SELECT 
+                        SELECT
                             b_sub.si_id AS actual_id,
                             SUM(c_sub.demerit_point) AS total_demerit
                         FROM site_instruction AS b_sub
-                        JOIN dps AS c_sub ON 
-                            c_sub.dem_cate = b_sub.si_category 
+                        JOIN dps AS c_sub ON
+                            c_sub.dem_cate = b_sub.si_category
                             AND JSON_CONTAINS(
-                                b_sub.reference, 
-                                JSON_QUOTE(CONCAT(c_sub.ref, '(', c_sub.numb, ')')), 
+                                b_sub.reference,
+                                JSON_QUOTE(CONCAT(c_sub.ref, '(', c_sub.numb, ')')),
                                 '$'
                             )
                         GROUP BY b_sub.si_id
                     ) AS sub_dps ON sub_dps.actual_id = b.si_id
-                    WHERE a.id = '$cid'";
-                    
-                    $res_si_all = $conn->query($sql_si);
+                    WHERE a.id = ?";
+
+                    $stmt_si = $conn->prepare($sql_si);
+                    $res_si_all = false;
+                    if ($stmt_si) {
+                        $stmt_si->bind_param("i", $cid);
+                        $stmt_si->execute();
+                        $res_si_all = $stmt_si->get_result();
+                    }
                     if ($res_si_all && $res_si_all->num_rows > 0) {
                         while ($row_si = $res_si_all->fetch_assoc()) {
                             // $demerits_by_area[$row_si['area_id']] = $row_si['demerit_point_sebenar'];
@@ -356,7 +382,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                     <div class="text-center mb-4">
                                         <h6 class="mb-1 font-weight-bold text-dark text-uppercase" style="font-size: 16px;">Rekod Harian Tapak</h6>
                                         <span class="text-uppercase text-muted font-weight-bold" style="font-size: 17px; letter-spacing: 0.15em;">Bahagian Landskap</span>
-                                        
+
                                         <p class="text-muted mb-0 text-uppercase" style="font-size: 13px;">Penyelenggaraan Taman Berkualiti - Pemotongan Rumput & Landskap Lembut</p>
                                     </div>
                                     <div class="d-sm-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
@@ -402,7 +428,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                             <div class="card shadow h-100">
                                 <div class="card-body">
                                     <h4 class="card-title mb-4" style="color: #0f172a; font-weight:600; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Ringkasan Aktiviti</h4>
-                                    
+
                                     <div class="gms-table-wrapper">
                                         <table class="gms-table">
                                             <thead>
@@ -428,7 +454,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                                         </div>
                                                     </td>
                                                 </tr>
-                                                
+
                                                 <!-- Row 4: Drain Cleaning -->
                                                 <tr>
                                                     <td class="no-col">2</td>
@@ -443,7 +469,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                                 <!-- Row 5: Total -->
                                                 <tr style="background-color: #f8fafc; font-weight: 600;">
                                                     <td colspan="2" class="text-right" style="padding-right: 15px; font-weight: 600; color: #0f172a;">Jumlah:</td>
-                                                    <td class="text-center text-primary font-weight-bold" style="font-size: 15px;"><?php 
+                                                    <td class="text-center text-primary font-weight-bold" style="font-size: 15px;"><?php
                                                     if($row3['dc_workers'] == null || $row3['dc_workers'] == "" || $row3['dc_workers'] == '0'){ $dc_worker = 0; } else {$dc_worker = $row3['dc_workers'];} echo $row3['gc_workers'] + $dc_worker ?></td>
                                                     <td></td>
                                                     <td></td>
@@ -461,7 +487,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                 <div class="card-body d-flex flex-column justify-content-between">
                                     <div>
                                         <h4 class="card-title mb-4" style="color: #0f172a; font-weight: 600; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Cuaca & Pemeriksaan</h4>
-                                        
+
                                         <!-- Weather Box -->
                                         <div class="weather-widget">
                                             <div class="weather-clock-wrap" >
@@ -475,20 +501,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                                     <text x="124" y="36" text-anchor="start" font-size="9" fill="#64748b" font-weight="500">0900</text>
                                                 </svg>
                                             </div>
-                                            
+
                                             <!-- Weather Selection Radio Buttons -->
                                             <div class="weather-radio-group">
                                                 <input type="radio" id="weather-rainy" name="weather" value="Rainy" <?php if ($row3['weather'] == 'Rainy') echo 'checked'; ?> disabled>
                                                 <label for="weather-rainy" class="weather-radio-label rainy-label">Hujan</label>
-                                                
+
                                                 <input type="radio" id="weather-cloudy" name="weather" value="Cloudy" <?php if ($row3['weather'] == 'Cloudy') echo 'checked'; ?> disabled>
                                                 <label for="weather-cloudy" class="weather-radio-label cloudy-label">Mendung</label>
-                                                
+
                                                 <input type="radio" id="weather-fine" name="weather" value="Fine" <?php if ($row3['weather'] == 'Fine') echo 'checked'; ?> disabled>
                                                 <label for="weather-fine" class="weather-radio-label fine-label">Cerah</label>
                                             </div>
-                                            
-                                            
+
+
                                         </div>
 
                                         <!-- AM / PM Inspection Time -->
@@ -515,7 +541,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                             <div class="card shadow h-100">
                                 <div class="card-body d-flex flex-column justify-content-between">
                                     <h4 class="card-title mb-4" style="color: #0f172a; font-weight:600; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Kawasan</h4>
-                                    
+
                                     <div class="gms-table-wrapper">
                                         <table class="gms-table">
                                             <thead>
@@ -530,29 +556,38 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                 <?php 
-                                                 $sql = "SELECT * FROM contract_location WHERE sz_id = '$sz_id'";
-                                                 $res = $conn->query($sql);
-                                                 if ($res->num_rows > 0) {
+                                                 <?php
+                                                 $stmt_loc = $conn->prepare("
+                                                     SELECT cl.*, adr.gc_progress, adr.gc_comment, adr.dc_progress, adr.dc_comment
+                                                     FROM contract_location cl
+                                                     LEFT JOIN area_daily_records adr ON adr.area_id = cl.area AND adr.dr_id = ?
+                                                     WHERE cl.sz_id = ?
+                                                     ORDER BY cl.locId ASC
+                                                 ");
+                                                 if ($stmt_loc) {
+                                                     $stmt_loc->bind_param("ii", $cid, $sz_id);
+                                                     $stmt_loc->execute();
+                                                     $res = $stmt_loc->get_result();
+                                                 } else {
+                                                     $res = false;
+                                                 }
+                                                 if ($res && $res->num_rows > 0) {
                                                      while ($row = $res->fetch_assoc()) {
                                                         $area_no = $row['area'];
                                                         $locId = $row['locId'];
-                                                        $sql1 = "SELECT * FROM area_daily_records WHERE dr_id = '$cid' AND area_id = '$area_no'";
-                                                        $res1 = $conn->query($sql1);
-                                                        $row1 = $res1->fetch_assoc();
-                                                        
+                                                        $row1 = $row;
+
                                                         $status_map = [
                                                             '0' => 'X',
-                                                            '1' => '━',
+                                                            '1' => '—',
                                                             '2' => '✓',
                                                             '3' => 'O'
                                                         ];
-                                                        $status_map = ['0' => 'X', '1' => '—', '2' => '✓', '3' => 'O'];
                                                         $gc_progress = isset($row1['gc_progress']) && array_key_exists($row1['gc_progress'], $status_map) ? $status_map[$row1['gc_progress']] : '-';
                                                         $gc_comment = !empty($row1['gc_comment']) ? htmlspecialchars($row1['gc_comment']) : '-';
                                                         $dc_progress = isset($row1['dc_progress']) && array_key_exists($row1['dc_progress'], $status_map) ? $status_map[$row1['dc_progress']] : '-';
                                                         $dc_comment = !empty($row1['dc_comment']) ? htmlspecialchars($row1['dc_comment']) : '-';
-                                                        
+
                                                         // Get the demerit point from precalculated array
                                                         $demerit_val_gc = isset($demerits_by_area[$locId]['GC']) && $demerits_by_area[$locId]['GC'] > 0 ? $demerits_by_area[$locId]['GC'] : '-';
                                                         $demerit_val_dc = isset($demerits_by_area[$locId]['DC']) && $demerits_by_area[$locId]['DC'] > 0 ? $demerits_by_area[$locId]['DC'] : '-';
@@ -566,12 +601,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                                         $clean_format = function($data) {
                                                             // Decode JSON string menjadi array PHP
                                                             $array = json_decode($data, true);
-                                                            
+
                                                             // Pastikan ia adalah array dan tidak kosong
                                                             if (is_array($array) && !empty($array)) {
                                                                 return implode(', ', $array); // Gabungkan array jadi "A(i), C(ii)"
                                                             }
-                                                            
+
                                                             // Jika bukan JSON/array biasa, return data asal atau '-' jika kosong
                                                             return (!empty($data) && $data !== '-') ? $data : '-';
                                                         };
@@ -623,7 +658,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                                     <tr>
                                                         <td colspan="5"><small class="text-muted">Nota: Wakil Kontraktor hendaklah menyemak dan memahami catatan ini sebelum menandatangani</small></td>
                                                     </tr>
-                                                   
+
                                                 </tbody>
                                             </table>
                                         </div>
@@ -637,7 +672,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                                     </tr>
                                                     <tr style="height: 110px; vertical-align: middle;">
                                                         <td class="text-center">
-                                                            <?php 
+                                                            <?php
                                                             if ($row3 && $row3['contractor_dsign'] === 'Y') {
                                                                 echo '
                                                                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -655,7 +690,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                                             ?>
                                                         </td>
                                                         <td class="text-center">
-                                                            <?php 
+                                                            <?php
                                                             if ($row3 && $row3['supervisor_dsign'] === 'Y') {
                                                                 echo '
                                                                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -673,7 +708,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                                             ?>
                                                         </td>
                                                         <td class="text-center">
-                                                            <?php 
+                                                            <?php
                                                             if ($row3 && $row3['pengawas_dsign'] === 'Y') {
                                                                 echo '
                                                                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -698,7 +733,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                                     </tr>
                                                     <tr style="min-height: 60px;">
                                                         <td colspan="3" class="text-center text-dark" style="font-weight: 500; padding: 15px; font-style: italic;">
-                                                             <?php 
+                                                             <?php
                                                             if ($row3 && $row3['pengawas_dsign'] === 'Y') {
                                                                 echo '
                                                                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -718,7 +753,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                                                     </tr>
                                                     <tr>
                                                         <td colspan="3" class="text-center text-dark" style="font-weight: 500; padding: 15px; font-style: italic;">
-                                                            <?php 
+                                                            <?php
                                                             // Collect comments from site instructions
                                                             $instructions = [];
                                                             $res_si_all->data_seek(0); // Reset result pointer
@@ -747,7 +782,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                          </div>
                      </div>
                  </div>
-                 </div>                                       
+                 </div>
 
                 <!-- Verify Modal -->
                 <div class="modal fade" id="verifyModal" tabindex="-1" aria-labelledby="verifyModalLabel" aria-hidden="true">
@@ -778,7 +813,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
                 <!-- partial:partials/_footer.html -->
                 <?php include 'partials/footer.php' ?>
                 <!-- partial -->
-                 
+
             </div>
             <!-- main-panel ends -->
         </div>
@@ -833,15 +868,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
 
         days.forEach(day => {
             const tr = document.createElement('tr');
-            
+
             // Semak jika hari dalam loop sepadan dengan hari rekod
             const isMatch = (day.english.toLowerCase() === recordDay.toLowerCase());
-            
+
             // Set data jika hari sepadan
             const gcCheckedAttr = (isMatch && gcChecked === 1) ? 'checked' : '';
             const gcSessionVal  = isMatch ? gcSession : '';
             const gcDayNoVal    = isMatch ? gcDayNo : '';
-            
+
             const dmCheckedAttr = (isMatch && dmChecked === 1) ? 'checked' : '';
             const dmSessionVal  = isMatch ? dmSession : '';
             const dmDayNoVal    = isMatch ? dmDayNo : '';
@@ -929,16 +964,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_aso'])) {
             });
 
             <?php
-            $sql = "SELECT * FROM kmz_file WHERE sz_id = '$subzone_id'";
-            $res = $conn->query($sql);
-            if ($res->num_rows > 0) {
-                $row = $res->fetch_assoc();
-                $url = $row['url'];
-            } else {
-                $url = '';
+            $url = '';
+            if ($sz_id > 0) {
+                $stmt_kmz = $conn->prepare("SELECT url FROM kmz_file WHERE sz_id = ? ORDER BY id DESC LIMIT 1");
+                if ($stmt_kmz) {
+                    $stmt_kmz->bind_param("i", $sz_id);
+                    $stmt_kmz->execute();
+                    $res_kmz = $stmt_kmz->get_result();
+                    if ($res_kmz && $row_kmz = $res_kmz->fetch_assoc()) {
+                        $url = $row_kmz['url'];
+                    }
+                    $stmt_kmz->close();
+                }
             }
-
-
             ?>
 
             var kmzLayer = new google.maps.KmlLayer({

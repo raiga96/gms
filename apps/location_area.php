@@ -1,4 +1,4 @@
-<?php
+<?php require_once __DIR__ . '/_q.php';
 // Assume this PHP script fetches the data you need and returns it as JSON
 require 'conn.php';
 
@@ -11,11 +11,11 @@ $iv = "5fbc84cbabd58453"; // Replace with your own IV
 
 // $s = "SELECT * FROM contract_location WHERE sz_id = '$sz_id'";
 if ($page == 'detail') {
-    $s = "SELECT * FROM contract_location AS a LEFT JOIN area_daily_records AS b ON b.area_id = a.area AND b.date = CURDATE() WHERE a.sz_id = '$sz_id' ";
+    $s = "SELECT * FROM contract_location AS a LEFT JOIN area_daily_records AS b ON b.area_id = a.area AND b.date = CURDATE() WHERE a.sz_id = ?";
 } else {
-   $s = "SELECT * FROM contract_location AS a LEFT JOIN area_daily_records AS b ON b.area_id = a.area WHERE a.sz_id = '$sz_id' AND b.dr_id='$dd_id'";
+   $s = "SELECT * FROM contract_location AS a LEFT JOIN area_daily_records AS b ON b.area_id = a.area WHERE a.sz_id = ? AND b.dr_id = ?";
 }
-$r = $conn->query($s);
+$r = $page == "detail" ? gms_q($conn, $s, "s", [$sz_id]) : gms_q($conn, $s, "ss", [$sz_id, $dd_id]);
 
 // Fetch data and store it in an array
 $data = array();
